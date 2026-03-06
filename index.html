@@ -1,44 +1,121 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <title>Cbot Labs</title>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cbot Labs</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="script.js"></script>
 </head>
 
 <body>
+    <div class="page-shell">
+        <div class="bg-orb bg-orb-a"></div>
+        <div class="bg-orb bg-orb-b"></div>
 
-    <h1 class="title">Cbot Labs On Xahau</h1>
-    <div class="container1">
-        <img class="image" src="ll.png" alt="logo">
-    </div>
-    <div>
-        <p class="text">Validator Public Key: nHUCQgftpGqfDAY7XMCXPbyBBvGRg9T6n1YMnmaG2trnrYeywAjL</p>
+        <header class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">CBOT LABS / LOCAL APP</p>
+                <h1 id="brand-name">Loading app...</h1>
+                <p class="hero-tagline" id="brand-tagline"></p>
+                <p class="hero-summary" id="brand-summary"></p>
+
+                <div class="hero-actions">
+                    <a class="primary-button" id="toml-link" href="#" target="_blank" rel="noreferrer">Open Xahau TOML</a>
+                    <a class="secondary-button" id="unl-link" href="#" target="_blank" rel="noreferrer">View UNL Listing</a>
+                </div>
+            </div>
+
+            <div class="hero-card">
+                <img id="brand-logo" class="hero-logo" src="/ll.png" alt="Cbot Labs logo">
+                <div class="hero-status-row">
+                    <span class="status-dot"></span>
+                    <span id="status-pill">Waiting for API</span>
+                </div>
+                <dl class="hero-metrics">
+                    <div>
+                        <dt>Network</dt>
+                        <dd id="validator-network"></dd>
+                    </div>
+                    <div>
+                        <dt>Account</dt>
+                        <dd id="validator-account"></dd>
+                    </div>
+                    <div>
+                        <dt>Location</dt>
+                        <dd id="validator-location"></dd>
+                    </div>
+                </dl>
+            </div>
+        </header>
+
+        <main class="content-grid">
+            <section class="panel panel-wide">
+                <div class="panel-header">
+                    <p class="panel-kicker">Validator</p>
+                    <h2>Backend-fed identity</h2>
+                </div>
+                <div class="key-box">
+                    <span class="key-label">Public Key</span>
+                    <code id="validator-key">Loading...</code>
+                </div>
+                <div class="api-strip">
+                    <div>
+                        <span class="api-label">API status</span>
+                        <strong id="api-status">Checking...</strong>
+                    </div>
+                    <div>
+                        <span class="api-label">Updated</span>
+                        <strong id="api-updated">-</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <p class="panel-kicker">Modules</p>
+                    <h2>Build surface</h2>
+                </div>
+                <div id="modules-list" class="module-list"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <p class="panel-kicker">Links</p>
+                    <h2>Outbound</h2>
+                </div>
+                <div id="links-list" class="link-list"></div>
+            </section>
+
+            <section class="panel panel-wide">
+                <div class="panel-header">
+                    <p class="panel-kicker">Next</p>
+                    <h2>What this app shell is for</h2>
+                </div>
+                <div class="roadmap">
+                    <article>
+                        <h3>Move data to the backend</h3>
+                        <p>Keep validator info, links, and future settings in Express routes instead of hardcoded markup.</p>
+                    </article>
+                    <article>
+                        <h3>Add real features</h3>
+                        <p>Next up can be status polling, validator metrics, simple admin actions, or TOML management flows.</p>
+                    </article>
+                    <article>
+                        <h3>Deploy cleanly</h3>
+                        <p>Once local behavior is stable, we can lock it into `systemd` on the VM and promote the same app shape.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <div class="container1">
-        <a class="button" href="https://cbotlabs.xyz/.well-known/xahau.toml">
-            <button>Xahau.toml</button>
-        </a>
-    </div>
-
-    <div class="container1">
-        <a class="button" href="https://xahauexplorer.com/en/validators">
-            <button>Xahau UNL List</button>
-        </a>
-    </div>
-
-    <div class="container3">
-        <a href="mailto:cody@cbotlabs.xyz" class="fa fa-envelope fa-2x"></a>
-        <a href="https://twitter.com/Cbot_Xrpl" class="fa fa-twitter fa-2x"></a>
-        <a href="https://github.com/Cbot-XRPL" class="fa fa-github fa-2x"></a>
-    </div>
-
+    <script src="script.js"></script>
 </body>
 
 </html>
