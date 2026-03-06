@@ -1,6 +1,6 @@
 [METADATA]
-modified = 2023-11-17T08:00:00.000Z
-expires = 2024-11-17T08:00:00.000Z
+modified = 2026-03-06T00:00:00.000Z
+expires = 2027-03-06T00:00:00.000Z
 
 [[VALIDATORS]]
 public_key = "nHUCQgftpGqfDAY7XMCXPbyBBvGRg9T6n1YMnmaG2trnrYeywAjL"
@@ -10,12 +10,11 @@ server_country = "US"
 server_location = "Atlanta - US"
 server_cloud = false
 network_asn = 7018
-unl = ""
 attestation="2A2688394000186C8D07F9F708FB4C5573003C98E81F296471B27C50DCB8EF1EA640D8F960F4468AADFD0A2EE5249D7C9923860E2E3E5D8301D08A67C00D3D0B"
 
 [[ACCOUNTS]]
 address = "rCboTXmnomVJzRKVXqDMDFzwTaCKFAcYs"
-network = "main"
+network = "21337"
 desc = "Cbot"
 
 [[SERVERS]]
@@ -30,21 +29,18 @@ location = "US"
 
 [[PRINCIPALS]]
 name = "Cody, Cbot_Xrpl"
-title = "null"
 country = "US"
 state = "Georgia"
 website = "https://cbotlabs.xyz"
 twitter = "@Cbot_Xrpl"
-linkedin = "null"
 email = "cybrcris@gmail.com"
 
 
-[[ORGANIZATION]]
+[ORGANIZATION]
 name = "Cbot Labs"
-bus_num = "null"
 country = "US"
 state = "Georgia"
-website = "https://cbotlabs.xyz/"
+website = "https://cbotlabs.xyz"
 twitter = "@cbotlabs"
 email = "cybrcris@gmail.com"
 toml = "https://cbotlabs.xyz/.well-known/xahau.toml"

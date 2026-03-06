@@ -1,3 +1,4 @@
-<Files "xahau.toml">
+<FilesMatch "^(xahau|xrp-ledger)\.toml$">
+    ForceType application/toml
     Header set Access-Control-Allow-Origin "*"
-</Files>
+</FilesMatch>
