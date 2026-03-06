@@ -42,6 +42,6 @@ state = "Georgia"
 website = "https://cbotlabs.xyz"
 twitter = "@cbotlabs"
 email = "admin@cbotlabs.xyz"
-toml = "https://cbotlabs.xyz/.well-known/xahau.toml"
+toml = "https://cbotlabs.xyz/.well-known/xrp-ledger.toml"
 
 # End of file
