@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const crypto = require("crypto");
 const express = require("express");
+const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { Xumm } = require("xumm");
@@ -10,6 +11,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 const rootDir = __dirname;
 const wellKnownDir = path.join(rootDir, ".well-known");
+const dataDir = path.join(rootDir, ".data");
+const sessionsFile = path.join(dataDir, "sessions.json");
 const ownerAccount = "rCboTXmnomVJzRKVXqDMDFzwTaCKFAcYs";
 const sessionCookieName = "cbot_session";
 const sessionTtlMs = 1000 * 60 * 60 * 12;
@@ -23,10 +26,12 @@ const xamanApiSecret = process.env.XAMAN_API_SECRET || process.env.XUMM_API_SECR
 const xamanConfigured = Boolean(xamanApiKey && xamanApiSecret);
 const xumm = xamanConfigured ? new Xumm(xamanApiKey, xamanApiSecret) : null;
 
+fs.mkdirSync(dataDir, { recursive: true });
+
 const appData = {
   brand: {
     name: "Cbot Labs",
-    tagline: "Xahau builder node",
+    tagline: "Xahau UNL Validator",
     summary: "Local-first interface for validator identity, Xaman auth, and private operator controls.",
     logo: "/ll.png"
   },
@@ -43,7 +48,7 @@ const appData = {
   links: [
     {
       label: "Email",
-      href: "mailto:cody@cbotlabs.xyz"
+      href: "mailto:admin@cbotlabs.xyz"
     },
     {
       label: "Twitter",
@@ -56,19 +61,19 @@ const appData = {
   ],
   modules: [
     {
-      name: "Identity",
-      description: "Domain metadata, validator details, and account references served from one backend.",
-      status: "ready"
-    },
-    {
-      name: "Auth",
-      description: "Xaman sign-in with backend-owned session checks tied to the operator account.",
-      status: xamanConfigured ? "ready" : "needs keys"
-    },
-    {
       name: "Admin",
       description: "Private panel that only renders when the authenticated account matches the owner wallet.",
       status: "ready"
+    },
+    {
+      name: "Cutting Edge NFT Marketplace on Xahau",
+      description: "Construct a one of a kind marketplace on Xahau with hooks.",
+      status: "building"
+    },
+    {
+      name: "AI Engine",
+      description: "Experiment with blockchain, LLMs and VMs to increase work productivity.",
+      status: "building"
     }
   ]
 };
@@ -106,8 +111,37 @@ function pruneStore(store, ttlMs) {
   }
 }
 
+function loadSessions() {
+  try {
+    if (!fs.existsSync(sessionsFile)) {
+      return;
+    }
+
+    const raw = fs.readFileSync(sessionsFile, "utf8");
+    if (!raw.trim()) {
+      return;
+    }
+
+    const entries = JSON.parse(raw);
+    for (const [sessionId, session] of entries) {
+      sessions.set(sessionId, session);
+    }
+  } catch (error) {
+    console.error("Failed to load sessions:", error);
+  }
+}
+
+function persistSessions() {
+  try {
+    fs.writeFileSync(sessionsFile, JSON.stringify([...sessions.entries()], null, 2));
+  } catch (error) {
+    console.error("Failed to persist sessions:", error);
+  }
+}
+
 function getSession(req) {
   pruneStore(sessions, sessionTtlMs);
+  persistSessions();
   const cookies = parseCookies(req);
   const sessionId = cookies[sessionCookieName];
 
@@ -182,6 +216,7 @@ app.post("/api/auth/logout", (req, res) => {
   const cookies = parseCookies(req);
   if (cookies[sessionCookieName]) {
     sessions.delete(cookies[sessionCookieName]);
+    persistSessions();
   }
 
   res.setHeader("Set-Cookie", `${sessionCookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
@@ -281,6 +316,7 @@ app.get("/api/auth/xaman/poll/:uuid", async (req, res) => {
       createdAt: Date.now(),
       account
     });
+    persistSessions();
 
     res.setHeader("Set-Cookie", `${sessionCookieName}=${sessionId}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${Math.floor(sessionTtlMs / 1000)}`);
     res.json({
@@ -302,15 +338,25 @@ app.get("/api/admin", requireOwner, (req, res) => {
     ok: true,
     ownerAccount,
     controls: [
-      "Update validator metadata",
-      "Manage automation jobs",
-      "Add protected operator actions"
+      "Build private panel with wallet authentication",
+      "Back server and VMs",
+      "Add higher quality error tracking"
     ]
   });
 });
 
 app.use("/.well-known", express.static(wellKnownDir));
-app.use(express.static(rootDir));
+app.use(express.static(rootDir, {
+  maxAge: "1h",
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-cache");
+      return;
+    }
+
+    res.setHeader("Cache-Control", "public, max-age=3600");
+  }
+}));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(rootDir, "index.html"));
@@ -334,6 +380,8 @@ function getNetworkUrls(activePort) {
 
   return urls;
 }
+
+loadSessions();
 
 if (require.main === module) {
   const server = app.listen(port, () => {

@@ -55,7 +55,7 @@ code,
 
 .page-shell {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 64px;
@@ -145,12 +145,19 @@ code,
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 420px);
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
   margin-bottom: 24px;
+}
+
+.hero-side {
+  display: grid;
+  gap: 24px;
+  align-content: start;
 }
 
 .hero-copy {
   padding: 36px;
+  align-self: start;
 }
 
 .eyebrow,
@@ -238,6 +245,7 @@ code,
   flex-direction: column;
   justify-content: space-between;
   padding: 28px;
+  align-self: start;
 }
 
 .hero-logo {
@@ -286,6 +294,45 @@ code,
   margin: 0;
   color: var(--text);
   word-break: break-word;
+}
+
+.hero-socials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-left: 12px;
+}
+
+.hero-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.hero-social-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(121, 247, 200, 0.35);
+  background: rgba(121, 247, 200, 0.08);
+}
+
+.hero-social-link svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+}
+
+.hero-social-link svg path {
+  fill: currentColor;
 }
 
 .content-grid {
@@ -418,6 +465,11 @@ code,
 
 .module-status {
   margin-top: 14px;
+}
+
+.module-status-building {
+  background: rgba(240, 181, 107, 0.16);
+  color: var(--accent-warm);
 }
 
 .link-card {

@@ -48,7 +48,7 @@ function renderModules(modules) {
     <article class="module-card">
       <h3>${module.name}</h3>
       <p>${module.description}</p>
-      <span class="module-status">${module.status}</span>
+      <span class="module-status module-status-${module.status.toLowerCase()}">${module.status}</span>
     </article>
   `).join("");
 }
@@ -68,6 +68,24 @@ function renderLinks(links) {
       <span class="link-arrow">+</span>
     </a>
   `).join("");
+}
+
+function renderHeroLinks(links) {
+  const email = links.find((link) => link.label === "Email");
+  const twitter = links.find((link) => link.label === "Twitter");
+  const github = links.find((link) => link.label === "GitHub");
+
+  if (email) {
+    setHref("hero-email-link", email.href);
+  }
+
+  if (twitter) {
+    setHref("hero-twitter-link", twitter.href);
+  }
+
+  if (github) {
+    setHref("hero-github-link", github.href);
+  }
 }
 
 function renderAdmin(adminData) {
@@ -110,7 +128,7 @@ async function refreshAuthState() {
 
 function renderApp(appData, statusData) {
   currentAppData = appData;
-  setText("nav-brand", `${appData.brand.name} control surface`);
+  setText("nav-brand", "XRPL / XAHAU control surface");
   setText("brand-name", appData.brand.name);
   setText("brand-tagline", appData.brand.tagline);
   setText("brand-summary", appData.brand.summary);
@@ -134,6 +152,7 @@ function renderApp(appData, statusData) {
   }
 
   renderModules(appData.modules);
+  renderHeroLinks(appData.links);
   renderLinks(appData.links);
 }
 
