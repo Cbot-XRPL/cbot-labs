@@ -18,6 +18,22 @@
         <div class="bg-orb bg-orb-a"></div>
         <div class="bg-orb bg-orb-b"></div>
 
+        <nav class="topbar">
+            <div class="brand-lockup">
+                <img id="nav-logo" class="nav-logo" src="/ll.png" alt="Cbot Labs logo">
+                <div>
+                    <p class="eyebrow">CBOT LABS</p>
+                    <strong id="nav-brand">Local operator console</strong>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <div id="auth-chip" class="auth-chip">Signed out</div>
+                <button id="login-button" class="primary-button" type="button">Login with Xaman</button>
+                <button id="logout-button" class="secondary-button hidden" type="button">Logout</button>
+            </div>
+        </nav>
+
         <header class="hero">
             <div class="hero-copy">
                 <p class="eyebrow">CBOT LABS / LOCAL APP</p>
@@ -92,6 +108,27 @@
                 <div id="links-list" class="link-list"></div>
             </section>
 
+            <section id="admin-panel" class="panel panel-wide hidden">
+                <div class="panel-header">
+                    <p class="panel-kicker">Admin</p>
+                    <h2>Owner-only panel</h2>
+                </div>
+                <div class="admin-grid">
+                    <article class="admin-card">
+                        <span class="api-label">Authenticated wallet</span>
+                        <strong id="admin-account">-</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Access</span>
+                        <strong>Private operator view</strong>
+                    </article>
+                </div>
+                <div class="admin-box">
+                    <span class="key-label">Controls exposed by backend</span>
+                    <div id="admin-controls" class="admin-controls"></div>
+                </div>
+            </section>
+
             <section class="panel panel-wide">
                 <div class="panel-header">
                     <p class="panel-kicker">Next</p>
@@ -99,21 +136,36 @@
                 </div>
                 <div class="roadmap">
                     <article>
-                        <h3>Move data to the backend</h3>
-                        <p>Keep validator info, links, and future settings in Express routes instead of hardcoded markup.</p>
+                        <h3>Owner-gated actions</h3>
+                        <p>The admin surface now depends on backend session state instead of a frontend-only toggle.</p>
                     </article>
                     <article>
-                        <h3>Add real features</h3>
-                        <p>Next up can be status polling, validator metrics, simple admin actions, or TOML management flows.</p>
+                        <h3>Xaman sign-in</h3>
+                        <p>The server creates the sign-in payload and checks the signed wallet before exposing private controls.</p>
                     </article>
                     <article>
-                        <h3>Deploy cleanly</h3>
-                        <p>Once local behavior is stable, we can lock it into `systemd` on the VM and promote the same app shape.</p>
+                        <h3>Real admin features</h3>
+                        <p>Next up can be protected config edits, validator jobs, or operator commands behind the same owner gate.</p>
                     </article>
                 </div>
             </section>
         </main>
     </div>
+
+    <dialog id="login-dialog" class="login-dialog">
+        <div class="login-dialog-inner">
+            <div class="panel-header">
+                <p class="panel-kicker">Xaman</p>
+                <h2>Sign in</h2>
+            </div>
+            <p id="login-message" class="dialog-copy">Starting login...</p>
+            <img id="login-qr" class="login-qr hidden" alt="Xaman login QR code">
+            <div class="dialog-actions">
+                <a id="login-open-link" class="primary-button hidden" href="#" target="_blank" rel="noreferrer">Open in Xaman</a>
+                <button id="close-login-dialog" class="secondary-button" type="button">Close</button>
+            </div>
+        </div>
+    </dialog>
 
     <script src="script.js"></script>
 </body>

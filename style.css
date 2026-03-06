@@ -6,7 +6,6 @@
   --text: #eef6ff;
   --muted: #9cb3c9;
   --accent: #79f7c8;
-  --accent-deep: #134d45;
   --accent-warm: #f0b56b;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
@@ -30,9 +29,16 @@ body {
     linear-gradient(180deg, #08111d 0%, #0a1628 55%, #060d18 100%);
 }
 
+button,
 a {
   color: inherit;
   text-decoration: none;
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
 }
 
 code,
@@ -43,12 +49,16 @@ code,
   font-family: "IBM Plex Mono", monospace;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .page-shell {
   position: relative;
   overflow: hidden;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 48px 0 64px;
+  padding: 24px 0 64px;
 }
 
 .bg-orb {
@@ -75,10 +85,60 @@ code,
   background: #8e5c23;
 }
 
+.topbar,
 .hero,
 .content-grid {
   position: relative;
   z-index: 1;
+}
+
+.topbar,
+.hero-copy,
+.hero-card,
+.panel,
+.login-dialog-inner {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+}
+
+.brand-lockup,
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-logo,
+.hero-logo {
+  object-fit: contain;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-logo {
+  width: 48px;
+  height: 48px;
+  padding: 8px;
+}
+
+.auth-chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .hero {
@@ -87,16 +147,6 @@ code,
   gap: 24px;
   align-items: stretch;
   margin-bottom: 24px;
-}
-
-.hero-copy,
-.hero-card,
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 28px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
 }
 
 .hero-copy {
@@ -113,7 +163,8 @@ code,
 }
 
 .hero-copy h1,
-.panel h2 {
+.panel h2,
+.login-dialog h2 {
   margin: 0;
   line-height: 0.95;
 }
@@ -129,7 +180,8 @@ code,
   color: var(--accent-warm);
 }
 
-.hero-summary {
+.hero-summary,
+.dialog-copy {
   max-width: 58ch;
   margin: 0;
   font-size: 1rem;
@@ -137,7 +189,8 @@ code,
   color: var(--muted);
 }
 
-.hero-actions {
+.hero-actions,
+.dialog-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -153,7 +206,7 @@ code,
   padding: 0 18px;
   border-radius: 999px;
   font-weight: 600;
-  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, opacity 180ms ease;
 }
 
 .primary-button {
@@ -162,6 +215,7 @@ code,
 }
 
 .secondary-button {
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text);
 }
@@ -170,6 +224,13 @@ code,
 .secondary-button:hover,
 .link-card:hover {
   transform: translateY(-2px);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .hero-card {
@@ -182,9 +243,6 @@ code,
 .hero-logo {
   width: 72px;
   height: 72px;
-  object-fit: contain;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
   padding: 10px;
 }
 
@@ -248,12 +306,14 @@ code,
   margin-bottom: 22px;
 }
 
-.panel h2 {
+.panel h2,
+.login-dialog h2 {
   font-size: 1.8rem;
   letter-spacing: -0.04em;
 }
 
-.key-box {
+.key-box,
+.admin-box {
   padding: 18px;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.04);
@@ -278,26 +338,31 @@ code,
   color: var(--accent);
 }
 
-.api-strip {
+.api-strip,
+.admin-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 18px;
 }
 
-.api-strip > div {
+.api-strip > div,
+.admin-card {
   padding: 18px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.04);
 }
 
-.api-strip strong {
+.api-strip strong,
+.admin-card strong {
   font-size: 1rem;
+  word-break: break-word;
 }
 
 .module-list,
 .link-list,
-.roadmap {
+.roadmap,
+.admin-controls {
   display: grid;
   gap: 14px;
 }
@@ -340,14 +405,19 @@ code,
   line-height: 1.6;
 }
 
-.module-status {
+.module-status,
+.admin-control-pill {
   display: inline-flex;
-  margin-top: 14px;
+  width: fit-content;
   padding: 6px 10px;
   border-radius: 999px;
   background: rgba(121, 247, 200, 0.12);
   color: var(--accent);
   font-size: 0.8rem;
+}
+
+.module-status {
+  margin-top: 14px;
 }
 
 .link-card {
@@ -367,11 +437,45 @@ code,
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.login-dialog {
+  width: min(460px, calc(100% - 24px));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.login-dialog::backdrop {
+  background: rgba(2, 6, 12, 0.74);
+}
+
+.login-dialog-inner {
+  padding: 28px;
+}
+
+.login-qr {
+  width: min(260px, 100%);
+  margin-top: 20px;
+  border-radius: 24px;
+  background: white;
+  padding: 14px;
+}
+
 @media (max-width: 900px) {
+  .topbar,
   .hero,
   .content-grid,
   .roadmap {
     grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-actions {
+    flex-wrap: wrap;
   }
 
   .panel-wide {
@@ -394,12 +498,13 @@ code,
   }
 
   .hero-actions,
-  .api-strip {
-    grid-template-columns: 1fr;
+  .dialog-actions {
+    display: grid;
   }
 
-  .hero-actions {
-    display: grid;
+  .api-strip,
+  .admin-grid {
+    grid-template-columns: 1fr;
   }
 
   .primary-button,

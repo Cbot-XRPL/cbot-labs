@@ -1,22 +1,38 @@
+require("dotenv").config();
+
+const crypto = require("crypto");
 const express = require("express");
 const os = require("os");
 const path = require("path");
+const { Xumm } = require("xumm");
 
 const app = express();
 const port = process.env.PORT || 3000;
 const rootDir = __dirname;
 const wellKnownDir = path.join(rootDir, ".well-known");
+const ownerAccount = "rCboTXmnomVJzRKVXqDMDFzwTaCKFAcYs";
+const sessionCookieName = "cbot_session";
+const sessionTtlMs = 1000 * 60 * 60 * 12;
+const pendingAuthTtlMs = 1000 * 60 * 10;
+
+const sessions = new Map();
+const pendingAuth = new Map();
+
+const xamanApiKey = process.env.XAMAN_API_KEY || process.env.XUMM_API_KEY || "";
+const xamanApiSecret = process.env.XAMAN_API_SECRET || process.env.XUMM_API_SECRET || "";
+const xamanConfigured = Boolean(xamanApiKey && xamanApiSecret);
+const xumm = xamanConfigured ? new Xumm(xamanApiKey, xamanApiSecret) : null;
 
 const appData = {
   brand: {
     name: "Cbot Labs",
     tagline: "Xahau builder node",
-    summary: "A local-first app shell for validator identity, tools, and future Xahau automation.",
+    summary: "Local-first interface for validator identity, Xaman auth, and private operator controls.",
     logo: "/ll.png"
   },
   validator: {
     publicKey: "nHUCQgftpGqfDAY7XMCXPbyBBvGRg9T6n1YMnmaG2trnrYeywAjL",
-    account: "rCboTXmnomVJzRKVXqDMDFzwTaCKFAcYs",
+    account: ownerAccount,
     network: "Xahau Mainnet",
     networkId: 21337,
     status: "active",
@@ -27,18 +43,15 @@ const appData = {
   links: [
     {
       label: "Email",
-      href: "mailto:cody@cbotlabs.xyz",
-      icon: "envelope"
+      href: "mailto:cody@cbotlabs.xyz"
     },
     {
       label: "Twitter",
-      href: "https://twitter.com/Cbot_Xrpl",
-      icon: "twitter"
+      href: "https://twitter.com/Cbot_Xrpl"
     },
     {
       label: "GitHub",
-      href: "https://github.com/Cbot-XRPL",
-      icon: "github"
+      href: "https://github.com/Cbot-XRPL"
     }
   ],
   modules: [
@@ -48,14 +61,14 @@ const appData = {
       status: "ready"
     },
     {
-      name: "API Layer",
-      description: "Express routes that the frontend can consume without hardcoded content.",
-      status: "ready"
+      name: "Auth",
+      description: "Xaman sign-in with backend-owned session checks tied to the operator account.",
+      status: xamanConfigured ? "ready" : "needs keys"
     },
     {
-      name: "Automation",
-      description: "Reserved space for jobs, monitoring, and validator tooling as the app expands.",
-      status: "planned"
+      name: "Admin",
+      description: "Private panel that only renders when the authenticated account matches the owner wallet.",
+      status: "ready"
     }
   ]
 };
@@ -70,6 +83,66 @@ app.use((req, res, next) => {
   next();
 });
 
+function parseCookies(req) {
+  const header = req.headers.cookie;
+  if (!header) {
+    return {};
+  }
+
+  return header.split(";").reduce((cookies, item) => {
+    const [name, ...valueParts] = item.trim().split("=");
+    cookies[name] = decodeURIComponent(valueParts.join("="));
+    return cookies;
+  }, {});
+}
+
+function pruneStore(store, ttlMs) {
+  const now = Date.now();
+
+  for (const [key, value] of store.entries()) {
+    if (now - value.createdAt > ttlMs) {
+      store.delete(key);
+    }
+  }
+}
+
+function getSession(req) {
+  pruneStore(sessions, sessionTtlMs);
+  const cookies = parseCookies(req);
+  const sessionId = cookies[sessionCookieName];
+
+  if (!sessionId) {
+    return null;
+  }
+
+  return sessions.get(sessionId) || null;
+}
+
+function buildAuthState(req) {
+  const session = getSession(req);
+
+  return {
+    configured: xamanConfigured,
+    loggedIn: Boolean(session),
+    account: session?.account || null,
+    isOwner: session?.account === ownerAccount
+  };
+}
+
+function requireOwner(req, res, next) {
+  const session = getSession(req);
+
+  if (!session || session.account !== ownerAccount) {
+    res.status(403).json({
+      ok: false,
+      error: "Owner session required"
+    });
+    return;
+  }
+
+  next();
+}
+
 app.get("/api/status", (req, res) => {
   res.json({
     ok: true,
@@ -80,7 +153,13 @@ app.get("/api/status", (req, res) => {
 });
 
 app.get("/api/app", (req, res) => {
-  res.json(appData);
+  res.json({
+    ...appData,
+    auth: {
+      ownerAccount,
+      xamanConfigured
+    }
+  });
 });
 
 app.get("/api/validator", (req, res) => {
@@ -93,6 +172,141 @@ app.get("/api/links", (req, res) => {
 
 app.get("/api/modules", (req, res) => {
   res.json(appData.modules);
+});
+
+app.get("/api/auth/session", (req, res) => {
+  res.json(buildAuthState(req));
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  const cookies = parseCookies(req);
+  if (cookies[sessionCookieName]) {
+    sessions.delete(cookies[sessionCookieName]);
+  }
+
+  res.setHeader("Set-Cookie", `${sessionCookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+  res.json({ ok: true });
+});
+
+app.post("/api/auth/xaman/start", async (req, res) => {
+  if (!xamanConfigured) {
+    res.status(503).json({
+      ok: false,
+      error: "Xaman credentials are not configured on the server"
+    });
+    return;
+  }
+
+  try {
+    const origin = `${req.protocol}://${req.get("host")}`;
+    const payload = await xumm.payload.create({
+      txjson: {
+        TransactionType: "SignIn"
+      },
+      custom_meta: {
+        identifier: "cbot-labs-admin-login",
+        instruction: "Sign in to Cbot Labs admin"
+      },
+      options: {
+        return_url: {
+          app: `${origin}/`,
+          web: `${origin}/`
+        }
+      }
+    });
+
+    pendingAuth.set(payload.uuid, {
+      createdAt: Date.now()
+    });
+
+    res.json({
+      ok: true,
+      uuid: payload.uuid,
+      qrPng: payload.refs?.qr_png || null,
+      always: payload.next?.always || null
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "Failed to create Xaman sign-in payload"
+    });
+  }
+});
+
+app.get("/api/auth/xaman/poll/:uuid", async (req, res) => {
+  if (!xamanConfigured) {
+    res.status(503).json({
+      ok: false,
+      error: "Xaman credentials are not configured on the server"
+    });
+    return;
+  }
+
+  pruneStore(pendingAuth, pendingAuthTtlMs);
+  const pending = pendingAuth.get(req.params.uuid);
+
+  if (!pending) {
+    res.status(404).json({
+      ok: false,
+      error: "Unknown or expired login request"
+    });
+    return;
+  }
+
+  try {
+    const payload = await xumm.payload.get(req.params.uuid);
+    const signed = payload?.meta?.signed === true;
+    const account = payload?.response?.account || null;
+
+    if (!signed) {
+      res.json({
+        ok: true,
+        resolved: false
+      });
+      return;
+    }
+
+    pendingAuth.delete(req.params.uuid);
+
+    if (!account) {
+      res.status(400).json({
+        ok: false,
+        error: "Signed payload did not include an account"
+      });
+      return;
+    }
+
+    const sessionId = crypto.randomUUID();
+    sessions.set(sessionId, {
+      createdAt: Date.now(),
+      account
+    });
+
+    res.setHeader("Set-Cookie", `${sessionCookieName}=${sessionId}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${Math.floor(sessionTtlMs / 1000)}`);
+    res.json({
+      ok: true,
+      resolved: true,
+      account,
+      isOwner: account === ownerAccount
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "Failed to poll Xaman payload"
+    });
+  }
+});
+
+app.get("/api/admin", requireOwner, (req, res) => {
+  res.json({
+    ok: true,
+    ownerAccount,
+    controls: [
+      "Update validator metadata",
+      "Manage automation jobs",
+      "Add protected operator actions"
+    ]
+  });
 });
 
 app.use("/.well-known", express.static(wellKnownDir));

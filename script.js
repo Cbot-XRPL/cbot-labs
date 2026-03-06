@@ -1,11 +1,20 @@
-async function fetchJson(url) {
-  const response = await fetch(url);
+let currentAppData = null;
+let authPollTimer = null;
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options
+  });
+
+  const isJson = response.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await response.json() : null;
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new Error(data?.error || `Request failed: ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }
 
 function setText(id, value) {
@@ -19,6 +28,13 @@ function setHref(id, value) {
   const element = document.getElementById(id);
   if (element) {
     element.href = value;
+  }
+}
+
+function showElement(id, visible) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.classList.toggle("hidden", !visible);
   }
 }
 
@@ -54,7 +70,47 @@ function renderLinks(links) {
   `).join("");
 }
 
+function renderAdmin(adminData) {
+  const controls = document.getElementById("admin-controls");
+  if (!controls) {
+    return;
+  }
+
+  setText("admin-account", adminData.ownerAccount);
+  controls.innerHTML = adminData.controls.map((control) => `
+    <span class="admin-control-pill">${control}</span>
+  `).join("");
+}
+
+async function refreshAuthState() {
+  const auth = await fetchJson("/api/auth/session");
+  const authChipText = auth.loggedIn
+    ? auth.isOwner
+      ? `Owner ${auth.account}`
+      : `Signed in ${auth.account}`
+    : auth.configured
+      ? "Signed out"
+      : "Xaman keys missing";
+
+  setText("auth-chip", authChipText);
+  showElement("logout-button", auth.loggedIn);
+  showElement("admin-panel", auth.isOwner);
+
+  const loginButton = document.getElementById("login-button");
+  if (loginButton) {
+    loginButton.disabled = !auth.configured || auth.loggedIn;
+    loginButton.textContent = auth.configured ? "Login with Xaman" : "Xaman not configured";
+  }
+
+  if (auth.isOwner) {
+    const adminData = await fetchJson("/api/admin");
+    renderAdmin(adminData);
+  }
+}
+
 function renderApp(appData, statusData) {
+  currentAppData = appData;
+  setText("nav-brand", `${appData.brand.name} control surface`);
   setText("brand-name", appData.brand.name);
   setText("brand-tagline", appData.brand.tagline);
   setText("brand-summary", appData.brand.summary);
@@ -69,8 +125,12 @@ function renderApp(appData, statusData) {
   setHref("unl-link", appData.validator.unlUrl);
 
   const logo = document.getElementById("brand-logo");
+  const navLogo = document.getElementById("nav-logo");
   if (logo) {
     logo.src = appData.brand.logo;
+  }
+  if (navLogo) {
+    navLogo.src = appData.brand.logo;
   }
 
   renderModules(appData.modules);
@@ -83,6 +143,77 @@ function renderError(error) {
   setText("api-status", "Offline");
 }
 
+function openLoginDialog() {
+  const dialog = document.getElementById("login-dialog");
+  if (dialog && typeof dialog.showModal === "function") {
+    dialog.showModal();
+  }
+}
+
+function closeLoginDialog() {
+  const dialog = document.getElementById("login-dialog");
+  if (dialog) {
+    dialog.close();
+  }
+
+  if (authPollTimer) {
+    window.clearInterval(authPollTimer);
+    authPollTimer = null;
+  }
+}
+
+async function startLogin() {
+  const qr = document.getElementById("login-qr");
+  const openLink = document.getElementById("login-open-link");
+
+  openLoginDialog();
+  setText("login-message", "Creating Xaman sign-in request...");
+  showElement("login-qr", false);
+  showElement("login-open-link", false);
+
+  try {
+    const login = await fetchJson("/api/auth/xaman/start", {
+      method: "POST"
+    });
+
+    if (qr && login.qrPng) {
+      qr.src = login.qrPng;
+      showElement("login-qr", true);
+    }
+
+    if (openLink && login.always) {
+      openLink.href = login.always;
+      showElement("login-open-link", true);
+    }
+
+    setText("login-message", `Sign with Xaman. Only ${currentAppData.auth.ownerAccount} will unlock admin.`);
+
+    authPollTimer = window.setInterval(async () => {
+      try {
+        const result = await fetchJson(`/api/auth/xaman/poll/${login.uuid}`);
+        if (!result.resolved) {
+          return;
+        }
+
+        closeLoginDialog();
+        await refreshAuthState();
+      } catch (error) {
+        setText("login-message", error.message);
+      }
+    }, 2000);
+  } catch (error) {
+    setText("login-message", error.message);
+  }
+}
+
+async function logout() {
+  await fetchJson("/api/auth/logout", {
+    method: "POST"
+  });
+
+  await refreshAuthState();
+}
+
 async function bootstrapApp() {
   try {
     const [statusData, appData] = await Promise.all([
@@ -91,9 +222,28 @@ async function bootstrapApp() {
     ]);
 
     renderApp(appData, statusData);
+    await refreshAuthState();
   } catch (error) {
     renderError(error);
   }
 }
 
-window.addEventListener("DOMContentLoaded", bootstrapApp);
+window.addEventListener("DOMContentLoaded", () => {
+  const loginButton = document.getElementById("login-button");
+  const logoutButton = document.getElementById("logout-button");
+  const closeButton = document.getElementById("close-login-dialog");
+
+  if (loginButton) {
+    loginButton.addEventListener("click", startLogin);
+  }
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", logout);
+  }
+
+  if (closeButton) {
+    closeButton.addEventListener("click", closeLoginDialog);
+  }
+
+  bootstrapApp();
+});
