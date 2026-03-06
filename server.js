@@ -1,4 +1,5 @@
 const express = require("express");
+const os = require("os");
 const path = require("path");
 
 const app = express();
@@ -21,9 +22,42 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(rootDir, "index.html"));
 });
 
+function getNetworkUrls(activePort) {
+  const interfaces = os.networkInterfaces();
+  const urls = [];
+
+  for (const entries of Object.values(interfaces)) {
+    if (!entries) {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (entry.family === "IPv4" && !entry.internal) {
+        urls.push(`http://${entry.address}:${activePort}`);
+      }
+    }
+  }
+
+  return urls;
+}
+
 if (require.main === module) {
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Cbot Labs server listening on http://localhost:${port}`);
+
+    const networkUrls = getNetworkUrls(port);
+    for (const url of networkUrls) {
+      console.log(`Network access: ${url}`);
+    }
+  });
+
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${port} is already in use. Stop the other server or set PORT to a different value.`);
+      return;
+    }
+
+    console.error("Server failed to start:", error);
   });
 }
 
