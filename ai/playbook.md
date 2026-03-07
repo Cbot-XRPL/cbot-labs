@@ -4,8 +4,9 @@
 
 1. Review current validator state.
 2. Load relevant library entries.
-3. Build a response or action plan.
-4. Ask for confirmation before any sensitive operation.
+3. Convert assigned research into durable AI workspace updates.
+4. Write structured changes into the repo before reporting completion.
+5. Only ask for confirmation when blocked by a sensitive or unsupported operation.
 
 ## Reserved future actions
 

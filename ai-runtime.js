@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
 const { promisify } = require("util");
-const { getAiWorkspace, runAiTask } = require("./ai-service");
+const { applyAutonomousTaskResult, getAiWorkspace, runAiTask } = require("./ai-service");
 
 const execFileAsync = promisify(execFile);
 
@@ -29,7 +29,13 @@ function defaultDb() {
       postTaskDelaySeconds: 15,
       retryDelaySeconds: 90,
       maxTaskRuntimeMinutes: 20,
-      maxRetries: 2
+      maxRetries: 2,
+      writableRoots: ["ai/"],
+      protectedPaths: [
+        ".env",
+        ".data/",
+        "server.js"
+      ]
     },
     goals: [],
     tasks: [],
@@ -96,6 +102,22 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
   const entries = [];
   const seen = new Set();
 
+  const normalizeEntryTextForKey = (value) => {
+    const lines = String(value || "").trim().split("\n");
+    if (lines.length > 1) {
+      const secondLine = lines[1].trim();
+      const parsed = new Date(secondLine);
+      if (!Number.isNaN(parsed.getTime())) {
+        lines.splice(1, 1);
+        while (lines[1] === "") {
+          lines.splice(1, 1);
+        }
+      }
+    }
+
+    return lines.join("\n").trim();
+  };
+
   const pushEntry = (entry) => {
     if (!entry || typeof entry.text !== "string") {
       return;
@@ -108,7 +130,7 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
 
     const createdAt = entry.createdAt || new Date().toISOString();
     const source = entry.source || "system";
-    const key = `${createdAt}|${source}|${text}`;
+    const key = `${createdAt}|${source}|${normalizeEntryTextForKey(text)}`;
     if (seen.has(key)) {
       return;
     }
@@ -136,20 +158,30 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
     });
   }
 
+  for (const task of tasks) {
+    if (task.status !== "completed" || !task.lastOutput) {
+      continue;
+    }
+
+    pushEntry({
+      source: "completed-task",
+      createdAt: task.completedAt || task.startedAt || task.createdAt,
+      text: buildRunSummary(
+        task,
+        task.lastOutput,
+        task.git,
+        task.completedAt || task.startedAt || task.createdAt
+      )
+    });
+  }
+
   if (!Array.isArray(state.botOutputEntries) || !state.botOutputEntries.length) {
-    for (const task of tasks) {
-      if (task.status !== "completed" || !task.lastOutput) {
+    for (const note of notes) {
+      const noteTitle = String(note.title || "");
+      if (noteTitle.startsWith("Run result for ") || noteTitle.startsWith("Run error for ")) {
         continue;
       }
 
-      pushEntry({
-        source: "completed-task",
-        createdAt: task.completedAt || task.startedAt || task.createdAt,
-        text: buildRunSummary(task, task.lastOutput, task.git)
-      });
-    }
-
-    for (const note of notes) {
       pushEntry({
         source: "note",
         createdAt: note.createdAt,
@@ -183,6 +215,7 @@ function normalizeTaskOrder(tasks) {
     .map((task, index) => ({
       ...task,
       locked: Boolean(task.locked),
+      allowRerun: Boolean(task.allowRerun),
       order: index + 1
     }));
 }
@@ -259,10 +292,10 @@ function appendBotOutput(text, source = "system", createdAt = new Date().toISOSt
   });
 }
 
-function buildRunSummary(task, resultText, gitResult) {
+function buildRunSummary(task, resultText, gitResult, createdAt = new Date().toISOString()) {
   return [
     `Run result for ${task.title}`,
-    new Date().toLocaleString(),
+    new Date(createdAt).toLocaleString(),
     "",
     `Task: ${task.title}`,
     `Goal: ${task.goal || "n/a"}`,
@@ -278,6 +311,26 @@ function buildTaskSignature(payload) {
     String(payload?.goal || "").trim().toLowerCase(),
     String(payload?.assignedTaskBlock || "").trim().toLowerCase()
   ].join("::");
+}
+
+function inferTaskExecutionMode(task) {
+  const combined = [
+    task?.title,
+    task?.goal,
+    task?.assignedTaskBlock
+  ].join(" ").toLowerCase();
+
+  if (
+    combined.includes("library")
+    || combined.includes("research")
+    || combined.includes("resource")
+    || combined.includes("examples")
+    || combined.includes("study how")
+  ) {
+    return "library-update";
+  }
+
+  return "library-update";
 }
 
 function findCompletedTaskMatch(tasks, payload, excludeTaskId = null) {
@@ -463,17 +516,26 @@ function maybeWakeLoop(reason) {
 function buildLoopPrompt(task, db, workspace) {
   const goalsText = db.goals.map((goal) => `- ${goal.text}`).join("\n") || "- No active goals";
   const taskBlock = task.assignedTaskBlock || "No assigned task block provided.";
+  const writableRoots = (db.config.writableRoots || []).map((item) => `- ${item}`).join("\n") || "- none";
+  const protectedPaths = (db.config.protectedPaths || []).map((item) => `- ${item}`).join("\n") || "- none";
 
   return [
     "You are the admin-only Cbot Labs automation agent.",
-    "Read the AI docs and work the assigned task block.",
+    "Read the AI docs and execute the assigned task block.",
+    "Do not ask the operator what to do next.",
+    "Prefer durable repo updates over chat-style summaries.",
     `Task title: ${task.title}`,
     `Task goal: ${task.goal || "No explicit goal provided"}`,
     "Assigned task block:",
     taskBlock,
     "Active goals:",
     goalsText,
-    `Manifest: ${workspace.manifest.name} v${workspace.manifest.version}`
+    "Writable roots:",
+    writableRoots,
+    "Protected paths:",
+    protectedPaths,
+    `Manifest: ${workspace.manifest.name} v${workspace.manifest.version}`,
+    `Primary knowledge file: ${workspace.files.library}`
   ].join("\n");
 }
 
@@ -552,6 +614,50 @@ async function runLoopCycle() {
   });
   heartbeatTimer = startTaskHeartbeat(task);
 
+  const duplicateCompletedTask = findCompletedTaskMatch(db.tasks, task, task.id);
+  if (duplicateCompletedTask && !task.allowRerun) {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+
+    const duplicateMessage = "Task already completed in bot. Skipped duplicate execution.";
+    updateDb((current) => {
+      const currentTask = current.tasks.find((entry) => entry.id === task.id);
+      if (currentTask) {
+        currentTask.status = "completed";
+        currentTask.completedAt = new Date().toISOString();
+        currentTask.lastOutput = duplicateMessage;
+        currentTask.allowRerun = false;
+      }
+      current.state.isRunning = false;
+      current.state.currentTaskId = null;
+      current.state.lastResult = duplicateMessage;
+      current.state.lastError = null;
+      current.state.botOutputEntries = normalizeBotOutputEntries(current.state, current.notes, current.tasks);
+      current.state.botOutput = current.state.botOutputEntries[0]?.text || duplicateMessage;
+      return current;
+    });
+
+    appendBotOutput([
+      "Task already completed in bot",
+      new Date().toLocaleString(),
+      "",
+      `Skipped duplicate task: ${task.title}`
+    ].join("\n"), "task");
+
+    addActivity("task", "Task already completed in bot, skipping to next task", {
+      taskId: task.id,
+      existingTaskId: duplicateCompletedTask.id,
+      title: task.title,
+      status: "completed"
+    });
+
+    const latestDb = loadDb();
+    scheduleNextRun(hasRunnableTask(latestDb) ? latestDb.config.postTaskDelaySeconds : latestDb.config.idleDelaySeconds);
+    return getSnapshot();
+  }
+
   if (!db.config.autoCallLlm) {
     const waitingMessage = "Auto call LLM is disabled. Task is waiting for AI.";
     if (heartbeatTimer) {
@@ -564,6 +670,7 @@ async function runLoopCycle() {
       if (currentTask) {
         currentTask.status = "waiting";
         currentTask.lastOutput = waitingMessage;
+        currentTask.allowRerun = Boolean(currentTask.allowRerun);
       }
       current.state.isRunning = false;
       current.state.currentTaskId = null;
@@ -598,36 +705,45 @@ async function runLoopCycle() {
 
   try {
     const prompt = buildLoopPrompt(task, db, workspace);
+    const taskMode = inferTaskExecutionMode(task);
     const maxRuntimeMs = db.config.maxTaskRuntimeMinutes * 60 * 1000;
     const aiResult = await withTimeout(
-      runAiTask(prompt),
+      runAiTask(prompt, {
+        mode: taskMode,
+        taskTitle: task.title,
+        taskGoal: task.goal,
+        assignedTaskBlock: task.assignedTaskBlock
+      }),
       maxRuntimeMs,
       "Task run"
     );
+    const appliedResult = applyAutonomousTaskResult(task, aiResult, db.config);
 
     const gitResult = await withTimeout(
       maybeRunGitActions(task, db.config),
       maxRuntimeMs,
       "Git follow-up"
     );
-    const botOutput = buildRunSummary(task, aiResult.output, gitResult);
+    const completedAt = new Date().toISOString();
+    const botOutput = buildRunSummary(task, appliedResult.output, gitResult, completedAt);
 
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
       if (currentTask) {
         currentTask.status = "completed";
-        currentTask.completedAt = new Date().toISOString();
-        currentTask.lastOutput = aiResult.output;
+        currentTask.completedAt = completedAt;
+        currentTask.lastOutput = appliedResult.output;
         currentTask.git = gitResult;
+        currentTask.allowRerun = false;
       }
       current.state.isRunning = false;
       current.state.currentTaskId = null;
-      current.state.lastResult = aiResult.output;
+      current.state.lastResult = appliedResult.output;
       current.state.lastError = null;
+      current.state.botOutputEntries = normalizeBotOutputEntries(current.state, current.notes, current.tasks);
+      current.state.botOutput = current.state.botOutputEntries[0]?.text || botOutput;
       return current;
     });
-
-    appendBotOutput(botOutput, "task");
 
     updateExecFile({
       lastUpdated: new Date().toISOString(),
@@ -639,7 +755,8 @@ async function runLoopCycle() {
     addActivity("task", "Task completed successfully", {
       taskId: task.id,
       title: task.title,
-      status: "completed"
+      status: "completed",
+      changedFiles: appliedResult.changedFiles
     });
   } catch (error) {
     updateDb((current) => {
@@ -648,6 +765,7 @@ async function runLoopCycle() {
         const retryLimitReached = currentTask.attempts >= current.config.maxRetries;
         currentTask.status = retryLimitReached ? "failed" : "pending";
         currentTask.lastError = error.message;
+        currentTask.allowRerun = false;
       }
       current.state.isRunning = false;
       current.state.currentTaskId = null;
@@ -732,7 +850,7 @@ function stopLoop() {
 }
 
 function setConfig(patch) {
-  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "enabled"];
+  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "enabled", "writableRoots", "protectedPaths"];
 
   const db = updateDb((current) => {
     for (const key of allowed) {
@@ -746,6 +864,12 @@ function setConfig(patch) {
     current.config.retryDelaySeconds = Math.max(15, Number(current.config.retryDelaySeconds) || 90);
     current.config.maxTaskRuntimeMinutes = Math.max(1, Number(current.config.maxTaskRuntimeMinutes) || 20);
     current.config.maxRetries = Math.max(1, Number(current.config.maxRetries) || 2);
+    current.config.writableRoots = Array.isArray(current.config.writableRoots)
+      ? current.config.writableRoots.map((item) => String(item || "").trim().replaceAll("\\", "/")).filter(Boolean)
+      : ["ai/"];
+    current.config.protectedPaths = Array.isArray(current.config.protectedPaths)
+      ? current.config.protectedPaths.map((item) => String(item || "").trim().replaceAll("\\", "/")).filter(Boolean)
+      : [".env", ".data/", "server.js"];
     return current;
   });
 
@@ -796,6 +920,7 @@ function addTask(payload) {
     assignedTaskBlock: String(payload.assignedTaskBlock || "").trim(),
     status: "pending",
     locked: false,
+    allowRerun: false,
     attempts: 0,
     createdAt: new Date().toISOString(),
     startedAt: null,
@@ -859,6 +984,7 @@ function updateTask(taskId, patch) {
 
     if (patch.reset) {
       task.status = "waiting";
+      task.allowRerun = true;
       task.attempts = 0;
       task.startedAt = null;
       task.completedAt = null;
@@ -869,6 +995,9 @@ function updateTask(taskId, patch) {
 
     if (patch.status) {
       task.status = patch.status;
+      if (patch.status !== "waiting") {
+        task.allowRerun = false;
+      }
     }
 
     if (Object.hasOwn(patch, "locked")) {
@@ -893,7 +1022,8 @@ function updateTask(taskId, patch) {
 
   addActivity("task", patch.reset ? "Task reset to waiting" : "Task updated", {
     taskId,
-    status: patch.reset ? "waiting" : undefined
+    status: patch.reset ? "waiting" : undefined,
+    allowRerun: Boolean(patch.reset)
   });
 
   const updatedTask = db.tasks.find((task) => task.id === taskId);
@@ -1004,6 +1134,24 @@ function addManualNote(title, body) {
   addActivity("note", "Manual note added");
 }
 
+function removeNote(noteId) {
+  let removed = null;
+
+  updateDb((db) => {
+    removed = db.notes.find((note) => note.id === noteId) || null;
+    db.notes = db.notes.filter((note) => note.id !== noteId);
+    return db;
+  });
+
+  if (!removed) {
+    throw new Error("Note not found");
+  }
+
+  addActivity("note", "Manual note deleted", {
+    noteId
+  });
+}
+
 function getSnapshot() {
   const db = loadDb();
   return {
@@ -1040,6 +1188,7 @@ module.exports = {
   getGitSnapshot,
   getSnapshot,
   removeGoal,
+  removeNote,
   reorderTasks,
   runLoopCycle,
   setConfig,

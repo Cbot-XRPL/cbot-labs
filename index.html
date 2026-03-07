@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260307-reset">
 </head>
 
 <body>
@@ -168,6 +168,20 @@
                         <input id="bot-max-retries" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
                     </label>
                 </div>
+                <div class="admin-bot-columns">
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Writable roots</span>
+                        <label class="admin-ai-form" for="bot-writable-roots">
+                            <textarea id="bot-writable-roots" class="admin-ai-input" rows="4" placeholder="One repo-relative path per line, example: ai/"></textarea>
+                        </label>
+                    </div>
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Protected paths</span>
+                        <label class="admin-ai-form" for="bot-protected-paths">
+                            <textarea id="bot-protected-paths" class="admin-ai-input" rows="4" placeholder="One repo-relative file or folder per line, example: .env"></textarea>
+                        </label>
+                    </div>
+                </div>
                 <div class="admin-toggle-row">
                     <label class="toggle-chip"><input id="bot-enabled" type="checkbox"> Loop enabled</label>
                     <label class="toggle-chip"><input id="bot-pause-empty" type="checkbox"> Pause when queue empty</label>
@@ -186,8 +200,8 @@
                     <button id="bot-run-now" class="primary-button" type="button">Run Now</button>
                     <button id="ai-run-button" class="secondary-button" type="button">Manual AI Call</button>
                 </div>
-                <div class="admin-bot-columns">
-                    <div class="key-box admin-ai-box">
+                <div class="admin-bot-columns admin-bot-primary-row">
+                    <div class="key-box admin-ai-box task-queue-pane">
                         <span class="key-label">Assigned task queue</span>
                         <div class="admin-ai-form">
                             <input id="task-title" class="admin-ai-input admin-short-input" type="text" placeholder="Task title">
@@ -197,9 +211,9 @@
                         </div>
                         <div id="bot-task-list" class="bot-list"></div>
                     </div>
-                    <div class="key-box admin-ai-box">
+                    <div class="key-box admin-ai-box bot-output-pane">
                         <span class="key-label">Bot output</span>
-                        <pre id="ai-output" class="toml-content admin-ai-output">Bot output will appear here.</pre>
+                        <div id="ai-output" class="toml-content admin-ai-output">Bot output will appear here.</div>
                     </div>
                 </div>
                 <div class="admin-bot-columns">
@@ -300,7 +314,22 @@
         </div>
     </dialog>
 
-    <script src="script.js"></script>
+    <dialog id="bot-output-dialog" class="login-dialog bot-output-dialog">
+        <div class="login-dialog-inner bot-output-dialog-inner">
+            <div class="panel-header">
+                <p class="panel-kicker">Bot Output</p>
+                <h2 id="bot-output-dialog-title">Output entry</h2>
+            </div>
+            <p id="bot-output-dialog-time" class="dialog-copy">-</p>
+            <pre id="bot-output-dialog-body" class="toml-content bot-output-dialog-body"></pre>
+            <div class="dialog-actions">
+                <button id="toggle-bot-output-dialog-size" class="secondary-button" type="button">Maximize</button>
+                <button id="close-bot-output-dialog" class="primary-button" type="button">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="script.js?v=20260307-reset"></script>
 </body>
 
 </html>

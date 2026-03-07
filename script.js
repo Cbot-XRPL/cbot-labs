@@ -2,6 +2,9 @@ let currentAppData = null;
 let authPollTimer = null;
 let adminPollTimer = null;
 let draggedTaskId = null;
+const visibleBotOutputLimit = 20;
+let currentBotOutputEntries = [];
+let lastBotOutputRenderKey = "";
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
@@ -84,6 +87,17 @@ function formatDateTime(value) {
   }
 
   return date.toLocaleString();
+}
+
+function joinPolicyLines(values) {
+  return Array.isArray(values) ? values.join("\n") : "";
+}
+
+function parsePolicyLines(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replaceAll("\\", "/"))
+    .filter(Boolean);
 }
 
 function renderModules(modules) {
@@ -205,7 +219,7 @@ function renderTaskList(tasks) {
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
-        ${task.status === "failed" ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
+        ${(task.status === "failed" || task.status === "completed") ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
       </div>
     </article>
   `).join("");
@@ -250,6 +264,9 @@ function renderNoteList(notes) {
       <strong>${escapeHtml(note.title)}</strong>
       <span>${escapeHtml(formatDateTime(note.createdAt))}</span>
       <p>${escapeHtml(note.body)}</p>
+      <div class="bot-list-item-actions">
+        <button class="mini-button" type="button" data-note-remove="${escapeHtml(note.id)}">Delete</button>
+      </div>
     </article>
   `).join("");
 }
@@ -274,6 +291,36 @@ function renderActivityList(activity) {
   `).join("");
 }
 
+function getBotOutputTitle(entry) {
+  const firstLine = String(entry?.text || "").split("\n").find((line) => line.trim());
+  return firstLine || "Bot output";
+}
+
+function getBotOutputBody(entry) {
+  const lines = String(entry?.text || "").split("\n");
+  const [, ...rest] = lines;
+  const trimmedLines = [...rest];
+
+  while (trimmedLines.length && !trimmedLines[0].trim()) {
+    trimmedLines.shift();
+  }
+
+  if (trimmedLines.length) {
+    const possibleTimestamp = trimmedLines[0].trim();
+    const parsedTimestamp = new Date(possibleTimestamp);
+    if (!Number.isNaN(parsedTimestamp.getTime())) {
+      trimmedLines.shift();
+    }
+  }
+
+  while (trimmedLines.length && !trimmedLines[0].trim()) {
+    trimmedLines.shift();
+  }
+
+  const body = trimmedLines.join("\n").trim();
+  return body || String(entry?.text || "");
+}
+
 function renderBotOutput(outputEntries) {
   const output = document.getElementById("ai-output");
   if (!output) {
@@ -285,9 +332,74 @@ function renderBotOutput(outputEntries) {
     return;
   }
 
-  output.textContent = outputEntries
-    .map((entry) => entry.text)
-    .join("\n\n====================\n\n");
+  const visibleEntries = outputEntries.slice(0, visibleBotOutputLimit);
+  const renderKey = visibleEntries.map((entry) => `${entry.createdAt}|${entry.source}|${entry.text}`).join("\n---\n");
+  if (renderKey === lastBotOutputRenderKey) {
+    currentBotOutputEntries = visibleEntries;
+    return;
+  }
+
+  lastBotOutputRenderKey = renderKey;
+  currentBotOutputEntries = visibleEntries;
+  output.innerHTML = `
+    <div class="bot-output-list">
+      ${visibleEntries.map((entry, index) => `
+        <article class="bot-output-entry">
+          <div class="bot-output-entry-actions">
+            <button class="mini-button" type="button" data-output-expand="${index}">Expand</button>
+          </div>
+          <strong class="bot-output-entry-title">${escapeHtml(getBotOutputTitle(entry))}</strong>
+          <span class="bot-output-entry-time">${escapeHtml(formatDateTime(entry.createdAt))}</span>
+          <pre class="bot-output-entry-body">${escapeHtml(getBotOutputBody(entry))}</pre>
+        </article>
+      `).join("")}
+    </div>
+  `;
+
+  output.scrollTop = output.scrollHeight;
+}
+
+function openBotOutputDialog() {
+  const dialog = document.getElementById("bot-output-dialog");
+  if (dialog && typeof dialog.showModal === "function") {
+    dialog.showModal();
+  }
+}
+
+function closeBotOutputDialog() {
+  const dialog = document.getElementById("bot-output-dialog");
+  if (dialog) {
+    dialog.classList.remove("dialog-maximized");
+    dialog.close();
+  }
+
+  const toggleButton = document.getElementById("toggle-bot-output-dialog-size");
+  if (toggleButton) {
+    toggleButton.textContent = "Maximize";
+  }
+}
+
+function expandBotOutputEntry(index) {
+  const entry = currentBotOutputEntries[index];
+  if (!entry) {
+    return;
+  }
+
+  setText("bot-output-dialog-title", getBotOutputTitle(entry));
+  setText("bot-output-dialog-time", formatDateTime(entry.createdAt));
+  setText("bot-output-dialog-body", getBotOutputBody(entry));
+  openBotOutputDialog();
+}
+
+function toggleBotOutputDialogSize() {
+  const dialog = document.getElementById("bot-output-dialog");
+  const toggleButton = document.getElementById("toggle-bot-output-dialog-size");
+  if (!dialog || !toggleButton) {
+    return;
+  }
+
+  const maximized = dialog.classList.toggle("dialog-maximized");
+  toggleButton.textContent = maximized ? "Restore" : "Maximize";
 }
 
 function renderBot(botData) {
@@ -311,6 +423,8 @@ function renderBot(botData) {
   const autoCall = document.getElementById("bot-auto-call");
   const autoCommit = document.getElementById("bot-auto-commit");
   const autoPush = document.getElementById("bot-auto-push");
+  const writableRoots = document.getElementById("bot-writable-roots");
+  const protectedPaths = document.getElementById("bot-protected-paths");
 
   if (idleDelay) {
     idleDelay.value = botData.config.idleDelaySeconds;
@@ -341,6 +455,12 @@ function renderBot(botData) {
   }
   if (autoPush) {
     autoPush.checked = Boolean(botData.config.autoPush);
+  }
+  if (writableRoots) {
+    writableRoots.value = joinPolicyLines(botData.config.writableRoots);
+  }
+  if (protectedPaths) {
+    protectedPaths.value = joinPolicyLines(botData.config.protectedPaths);
   }
 
   renderTaskList(botData.tasks || []);
@@ -542,7 +662,9 @@ async function saveBotConfig() {
     postTaskDelaySeconds: Number(document.getElementById("bot-post-task-delay")?.value || 15),
     retryDelaySeconds: Number(document.getElementById("bot-retry-delay")?.value || 90),
     maxTaskRuntimeMinutes: Number(document.getElementById("bot-max-runtime")?.value || 20),
-    maxRetries: Number(document.getElementById("bot-max-retries")?.value || 2)
+    maxRetries: Number(document.getElementById("bot-max-retries")?.value || 2),
+    writableRoots: parsePolicyLines(document.getElementById("bot-writable-roots")?.value),
+    protectedPaths: parsePolicyLines(document.getElementById("bot-protected-paths")?.value)
   };
 
   await fetchJson("/api/admin/bot/config", {
@@ -629,7 +751,7 @@ async function resetTask(taskId) {
     body: JSON.stringify({ reset: true })
   });
 
-  setText("ai-output", "Task reset to waiting.");
+  setText("ai-output", "Task reset to waiting and marked for rerun.");
   await refreshOwnerData();
 }
 
@@ -779,6 +901,15 @@ async function addNote() {
   await refreshOwnerData();
 }
 
+async function removeNote(noteId) {
+  await fetchJson(`/api/admin/bot/notes/${noteId}`, {
+    method: "DELETE"
+  });
+
+  setText("ai-output", "Note deleted.");
+  await refreshOwnerData();
+}
+
 async function startLogin() {
   const qr = document.getElementById("login-qr");
   const openLink = document.getElementById("login-open-link");
@@ -858,10 +989,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const noteAddButton = document.getElementById("note-add-button");
   const taskList = document.getElementById("bot-task-list");
   const goalList = document.getElementById("bot-goal-list");
+  const noteList = document.getElementById("bot-note-list");
+  const outputList = document.getElementById("ai-output");
   const loginButton = document.getElementById("login-button");
   const logoutButton = document.getElementById("logout-button");
   const closeButton = document.getElementById("close-login-dialog");
   const closeTomlButton = document.getElementById("close-toml-dialog");
+  const closeBotOutputButton = document.getElementById("close-bot-output-dialog");
+  const toggleBotOutputSizeButton = document.getElementById("toggle-bot-output-dialog-size");
 
   if (tomlButton) {
     tomlButton.addEventListener("click", showToml);
@@ -1013,6 +1148,32 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  if (noteList) {
+    noteList.addEventListener("click", async (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const noteId = target.dataset.noteRemove;
+      if (noteId) {
+        await removeNote(noteId);
+      }
+    });
+  }
+  if (outputList) {
+    outputList.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const outputIndex = target.dataset.outputExpand;
+      if (outputIndex) {
+        expandBotOutputEntry(Number(outputIndex));
+      }
+    });
+  }
   if (loginButton) {
     loginButton.addEventListener("click", startLogin);
   }
@@ -1024,6 +1185,12 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   if (closeTomlButton) {
     closeTomlButton.addEventListener("click", closeTomlDialog);
+  }
+  if (closeBotOutputButton) {
+    closeBotOutputButton.addEventListener("click", closeBotOutputDialog);
+  }
+  if (toggleBotOutputSizeButton) {
+    toggleBotOutputSizeButton.addEventListener("click", toggleBotOutputDialogSize);
   }
 
   bootstrapApp();

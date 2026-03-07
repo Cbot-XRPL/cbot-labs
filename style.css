@@ -478,10 +478,29 @@ code,
 
 .admin-bot-columns {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.admin-bot-primary-row {
+  height: min(88vh, 1400px);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.admin-bot-primary-row > .admin-ai-box {
+  min-height: 0;
+  height: 100%;
 }
 
 .admin-ai-box {
   margin-top: 18px;
+}
+
+.task-queue-pane,
+.bot-output-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .admin-ai-form {
@@ -512,14 +531,126 @@ code,
 
 .admin-ai-output {
   margin: 0;
-  max-height: 280px;
+  min-height: 0;
+  max-height: none;
   color: var(--text);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block;
+}
+
+.bot-output-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  min-height: 100%;
+}
+
+.bot-output-pane > #ai-output.admin-ai-output {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-top: 0;
+  align-self: stretch;
+}
+
+.bot-output-entry {
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: 520px;
+  overflow: hidden;
+}
+
+.bot-output-entry-title,
+.bot-output-entry-time {
+  display: block;
+}
+
+.bot-output-entry-title {
+  margin-bottom: 2px;
+  color: var(--accent);
+  line-height: 1.25;
+}
+
+.bot-output-entry-time {
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.bot-output-entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.bot-output-entry-body {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 6px 0 0;
+}
+
+.bot-output-dialog {
+  width: min(1380px, calc(100vw - 24px));
+}
+
+.bot-output-dialog-inner {
+  width: 100%;
+}
+
+.bot-output-dialog-body {
+  max-height: min(82vh, 1100px);
+  margin-top: 16px;
+  color: var(--text);
+}
+
+.bot-output-dialog.dialog-maximized {
+  width: calc(100vw - 12px);
+  max-width: calc(100vw - 12px);
+}
+
+.bot-output-dialog.dialog-maximized .bot-output-dialog-inner {
+  min-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+}
+
+.bot-output-dialog.dialog-maximized .bot-output-dialog-body {
+  flex: 1 1 auto;
+  max-height: none;
 }
 
 .bot-list {
   display: grid;
   gap: 12px;
   margin-top: 16px;
+}
+
+#bot-task-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+#bot-activity-list {
+  max-height: min(88vh, 1400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
 }
 
 .bot-list-item {
@@ -799,6 +930,15 @@ code,
   .admin-bot-config-grid,
   .admin-bot-columns {
     grid-template-columns: 1fr;
+  }
+
+  .admin-bot-primary-row {
+    height: auto;
+  }
+
+  .bot-output-pane > #ai-output.admin-ai-output {
+    height: auto !important;
+    min-height: 320px !important;
   }
 
   .admin-ai-header {

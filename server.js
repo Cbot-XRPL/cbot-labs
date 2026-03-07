@@ -15,6 +15,7 @@ const {
   getGitSnapshot,
   getSnapshot,
   removeGoal,
+  removeNote,
   reorderTasks,
   runLoopCycle,
   setConfig,
@@ -517,6 +518,18 @@ app.delete("/api/admin/bot/goals/:id", requireOwner, (req, res) => {
 app.post("/api/admin/bot/notes", requireOwner, (req, res) => {
   try {
     addManualNote(req.body?.title, req.body?.body);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.delete("/api/admin/bot/notes/:id", requireOwner, (req, res) => {
+  try {
+    removeNote(req.params.id);
     res.json({ ok: true });
   } catch (error) {
     res.status(400).json({
