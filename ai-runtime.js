@@ -40,6 +40,7 @@ function defaultDb() {
       nextRunAt: null,
       lastResult: null,
       lastError: null,
+      botOutput: null,
       runCount: 0
     }
   };
@@ -151,6 +152,19 @@ function updateExecFile(patch) {
       error: error.message
     });
   }
+}
+
+function buildRunSummary(task, resultText, gitResult) {
+  return [
+    `Run result for ${task.title}`,
+    new Date().toLocaleString(),
+    "",
+    `Task: ${task.title}`,
+    `Goal: ${task.goal || "n/a"}`,
+    `Assigned block: ${task.assignedTaskBlock || "n/a"}`,
+    `Result: ${resultText}`,
+    `Git: ${(gitResult?.actions || []).join("; ") || "no git actions"}`
+  ].join("\n");
 }
 
 function withTimeout(promise, timeoutMs, label) {
@@ -283,7 +297,17 @@ async function maybeRunGitActions(task, config) {
 
 function getPendingTask(db) {
   return normalizeTaskOrder(db.tasks)
-    .filter((task) => task.status === "pending" && !task.locked)[0] || null;
+    .filter((task) => {
+      if (task.locked) {
+        return false;
+      }
+
+      if (task.status === "pending") {
+        return true;
+      }
+
+      return task.status === "waiting" && db.config.autoCallLlm;
+    })[0] || null;
 }
 
 function hasRunnableTask(db) {
@@ -354,6 +378,7 @@ async function runLoopCycle() {
       current.state.lastResult = initialDb.config.pauseWhenQueueEmpty
         ? "Queue empty, loop paused"
         : "Idle";
+      current.state.botOutput = current.state.lastResult;
       return current;
     });
 
@@ -382,17 +407,49 @@ async function runLoopCycle() {
     title: task.title
   });
 
+  if (!db.config.autoCallLlm) {
+    const waitingMessage = "Auto call LLM is disabled. Task is waiting for AI.";
+
+    updateDb((current) => {
+      const currentTask = current.tasks.find((entry) => entry.id === task.id);
+      if (currentTask) {
+        currentTask.status = "waiting";
+        currentTask.lastOutput = waitingMessage;
+      }
+      current.state.isRunning = false;
+      current.state.currentTaskId = null;
+      current.state.lastResult = waitingMessage;
+      current.state.lastError = null;
+      current.state.botOutput = [
+        `Task waiting: ${task.title}`,
+        new Date().toLocaleString(),
+        "",
+        waitingMessage
+      ].join("\n");
+      return current;
+    });
+
+    addActivity("task", "Task moved to waiting because Auto call LLM is disabled", {
+      taskId: task.id,
+      title: task.title
+    });
+
+    updateExecFile({
+      lastUpdated: new Date().toISOString(),
+      lastRunAt: new Date().toISOString(),
+      lastTaskId: task.id,
+      lastTaskStatus: "waiting"
+    });
+
+    scheduleNextRun(loadDb().config.idleDelaySeconds);
+    return getSnapshot();
+  }
+
   try {
     const prompt = buildLoopPrompt(task, db, workspace);
     const maxRuntimeMs = db.config.maxTaskRuntimeMinutes * 60 * 1000;
     const aiResult = await withTimeout(
-      db.config.autoCallLlm
-        ? runAiTask(prompt)
-        : Promise.resolve({
-            ok: true,
-            mode: "manual-disabled",
-            output: "autoCallLlm is disabled. Task processed in scaffold mode."
-          }),
+      runAiTask(prompt),
       maxRuntimeMs,
       "Task run"
     );
@@ -402,14 +459,7 @@ async function runLoopCycle() {
       maxRuntimeMs,
       "Git follow-up"
     );
-    const noteBody = [
-      `Task: ${task.title}`,
-      `Goal: ${task.goal || "n/a"}`,
-      `Result: ${aiResult.output}`,
-      `Git: ${(gitResult.actions || []).join("; ") || "no git actions"}`
-    ].join("\n\n");
-
-    addNote(`Run result for ${task.title}`, noteBody, task.id);
+    const botOutput = buildRunSummary(task, aiResult.output, gitResult);
 
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
@@ -423,6 +473,7 @@ async function runLoopCycle() {
       current.state.currentTaskId = null;
       current.state.lastResult = aiResult.output;
       current.state.lastError = null;
+      current.state.botOutput = botOutput;
       return current;
     });
 
@@ -449,10 +500,15 @@ async function runLoopCycle() {
       current.state.currentTaskId = null;
       current.state.lastError = error.message;
       current.state.lastResult = null;
+      current.state.botOutput = [
+        `Run error for ${task.title}`,
+        new Date().toLocaleString(),
+        "",
+        error.message
+      ].join("\n");
       return current;
     });
 
-    addNote(`Run error for ${task.title}`, error.message, task.id);
     addActivity("error", "Task run failed", {
       taskId: task.id,
       error: error.message
@@ -468,7 +524,7 @@ async function runLoopCycle() {
 
   const latestDb = loadDb();
   const currentTaskState = latestDb.tasks.find((entry) => entry.id === task.id);
-  const hasQueuedTask = latestDb.tasks.some((entry) => entry.status === "pending" && !entry.locked);
+  const hasQueuedTask = hasRunnableTask(latestDb);
   const delaySeconds = !latestDb.config.enabled
     ? latestDb.config.idleDelaySeconds
     : currentTaskState?.status === "pending"

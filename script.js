@@ -187,7 +187,7 @@ function renderTaskList(tasks) {
     if (status === "failed") {
       return "failed";
     }
-    if (status === "pending") {
+    if (status === "pending" || status === "waiting") {
       return "pending";
     }
     return "neutral";
@@ -287,6 +287,7 @@ function renderBot(botData) {
   setText("bot-git-branch", botData.git?.available ? `${botData.git.branch} (${botData.git.dirty ? "dirty" : "clean"})` : "Git unavailable");
   setText("bot-next-run", botData.state.nextRunAt ? formatDateTime(botData.state.nextRunAt) : (botData.config.enabled && botData.config.pauseWhenQueueEmpty ? "Paused until new task" : "-"));
   setText("bot-last-result", botData.state.lastResult || botData.state.lastError || "-");
+  setText("ai-output", botData.state.botOutput || "Bot output will appear here.");
 
   const idleDelay = document.getElementById("bot-idle-delay");
   const postTaskDelay = document.getElementById("bot-post-task-delay");

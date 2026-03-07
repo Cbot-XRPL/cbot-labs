@@ -1,5 +1,8 @@
 {
   "mode": "stub",
-  "lastUpdated": null,
-  "notes": "Execution engine placeholder. Replace with provider-backed logic later."
+  "lastUpdated": "2026-03-07T19:03:54.374Z",
+  "notes": "Execution engine placeholder. Replace with provider-backed logic later.",
+  "lastRunAt": "2026-03-07T19:03:54.374Z",
+  "lastTaskId": null,
+  "lastTaskStatus": "idle"
 }
