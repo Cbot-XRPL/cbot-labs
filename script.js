@@ -219,7 +219,7 @@ function renderTaskList(tasks) {
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
-        ${(task.status === "failed" || task.status === "completed") ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
+        ${(task.status === "failed" || task.status === "completed" || task.status === "running") ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
       </div>
     </article>
   `).join("");
@@ -287,8 +287,31 @@ function renderActivityList(activity) {
       <strong>${escapeHtml(entry.type)}</strong>
       <span>${escapeHtml(formatDateTime(entry.createdAt))}</span>
       <p>${escapeHtml(entry.message)}</p>
+      ${entry.meta && Object.keys(entry.meta).length ? `<code class="bot-meta">${escapeHtml(JSON.stringify(entry.meta))}</code>` : ""}
     </article>
   `).join("");
+}
+
+function renderConsoleList(entries) {
+  const container = document.getElementById("bot-console-list");
+  if (!container) {
+    return;
+  }
+
+  if (!entries?.length) {
+    container.textContent = "Console output will appear here.";
+    return;
+  }
+
+  const orderedEntries = [...entries].reverse();
+  container.innerHTML = orderedEntries.map((entry) => `
+    <div class="bot-console-line">
+      <span class="bot-console-time">${escapeHtml(formatDateTime(entry.createdAt))}</span>
+      <span class="bot-console-message">${escapeHtml(entry.message || "")}</span>
+      ${entry.meta && Object.keys(entry.meta).length ? `<code class="bot-console-meta">${escapeHtml(JSON.stringify(entry.meta))}</code>` : ""}
+    </div>
+  `).join("");
+  container.scrollTop = container.scrollHeight;
 }
 
 function getBotOutputTitle(entry) {
@@ -334,7 +357,8 @@ function renderBotOutput(outputEntries) {
 
   const visibleEntries = outputEntries.slice(0, visibleBotOutputLimit);
   const renderKey = visibleEntries.map((entry) => `${entry.createdAt}|${entry.source}|${entry.text}`).join("\n---\n");
-  if (renderKey === lastBotOutputRenderKey) {
+  const alreadyRendered = Boolean(output.querySelector(".bot-output-list"));
+  if (renderKey === lastBotOutputRenderKey && alreadyRendered) {
     currentBotOutputEntries = visibleEntries;
     return;
   }
@@ -407,10 +431,16 @@ function renderBot(botData) {
     return;
   }
 
-  setText("bot-runtime-status", botData.config.enabled ? "Loop enabled" : "Loop disabled");
+  const runtimeStatus = botData.state.isRunning
+    ? (botData.config.enabled ? "Running" : "Stopping after current run")
+    : botData.config.enabled
+      ? (botData.config.pauseWhenQueueEmpty && !botData.state.nextRunAt ? "Paused waiting for work" : "Loop enabled")
+      : "Stopped";
+  setText("bot-runtime-status", runtimeStatus);
   setText("bot-git-branch", botData.git?.available ? `${botData.git.branch} (${botData.git.dirty ? "dirty" : "clean"})` : "Git unavailable");
   setText("bot-next-run", botData.state.nextRunAt ? formatDateTime(botData.state.nextRunAt) : (botData.config.enabled && botData.config.pauseWhenQueueEmpty ? "Paused until new task" : "-"));
   setText("bot-last-result", botData.state.lastResult || botData.state.lastError || "-");
+  setText("bot-last-error", botData.state.lastError || "-");
   renderBotOutput(botData.state.botOutputEntries || []);
 
   const idleDelay = document.getElementById("bot-idle-delay");
@@ -467,6 +497,7 @@ function renderBot(botData) {
   renderGoalList(botData.goals || []);
   renderNoteList(botData.notes || []);
   renderActivityList(botData.activity || []);
+  renderConsoleList(botData.state.consoleEntries || []);
 }
 
 function startAdminPolling() {

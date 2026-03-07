@@ -653,6 +653,19 @@ code,
   padding-right: 6px;
 }
 
+#bot-console-list {
+  margin-top: 16px;
+  max-height: min(88vh, 1400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #05070a;
+  border: 1px solid rgba(121, 247, 200, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(121, 247, 200, 0.05);
+  font-family: "Consolas", "SFMono-Regular", monospace;
+}
+
 .bot-list-item {
   padding: 14px 16px;
   border-radius: 18px;
@@ -707,6 +720,45 @@ code,
   line-height: 1.5;
 }
 
+.bot-meta,
+.bot-console-meta {
+  display: block;
+  margin-top: 8px;
+  color: rgba(156, 179, 201, 0.82);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bot-console-line {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(121, 247, 200, 0.09);
+}
+
+.bot-console-line:last-child {
+  border-bottom: 0;
+}
+
+.bot-console-time,
+.bot-console-message {
+  display: block;
+}
+
+.bot-console-time {
+  color: rgba(138, 166, 186, 0.8);
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.bot-console-message {
+  color: #dffdf2;
+  line-height: 1.5;
+}
+
+.bot-console-meta {
+  color: rgba(121, 247, 200, 0.72);
+}
+
 .bot-task-status-running {
   border-color: rgba(121, 247, 200, 0.38);
   box-shadow: 0 0 0 1px rgba(121, 247, 200, 0.08), 0 0 28px rgba(121, 247, 200, 0.12);
@@ -743,6 +795,21 @@ code,
 
 .bot-task-locked {
   border-style: dashed;
+  border-color: rgba(156, 179, 201, 0.2) !important;
+  background: rgba(140, 152, 164, 0.08) !important;
+  box-shadow: none !important;
+  opacity: 0.68;
+}
+
+.bot-task-locked .task-signal {
+  background: rgba(156, 179, 201, 0.55) !important;
+  box-shadow: none !important;
+}
+
+.bot-task-locked strong,
+.bot-task-locked p,
+.bot-task-locked span {
+  color: rgba(184, 198, 214, 0.78) !important;
 }
 
 .bot-list-item-actions {

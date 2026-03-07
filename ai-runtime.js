@@ -13,6 +13,7 @@ const execFilePath = path.join(__dirname, "ai", "exec.json");
 const notesLimit = 80;
 const activityLimit = 250;
 const botOutputLimit = 120;
+const consoleLimit = 400;
 const taskHeartbeatMs = 15000;
 
 let timer = null;
@@ -43,6 +44,8 @@ function defaultDb() {
     activity: [],
     state: {
       isRunning: false,
+      stopRequested: false,
+      activeRunId: null,
       currentTaskId: null,
       lastRunAt: null,
       nextRunAt: null,
@@ -50,6 +53,7 @@ function defaultDb() {
       lastError: null,
       botOutput: null,
       botOutputEntries: [],
+      consoleEntries: [],
       runCount: 0
     }
   };
@@ -241,6 +245,19 @@ function addActivity(type, message, meta = {}) {
   });
 }
 
+function addConsoleLine(message, meta = {}) {
+  updateDb((db) => {
+    db.state.consoleEntries.unshift({
+      id: crypto.randomUUID(),
+      message,
+      meta,
+      createdAt: new Date().toISOString()
+    });
+    db.state.consoleEntries = db.state.consoleEntries.slice(0, consoleLimit);
+    return db;
+  });
+}
+
 function addNote(title, body, relatedTaskId = null) {
   updateDb((db) => {
     db.notes.unshift({
@@ -352,6 +369,10 @@ function startTaskHeartbeat(task) {
       taskId: task.id,
       title: task.title,
       status: "running"
+    });
+    addConsoleLine("heartbeat: task still working", {
+      taskId: task.id,
+      title: task.title
     });
   }, taskHeartbeatMs);
 }
@@ -541,6 +562,7 @@ function buildLoopPrompt(task, db, workspace) {
 
 async function runLoopCycle() {
   const initialDb = loadDb();
+  const runId = crypto.randomUUID();
 
   if (initialDb.state.isRunning) {
     addActivity("loop", "Skipped cycle because a run is already active");
@@ -549,6 +571,8 @@ async function runLoopCycle() {
 
   updateDb((db) => {
     db.state.isRunning = true;
+    db.state.stopRequested = false;
+    db.state.activeRunId = runId;
     db.state.lastError = null;
     db.state.lastRunAt = new Date().toISOString();
     db.state.runCount += 1;
@@ -556,6 +580,7 @@ async function runLoopCycle() {
   });
 
   addActivity("loop", "Bot cycle started");
+  addConsoleLine("cycle started");
 
   let db = loadDb();
   const task = getPendingTask(db);
@@ -564,6 +589,7 @@ async function runLoopCycle() {
 
   if (!task) {
     addActivity("loop", "Queue check complete: no runnable task found");
+    addConsoleLine("queue check complete: no runnable task found");
     updateExecFile({
       lastUpdated: new Date().toISOString(),
       lastRunAt: new Date().toISOString(),
@@ -573,10 +599,12 @@ async function runLoopCycle() {
 
     updateDb((current) => {
       current.state.isRunning = false;
+      current.state.activeRunId = null;
       current.state.currentTaskId = null;
       current.state.lastResult = initialDb.config.pauseWhenQueueEmpty
         ? "Queue empty, loop paused"
         : "Idle";
+      current.state.stopRequested = false;
       return current;
     });
 
@@ -597,6 +625,7 @@ async function runLoopCycle() {
       currentTask.status = "running";
       currentTask.startedAt = new Date().toISOString();
       currentTask.attempts += 1;
+      currentTask.runId = runId;
     }
     current.state.currentTaskId = task.id;
     return current;
@@ -608,6 +637,11 @@ async function runLoopCycle() {
     status: "running"
   });
   addActivity("task", "Task marked working", {
+    taskId: task.id,
+    title: task.title,
+    status: "running"
+  });
+  addConsoleLine("task selected", {
     taskId: task.id,
     title: task.title,
     status: "running"
@@ -631,12 +665,18 @@ async function runLoopCycle() {
         currentTask.allowRerun = false;
       }
       current.state.isRunning = false;
+      current.state.activeRunId = null;
       current.state.currentTaskId = null;
       current.state.lastResult = duplicateMessage;
       current.state.lastError = null;
+      current.state.stopRequested = false;
       current.state.botOutputEntries = normalizeBotOutputEntries(current.state, current.notes, current.tasks);
       current.state.botOutput = current.state.botOutputEntries[0]?.text || duplicateMessage;
       return current;
+    });
+    addConsoleLine("duplicate completed task skipped", {
+      taskId: task.id,
+      title: task.title
     });
 
     appendBotOutput([
@@ -673,10 +713,16 @@ async function runLoopCycle() {
         currentTask.allowRerun = Boolean(currentTask.allowRerun);
       }
       current.state.isRunning = false;
+      current.state.activeRunId = null;
       current.state.currentTaskId = null;
       current.state.lastResult = waitingMessage;
       current.state.lastError = null;
+      current.state.stopRequested = false;
       return current;
+    });
+    addConsoleLine("task moved to waiting because auto LLM is disabled", {
+      taskId: task.id,
+      title: task.title
     });
 
     appendBotOutput([
@@ -707,6 +753,11 @@ async function runLoopCycle() {
     const prompt = buildLoopPrompt(task, db, workspace);
     const taskMode = inferTaskExecutionMode(task);
     const maxRuntimeMs = db.config.maxTaskRuntimeMinutes * 60 * 1000;
+    addConsoleLine("calling AI task runner", {
+      taskId: task.id,
+      title: task.title,
+      mode: taskMode
+    });
     const aiResult = await withTimeout(
       runAiTask(prompt, {
         mode: taskMode,
@@ -717,8 +768,21 @@ async function runLoopCycle() {
       maxRuntimeMs,
       "Task run"
     );
+    addConsoleLine("AI response received", {
+      taskId: task.id,
+      title: task.title
+    });
     const appliedResult = applyAutonomousTaskResult(task, aiResult, db.config);
+    addConsoleLine("autonomous result applied", {
+      taskId: task.id,
+      title: task.title,
+      changedFiles: appliedResult.changedFiles
+    });
 
+    addConsoleLine("running git follow-up", {
+      taskId: task.id,
+      title: task.title
+    });
     const gitResult = await withTimeout(
       maybeRunGitActions(task, db.config),
       maxRuntimeMs,
@@ -726,6 +790,17 @@ async function runLoopCycle() {
     );
     const completedAt = new Date().toISOString();
     const botOutput = buildRunSummary(task, appliedResult.output, gitResult, completedAt);
+
+    const latestBeforeComplete = loadDb();
+    const latestTaskBeforeComplete = latestBeforeComplete.tasks.find((entry) => entry.id === task.id);
+    if (latestBeforeComplete.state.activeRunId !== runId || latestTaskBeforeComplete?.runId !== runId) {
+      addConsoleLine("stale run result ignored after reset or override", {
+        taskId: task.id,
+        title: task.title,
+        runId
+      });
+      return getSnapshot();
+    }
 
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
@@ -735,14 +810,22 @@ async function runLoopCycle() {
         currentTask.lastOutput = appliedResult.output;
         currentTask.git = gitResult;
         currentTask.allowRerun = false;
+        currentTask.runId = null;
       }
       current.state.isRunning = false;
+      current.state.activeRunId = null;
       current.state.currentTaskId = null;
       current.state.lastResult = appliedResult.output;
       current.state.lastError = null;
+      current.state.stopRequested = false;
       current.state.botOutputEntries = normalizeBotOutputEntries(current.state, current.notes, current.tasks);
       current.state.botOutput = current.state.botOutputEntries[0]?.text || botOutput;
       return current;
+    });
+    addConsoleLine("task completed successfully", {
+      taskId: task.id,
+      title: task.title,
+      changedFiles: appliedResult.changedFiles
     });
 
     updateExecFile({
@@ -761,17 +844,33 @@ async function runLoopCycle() {
   } catch (error) {
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
+      const staleRun = current.state.activeRunId !== runId || currentTask?.runId !== runId;
+      if (staleRun) {
+        current.state.isRunning = false;
+        current.state.activeRunId = null;
+        current.state.currentTaskId = null;
+        current.state.stopRequested = false;
+        return current;
+      }
       if (currentTask) {
         const retryLimitReached = currentTask.attempts >= current.config.maxRetries;
         currentTask.status = retryLimitReached ? "failed" : "pending";
         currentTask.lastError = error.message;
         currentTask.allowRerun = false;
+        currentTask.runId = null;
       }
       current.state.isRunning = false;
+      current.state.activeRunId = null;
       current.state.currentTaskId = null;
       current.state.lastError = error.message;
       current.state.lastResult = null;
+      current.state.stopRequested = false;
       return current;
+    });
+    addConsoleLine("task failed", {
+      taskId: task.id,
+      title: task.title,
+      error: error.message
     });
 
     appendBotOutput([
@@ -801,6 +900,12 @@ async function runLoopCycle() {
   }
 
   const latestDb = loadDb();
+  if (!latestDb.config.enabled) {
+    clearScheduledRun();
+    addConsoleLine("loop remains stopped after current run");
+    return getSnapshot();
+  }
+
   const currentTaskState = latestDb.tasks.find((entry) => entry.id === task.id);
   const hasQueuedTask = hasRunnableTask(latestDb);
   const delaySeconds = !latestDb.config.enabled
@@ -818,10 +923,12 @@ async function runLoopCycle() {
 function startLoop() {
   const db = updateDb((current) => {
     current.config.enabled = true;
+    current.state.stopRequested = false;
     return current;
   });
 
   addActivity("loop", "Bot loop enabled");
+  addConsoleLine("loop enabled");
   if (hasRunnableTask(db)) {
     scheduleNextRun(1);
   } else if (db.config.pauseWhenQueueEmpty) {
@@ -841,11 +948,16 @@ function stopLoop() {
   const db = updateDb((current) => {
     current.config.enabled = false;
     current.state.nextRunAt = null;
-    current.state.isRunning = false;
+    current.state.stopRequested = true;
+    if (!current.state.isRunning) {
+      current.state.stopRequested = false;
+      current.state.activeRunId = null;
+    }
     return current;
   });
 
   addActivity("loop", "Bot loop disabled");
+  addConsoleLine(db.state.isRunning ? "stop requested while task is still running" : "loop stopped");
   return db;
 }
 
@@ -983,14 +1095,50 @@ function updateTask(taskId, patch) {
     }
 
     if (patch.reset) {
+      const archivedCreatedAt = new Date().toISOString();
+      const resetResultText = task.lastOutput || [
+        "Task was force-reset before completion.",
+        `Previous status: ${task.status}`,
+        `Started at: ${task.startedAt ? new Date(task.startedAt).toLocaleString() : "n/a"}`,
+        `Last error: ${task.lastError || "none captured"}`,
+        "No model output was captured before reset."
+      ].join(" ");
+      current.state.botOutputEntries = normalizeBotOutputEntries({
+        ...current.state,
+        botOutputEntries: [
+          {
+            id: crypto.randomUUID(),
+            source: "task-reset-history",
+            createdAt: archivedCreatedAt,
+            text: [
+              `Archived run before reset: ${task.title}`,
+              new Date(archivedCreatedAt).toLocaleString(),
+              "",
+              buildRunSummary(
+                task,
+                resetResultText,
+                task.git,
+                task.completedAt || task.startedAt || task.createdAt || archivedCreatedAt
+              )
+            ].join("\n")
+          },
+          ...(current.state.botOutputEntries || [])
+        ]
+      }, current.notes, current.tasks);
+      current.state.botOutput = current.state.botOutputEntries[0]?.text || current.state.botOutput;
+
       task.status = "waiting";
       task.allowRerun = true;
-      task.attempts = 0;
       task.startedAt = null;
-      task.completedAt = null;
       task.lastError = null;
-      task.lastOutput = null;
-      task.git = null;
+      task.runId = null;
+      if (current.state.currentTaskId === taskId) {
+        current.state.isRunning = false;
+        current.state.currentTaskId = null;
+        current.state.activeRunId = null;
+        current.state.stopRequested = false;
+      }
+      current.state.lastResult = `Task reset to waiting: ${task.title}`;
     }
 
     if (patch.status) {
@@ -1025,6 +1173,13 @@ function updateTask(taskId, patch) {
     status: patch.reset ? "waiting" : undefined,
     allowRerun: Boolean(patch.reset)
   });
+  if (patch.reset) {
+    addConsoleLine("task force-reset to waiting", {
+      taskId,
+      title: existingTask.title,
+      previousStatus: existingTask.status
+    });
+  }
 
   const updatedTask = db.tasks.find((task) => task.id === taskId);
   if (updatedTask && (updatedTask.status === "pending" || updatedTask.status === "waiting") && !updatedTask.locked) {

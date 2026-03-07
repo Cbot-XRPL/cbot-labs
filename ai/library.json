@@ -3,12 +3,343 @@
     {
       "id": "validator-ops",
       "title": "Validator Operations",
-      "summary": "Reference material for validator uptime, identity, and maintenance."
+      "summary": "Reference material for validator uptime, identity, and maintenance.",
+      "tags": [],
+      "details": [],
+      "links": [],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
     },
     {
       "id": "xahau-buildout",
       "title": "Xahau Buildout",
-      "summary": "Working notes for future Xahau marketplace and AI integrations."
+      "summary": "Working notes for future Xahau marketplace and AI integrations.",
+      "tags": [],
+      "details": [],
+      "links": [],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "trading-overview",
+      "title": "Trading Fundamentals: Markets & Order Types",
+      "summary": "Core concepts for understanding how markets operate, order types, execution basics, and how these apply across crypto and traditional markets.",
+      "tags": [
+        "markets",
+        "order-types",
+        "execution",
+        "crypto",
+        "foundation"
+      ],
+      "details": [
+        "Describe market participants: retail, professional traders, market makers, exchanges/venues and liquidity providers.",
+        "Explain order types: market, limit, stop (stop-loss, stop-limit), IOC/FOK, and conditional orders and their execution risk.",
+        "Differentiate venue types: CEX order-book exchanges vs DEX AMMs and implications for slippage and MEV.",
+        "Outline execution considerations: latency, slippage, partial fills, order routing and best execution practices.",
+        "Summarize position management basics: leverage, margin, maintenance margin and liquidation mechanics (especially on crypto margin products)."
+      ],
+      "links": [
+        {
+          "label": "SEC - Market Makers (overview)",
+          "url": "https://www.sec.gov/fast-answers/answersmk-makerhtm.html"
+        },
+        {
+          "label": "Binance - Order Types & How Orders Work",
+          "url": "https://www.binance.com/en/support/faq/360043514452"
+        },
+        {
+          "label": "Investopedia - Order Types",
+          "url": "https://www.investopedia.com/terms/o/ordertype.asp"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "technical-indicators",
+      "title": "Technical Indicators: EMA, RSI, Fibonacci and Common Tools",
+      "summary": "Reference guide for widely used indicators (EMA, RSI, Fibonacci retracements) including interpretation, common settings, and pitfalls.",
+      "tags": [
+        "indicators",
+        "ema",
+        "rsi",
+        "fibonacci",
+        "technical-analysis"
+      ],
+      "details": [
+        "EMA: definition, calculation differences vs SMA, common periods (9, 12, 21, 50, 200), use in trend-following and cross strategies.",
+        "RSI: oscillator range (0–100), overbought/oversold rules (70/30 heuristic), divergence, and smoothing with EMA.",
+        "Fibonacci retracement: key ratios (23.6, 38.2, 50, 61.8), how to draw retracements from swing high/low, use as confluence zones with support/resistance.",
+        "Combine indicators conservatively: avoid indicator stacking without price/market-structure confirmation; prefer indicator + price action + liquidity context.",
+        "Watch for look-ahead and survivorship bias when backtesting indicator strategies."
+      ],
+      "links": [
+        {
+          "label": "Investopedia - Exponential Moving Average (EMA)",
+          "url": "https://www.investopedia.com/terms/e/exponentialmovingaverage.asp"
+        },
+        {
+          "label": "Binance Academy - EMA",
+          "url": "https://academy.binance.com/en/indicators/exponential-moving-average-ema"
+        },
+        {
+          "label": "Investopedia - Relative Strength Index (RSI)",
+          "url": "https://www.investopedia.com/terms/r/rsi.asp"
+        },
+        {
+          "label": "Binance Academy - RSI",
+          "url": "https://academy.binance.com/en/indicators/relative-strength-index-rsi"
+        },
+        {
+          "label": "Investopedia - Fibonacci Retracement",
+          "url": "https://www.investopedia.com/terms/f/fibonacciretracement.asp"
+        },
+        {
+          "label": "TradingView - Pine Script Indicator Docs",
+          "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "liquidity-market-structure",
+      "title": "Liquidity & Market Structure",
+      "summary": "Operational framing of liquidity concepts, order book dynamics, support/resistance, supply/demand zones, and how to read market structure.",
+      "tags": [
+        "liquidity",
+        "market-structure",
+        "orderbook",
+        "support-resistance"
+      ],
+      "details": [
+        "Define liquidity metrics: bid/ask spread, depth, volume at price levels, market impact and slippage.",
+        "Order book dynamics: understand depth, resting orders, cancellations, iceberg orders and how order flow changes price.",
+        "Market structure primitives: higher highs / higher lows (uptrend) vs lower lows / lower highs (downtrend), structure breaks as trigger signals.",
+        "Liquidity zones: cluster significant limit order levels, previous high-volume nodes, and on-chain token holder concentration for crypto.",
+        "Use combined data: time & sales (tape), order book snapshots and VWAP to assess short-term execution risk."
+      ],
+      "links": [
+        {
+          "label": "Investopedia - Liquidity",
+          "url": "https://www.investopedia.com/terms/l/liquidity.asp"
+        },
+        {
+          "label": "Order Book Microstructure (survey resources)",
+          "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=923749"
+        },
+        {
+          "label": "TradingView - Volume Profile & Market Structure tools",
+          "url": "https://www.tradingview.com/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "market-makers-whales",
+      "title": "Market Makers, Whales & Flow Analysis",
+      "summary": "How market makers and large holders ('whales') affect price discovery, liquidity provision, and manipulative patterns in crypto markets.",
+      "tags": [
+        "market-makers",
+        "whales",
+        "flow",
+        "crypto"
+      ],
+      "details": [
+        "Role of market makers: provide two-sided quotes, reduce spreads, may have inventory and risk limits — understand incentives and times when they withdraw liquidity.",
+        "Detect whale flows: large transfers between wallets/exchanges and on-chain jumps can presage price moves or liquidity drains.",
+        "Watch for manipulation vectors: spoofing, wash trading, concentrated sell-offs or wash bids on low-liquidity pairs (common in some spot/alt markets).",
+        "On-chain whale tracking: monitor large transfers to exchanges, exchange inflows/outflows and known wallet labels for probability of sell-side pressure.",
+        "Combine on-chain signals with order book and exchange flow for higher-confidence hypotheses about imminent moves."
+      ],
+      "links": [
+        {
+          "label": "Whale Alert - large crypto transfer tracker",
+          "url": "https://www.whale-alert.io/"
+        },
+        {
+          "label": "Glassnode - On-chain data & documentation",
+          "url": "https://glassnode.com/"
+        },
+        {
+          "label": "Nansen - Wallet labeling and flow analytics",
+          "url": "https://www.nansen.ai/"
+        },
+        {
+          "label": "Arkham Intelligence - on-chain investigations",
+          "url": "https://arkhamintelligence.com/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "crypto-onchain-metrics",
+      "title": "Crypto-Specific On-Chain Metrics & Analytics",
+      "summary": "Key on-chain signals and data sources critical to crypto trading: exchange flows, active addresses, supply movement, staking/locking, and protocol-specific dynamics.",
+      "tags": [
+        "crypto",
+        "on-chain",
+        "analytics",
+        "xrpl"
+      ],
+      "details": [
+        "Exchange flows: inflows to exchanges often precede selling pressure; outflows can indicate accumulation or cold storage.",
+        "Network activity: active addresses, transactions per day, unique senders/receivers as adoption/usage proxies.",
+        "Supply changes: unlocking schedules, staking rewards, vesting cliffs, and token burns materially change available float.",
+        "DEX / AMM-specific: TVL, liquidity pools composition, impermanent loss risk and slippage for large trades.",
+        "XRPL specifics: on-ledger DEX, pathfinding, and trustlines — monitor ledger transactions and orderbook offers for XRPL-native signals."
+      ],
+      "links": [
+        {
+          "label": "Glassnode Documentation (metrics & indicators)",
+          "url": "https://docs.glassnode.com/"
+        },
+        {
+          "label": "Dune Analytics (custom SQL dashboards)",
+          "url": "https://dune.com/"
+        },
+        {
+          "label": "Etherscan (transaction exploration)",
+          "url": "https://etherscan.io/"
+        },
+        {
+          "label": "XRP Ledger (XRPL) Docs",
+          "url": "https://xrpl.org/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "strategies-risk-management",
+      "title": "Trading Strategies & Risk Management",
+      "summary": "Common strategy archetypes (momentum, mean reversion, scalping, swing), with practical risk-management rules for crypto markets.",
+      "tags": [
+        "strategies",
+        "risk-management",
+        "position-sizing",
+        "crypto"
+      ],
+      "details": [
+        "Strategy archetypes: momentum (trend-following), mean reversion (counter-trend), breakout/fade, arbitrage, and liquidity-taking strategies.",
+        "Timeframes & matching tools: align strategy horizon (intraday, swing, position) with indicators and execution tools to avoid mismatch.",
+        "Risk rules: define per-trade risk (percentage of capital), max drawdown limits, use of stop-loss vs hedging and use of position sizing (fixed fractional, Kelly variants).",
+        "Backtesting & out-of-sample forward testing are mandatory; use realistic slippage, fees and market-impact models especially for illiquid pairs.",
+        "Psychology & operational hygiene: plan for edge decay, overnight risks, exchange counterparty risk and maintain a reproducible trade log for audits."
+      ],
+      "links": [
+        {
+          "label": "Investopedia - Position Sizing",
+          "url": "https://www.investopedia.com/articles/trading/08/position-sizing.asp"
+        },
+        {
+          "label": "BabyPips - Trading Strategies & Education",
+          "url": "https://www.babypips.com/learn/forex"
+        },
+        {
+          "label": "Wikipedia - Kelly Criterion",
+          "url": "https://en.wikipedia.org/wiki/Kelly_criterion"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.640Z"
+    },
+    {
+      "id": "tools-data-sources",
+      "title": "Trading Tools, Libraries & Data Sources",
+      "summary": "Practical tools and APIs for market data, execution, backtesting and on-chain analytics useful for research and production trading systems.",
+      "tags": [
+        "tools",
+        "apis",
+        "backtesting",
+        "data"
+      ],
+      "details": [
+        "Exchange APIs & wrappers: CCXT for unified REST/WebSocket across many CEXs; direct exchange native APIs for advanced features and raw orderbook access.",
+        "Backtesting & research: vectorbt, Backtrader, Backtesting.py and QuantConnect for strategy development and historical simulation.",
+        "On-chain data & analytics: Glassnode, Nansen, Dune Analytics, Etherscan APIs, and blockchain explorers (XRPL explorers for XRPL).",
+        "Market data & aggregators: TradingView for charts/indicators, CoinGecko and CoinMarketCap APIs for basic pricing and meta info.",
+        "Execution & infra: colocated/low-latency requirements for HFT, careful rate-limit handling for APIs, and logging/trade-reconciliation for auditability."
+      ],
+      "links": [
+        {
+          "label": "CCXT - CryptoExchange Trading Library",
+          "url": "https://github.com/ccxt/ccxt"
+        },
+        {
+          "label": "vectorbt - Python backtesting & research",
+          "url": "https://github.com/polakowo/vectorbt"
+        },
+        {
+          "label": "Backtrader - Python backtesting",
+          "url": "https://www.backtrader.com/"
+        },
+        {
+          "label": "CoinGecko API",
+          "url": "https://www.coingecko.com/en/api"
+        },
+        {
+          "label": "TradingView",
+          "url": "https://www.tradingview.com/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.641Z"
+    },
+    {
+      "id": "execution-best-practices",
+      "title": "Execution Best Practices & Production Considerations",
+      "summary": "Operational checklist for moving from research to live execution including monitoring, safety, and auditability.",
+      "tags": [
+        "execution",
+        "ops",
+        "monitoring",
+        "auditing"
+      ],
+      "details": [
+        "Start small: run paper or small-dollar live tests with full logging before scaling capital; ensure end-to-end reconciliation.",
+        "Monitoring & alerts: order fill monitoring, PnL tracking, exchange connectivity, and on-call escalation playbooks for outages or severe slippage.",
+        "Rate limits & retries: implement exponential backoff, idempotency for order placement/cancellation and robust error handling.",
+        "Security & compliance: protect API keys, use least-privilege exchange keys, maintain segregated accounts for production and testing.",
+        "Reproducibility & audit logs: persist raw market data, orderbook snapshots and full trade lifecycle for debugging and compliance."
+      ],
+      "links": [
+        {
+          "label": "Binance - API Best Practices",
+          "url": "https://binance-docs.github.io/apidocs/spot/en/#general-api-information"
+        },
+        {
+          "label": "CCXT (rate-limiting & exchange handling)",
+          "url": "https://github.com/ccxt/ccxt"
+        },
+        {
+          "label": "Quantitative Ops - runbook patterns (example projects)",
+          "url": "https://www.quantconnect.com/docs"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.641Z"
+    },
+    {
+      "id": "xrpl-and-xahau-notes",
+      "title": "XRPL & Xahau Context for Trading",
+      "summary": "Notes tying XRPL-specific mechanics and the Xahau buildout into trading considerations and data flows for this workspace.",
+      "tags": [
+        "xrpl",
+        "xahau",
+        "workspace",
+        "dex"
+      ],
+      "details": [
+        "XRPL has an on-ledger DEX and native orderbook offers: monitor ledger offers, pathfinding and trustline exposures for token liquidity analysis.",
+        "Use XRPL explorers and APIs to track offers, account balances and cross-currency path liquidity for trade planning.",
+        "Integrate Xahau buildout notes: map Xahau marketplace objectives to XRPL data sources (orderbook, offers, ledger events) and agent brain signals.",
+        "For XRPL-specific trading, consider automated watch for large offers/offers cancellations and on-ledger payment flows for whale detection.",
+        "Documented endpoints: use xrpl.org APIs and local Xahau artifacts in the workspace as primary sources for XRPL implementation details."
+      ],
+      "links": [
+        {
+          "label": "XRPL Developer Documentation",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "Xahau Buildout (workspace entry)",
+          "url": "FILE:ai/library.json#xahau-buildout"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:22:18.641Z"
     }
   ]
 }

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260307-reset">
+    <link rel="stylesheet" href="style.css?v=20260307-lockstyle">
 </head>
 
 <body>
@@ -141,6 +141,10 @@
                         <span class="api-label">Last result</span>
                         <strong id="bot-last-result">-</strong>
                     </article>
+                    <article class="admin-card">
+                        <span class="api-label">Last error</span>
+                        <strong id="bot-last-error">-</strong>
+                    </article>
                 </div>
                 <div class="key-box admin-ai-box">
                     <span class="key-label">Workspace files</span>
@@ -224,6 +228,10 @@
                             <button id="goal-add-button" class="primary-button" type="button">Add Goal</button>
                         </div>
                         <div id="bot-goal-list" class="bot-list"></div>
+                    </div>
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Bot console</span>
+                        <div id="bot-console-list" class="bot-console">Console output will appear here.</div>
                     </div>
                 </div>
                 <div class="admin-bot-columns">
@@ -329,7 +337,7 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260307-reset"></script>
+    <script src="script.js?v=20260307-terminal"></script>
 </body>
 
 </html>
