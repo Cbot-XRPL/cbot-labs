@@ -424,8 +424,8 @@ code,
 
 .api-strip > div,
 .admin-card {
-  padding: 18px;
-  border-radius: 20px;
+  padding: 12px 14px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -446,12 +446,12 @@ code,
 .admin-ai-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .admin-bot-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .admin-ai-header {
@@ -468,11 +468,11 @@ code,
 }
 
 .admin-ai-status {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .admin-toggle-row {
@@ -503,6 +503,37 @@ code,
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-top: 18px;
+}
+
+.admin-bot-grid .admin-card {
+  min-height: 88px;
+}
+
+.admin-bot-grid .api-label {
+  margin-bottom: 6px;
+}
+
+#bot-last-result,
+#bot-last-error,
+#bot-next-run {
+  display: block;
+  max-height: 136px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+#bot-last-result {
+  min-height: 88px;
+}
+
+#bot-git-branch,
+#ai-config-status,
+#ai-manifest-name,
+#ai-exec-mode {
+  line-height: 1.35;
 }
 
 .admin-bot-columns {
