@@ -1,8 +1,8 @@
 {
   "mode": "stub",
-  "lastUpdated": "2026-03-07T19:08:06.984Z",
+  "lastUpdated": "2026-03-07T19:09:24.320Z",
   "notes": "Execution engine placeholder. Replace with provider-backed logic later.",
-  "lastRunAt": "2026-03-07T19:08:06.984Z",
-  "lastTaskId": "04a51e2b-2ad7-4f6c-bd39-b41d23f0cc6a",
-  "lastTaskStatus": "completed"
+  "lastRunAt": "2026-03-07T19:09:24.320Z",
+  "lastTaskId": null,
+  "lastTaskStatus": "idle"
 }

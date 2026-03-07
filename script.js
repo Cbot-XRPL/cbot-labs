@@ -181,7 +181,7 @@ function renderTaskList(tasks) {
   }
 
   const getTaskStatusTone = (status) => {
-    if (status === "running") {
+    if (status === "running" || status === "completed") {
       return "running";
     }
     if (status === "failed") {
@@ -202,14 +202,10 @@ function renderTaskList(tasks) {
       <span>Status: ${escapeHtml(task.status)}${task.locked ? " | Locked" : ""} | Attempts: ${escapeHtml(task.attempts)}</span>
       <span>Goal: ${escapeHtml(task.goal || "n/a")}</span>
       <p>${escapeHtml(task.assignedTaskBlock || "No assigned task block.")}</p>
-      ${task.lastError ? `<span>Last error: ${escapeHtml(task.lastError)}</span>` : ""}
-      ${task.lastOutput ? `<span>Last output: ${escapeHtml(task.lastOutput)}</span>` : ""}
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
-        <button class="mini-button" type="button" data-task-action="pending" data-task-id="${escapeHtml(task.id)}">Queue</button>
-        <button class="mini-button" type="button" data-task-action="completed" data-task-id="${escapeHtml(task.id)}">Complete</button>
-        <button class="mini-button" type="button" data-task-action="failed" data-task-id="${escapeHtml(task.id)}">Fail</button>
+        ${task.status === "failed" ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
       </div>
     </article>
   `).join("");
@@ -278,6 +274,22 @@ function renderActivityList(activity) {
   `).join("");
 }
 
+function renderBotOutput(outputEntries) {
+  const output = document.getElementById("ai-output");
+  if (!output) {
+    return;
+  }
+
+  if (!outputEntries?.length) {
+    output.textContent = "Bot output will appear here.";
+    return;
+  }
+
+  output.textContent = outputEntries
+    .map((entry) => entry.text)
+    .join("\n\n====================\n\n");
+}
+
 function renderBot(botData) {
   if (!botData) {
     return;
@@ -287,7 +299,7 @@ function renderBot(botData) {
   setText("bot-git-branch", botData.git?.available ? `${botData.git.branch} (${botData.git.dirty ? "dirty" : "clean"})` : "Git unavailable");
   setText("bot-next-run", botData.state.nextRunAt ? formatDateTime(botData.state.nextRunAt) : (botData.config.enabled && botData.config.pauseWhenQueueEmpty ? "Paused until new task" : "-"));
   setText("bot-last-result", botData.state.lastResult || botData.state.lastError || "-");
-  setText("ai-output", botData.state.botOutput || "Bot output will appear here.");
+  renderBotOutput(botData.state.botOutputEntries || []);
 
   const idleDelay = document.getElementById("bot-idle-delay");
   const postTaskDelay = document.getElementById("bot-post-task-delay");
@@ -605,6 +617,19 @@ async function updateTaskStatus(taskId, status) {
   });
 
   setText("ai-output", `Task updated to ${status}.`);
+  await refreshOwnerData();
+}
+
+async function resetTask(taskId) {
+  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ reset: true })
+  });
+
+  setText("ai-output", "Task reset to waiting.");
   await refreshOwnerData();
 }
 
@@ -950,6 +975,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const editTaskId = target.dataset.taskEdit;
       const lockTaskId = target.dataset.taskLock;
+      const resetTaskId = target.dataset.taskReset;
       const taskId = target.dataset.taskId;
       const action = target.dataset.taskAction;
       if (editTaskId) {
@@ -958,6 +984,10 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       if (lockTaskId) {
         await toggleTaskLock(lockTaskId, target.dataset.taskLocked !== "true");
+        return;
+      }
+      if (resetTaskId) {
+        await resetTask(resetTaskId);
         return;
       }
       if (taskId && action) {

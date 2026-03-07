@@ -12,6 +12,8 @@ const botDbFile = path.join(dataDir, "bot-db.json");
 const execFilePath = path.join(__dirname, "ai", "exec.json");
 const notesLimit = 80;
 const activityLimit = 250;
+const botOutputLimit = 120;
+const taskHeartbeatMs = 15000;
 
 let timer = null;
 
@@ -41,6 +43,7 @@ function defaultDb() {
       lastResult: null,
       lastError: null,
       botOutput: null,
+      botOutputEntries: [],
       runCount: 0
     }
   };
@@ -59,7 +62,7 @@ function loadDb() {
   try {
     const raw = fs.readFileSync(botDbFile, "utf8");
     const parsed = JSON.parse(raw);
-    return {
+    const next = {
       ...defaultDb(),
       ...parsed,
       config: {
@@ -75,6 +78,10 @@ function loadDb() {
       notes: Array.isArray(parsed.notes) ? parsed.notes : [],
       activity: Array.isArray(parsed.activity) ? parsed.activity : []
     };
+
+    next.state.botOutputEntries = normalizeBotOutputEntries(next.state, next.notes, next.tasks);
+    next.state.botOutput = next.state.botOutputEntries[0]?.text || next.state.botOutput || null;
+    return next;
   } catch (error) {
     return defaultDb();
   }
@@ -83,6 +90,82 @@ function loadDb() {
 function saveDb(db) {
   ensureStorage();
   fs.writeFileSync(botDbFile, JSON.stringify(db, null, 2));
+}
+
+function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
+  const entries = [];
+  const seen = new Set();
+
+  const pushEntry = (entry) => {
+    if (!entry || typeof entry.text !== "string") {
+      return;
+    }
+
+    const text = entry.text.trim();
+    if (!text) {
+      return;
+    }
+
+    const createdAt = entry.createdAt || new Date().toISOString();
+    const source = entry.source || "system";
+    const key = `${createdAt}|${source}|${text}`;
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    entries.push({
+      id: entry.id || crypto.randomUUID(),
+      source,
+      createdAt,
+      text
+    });
+  };
+
+  if (Array.isArray(state.botOutputEntries)) {
+    for (const entry of state.botOutputEntries) {
+      pushEntry(entry);
+    }
+  }
+
+  if (!entries.length && state.botOutput) {
+    pushEntry({
+      source: "legacy-output",
+      createdAt: state.lastRunAt || new Date().toISOString(),
+      text: state.botOutput
+    });
+  }
+
+  if (!Array.isArray(state.botOutputEntries) || !state.botOutputEntries.length) {
+    for (const task of tasks) {
+      if (task.status !== "completed" || !task.lastOutput) {
+        continue;
+      }
+
+      pushEntry({
+        source: "completed-task",
+        createdAt: task.completedAt || task.startedAt || task.createdAt,
+        text: buildRunSummary(task, task.lastOutput, task.git)
+      });
+    }
+
+    for (const note of notes) {
+      pushEntry({
+        source: "note",
+        createdAt: note.createdAt,
+        text: [
+          `Recovered note: ${note.title}`,
+          new Date(note.createdAt).toLocaleString(),
+          "",
+          note.body
+        ].join("\n")
+      });
+    }
+  }
+
+  return entries
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, botOutputLimit);
 }
 
 function normalizeTaskOrder(tasks) {
@@ -154,6 +237,28 @@ function updateExecFile(patch) {
   }
 }
 
+function appendBotOutput(text, source = "system", createdAt = new Date().toISOString()) {
+  updateDb((db) => {
+    const nextEntry = {
+      id: crypto.randomUUID(),
+      source,
+      createdAt,
+      text: String(text || "").trim()
+    };
+
+    if (!nextEntry.text) {
+      return db;
+    }
+
+    db.state.botOutputEntries = normalizeBotOutputEntries({
+      ...db.state,
+      botOutputEntries: [nextEntry, ...(db.state.botOutputEntries || [])]
+    }, db.notes, db.tasks);
+    db.state.botOutput = db.state.botOutputEntries[0]?.text || null;
+    return db;
+  });
+}
+
 function buildRunSummary(task, resultText, gitResult) {
   return [
     `Run result for ${task.title}`,
@@ -165,6 +270,37 @@ function buildRunSummary(task, resultText, gitResult) {
     `Result: ${resultText}`,
     `Git: ${(gitResult?.actions || []).join("; ") || "no git actions"}`
   ].join("\n");
+}
+
+function buildTaskSignature(payload) {
+  return [
+    String(payload?.title || "").trim().toLowerCase(),
+    String(payload?.goal || "").trim().toLowerCase(),
+    String(payload?.assignedTaskBlock || "").trim().toLowerCase()
+  ].join("::");
+}
+
+function findCompletedTaskMatch(tasks, payload, excludeTaskId = null) {
+  const signature = buildTaskSignature(payload);
+  if (!signature.replaceAll(":", "")) {
+    return null;
+  }
+
+  return tasks.find((task) => (
+    task.id !== excludeTaskId
+    && task.status === "completed"
+    && buildTaskSignature(task) === signature
+  )) || null;
+}
+
+function startTaskHeartbeat(task) {
+  return setInterval(() => {
+    addActivity("task", "Task still working", {
+      taskId: task.id,
+      title: task.title,
+      status: "running"
+    });
+  }, taskHeartbeatMs);
 }
 
 function withTimeout(promise, timeoutMs, label) {
@@ -362,9 +498,10 @@ async function runLoopCycle() {
   let db = loadDb();
   const task = getPendingTask(db);
   const workspace = getAiWorkspace();
+  let heartbeatTimer = null;
 
   if (!task) {
-    addActivity("loop", "No pending task found");
+    addActivity("loop", "Queue check complete: no runnable task found");
     updateExecFile({
       lastUpdated: new Date().toISOString(),
       lastRunAt: new Date().toISOString(),
@@ -378,9 +515,10 @@ async function runLoopCycle() {
       current.state.lastResult = initialDb.config.pauseWhenQueueEmpty
         ? "Queue empty, loop paused"
         : "Idle";
-      current.state.botOutput = current.state.lastResult;
       return current;
     });
+
+    appendBotOutput(initialDb.config.pauseWhenQueueEmpty ? "Queue empty, loop paused" : "Idle", "loop");
 
     const latest = loadDb();
     if (latest.config.enabled && latest.config.pauseWhenQueueEmpty) {
@@ -402,13 +540,24 @@ async function runLoopCycle() {
     return current;
   });
 
-  addActivity("task", "Task run started", {
+  addActivity("task", "Task check passed, starting task", {
     taskId: task.id,
-    title: task.title
+    title: task.title,
+    status: "running"
   });
+  addActivity("task", "Task marked working", {
+    taskId: task.id,
+    title: task.title,
+    status: "running"
+  });
+  heartbeatTimer = startTaskHeartbeat(task);
 
   if (!db.config.autoCallLlm) {
     const waitingMessage = "Auto call LLM is disabled. Task is waiting for AI.";
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
 
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
@@ -420,18 +569,20 @@ async function runLoopCycle() {
       current.state.currentTaskId = null;
       current.state.lastResult = waitingMessage;
       current.state.lastError = null;
-      current.state.botOutput = [
-        `Task waiting: ${task.title}`,
-        new Date().toLocaleString(),
-        "",
-        waitingMessage
-      ].join("\n");
       return current;
     });
 
+    appendBotOutput([
+      `Task waiting: ${task.title}`,
+      new Date().toLocaleString(),
+      "",
+      waitingMessage
+    ].join("\n"), "task");
+
     addActivity("task", "Task moved to waiting because Auto call LLM is disabled", {
       taskId: task.id,
-      title: task.title
+      title: task.title,
+      status: "waiting"
     });
 
     updateExecFile({
@@ -473,9 +624,10 @@ async function runLoopCycle() {
       current.state.currentTaskId = null;
       current.state.lastResult = aiResult.output;
       current.state.lastError = null;
-      current.state.botOutput = botOutput;
       return current;
     });
+
+    appendBotOutput(botOutput, "task");
 
     updateExecFile({
       lastUpdated: new Date().toISOString(),
@@ -484,9 +636,10 @@ async function runLoopCycle() {
       lastTaskStatus: "completed"
     });
 
-    addActivity("task", "Task completed", {
+    addActivity("task", "Task completed successfully", {
       taskId: task.id,
-      title: task.title
+      title: task.title,
+      status: "completed"
     });
   } catch (error) {
     updateDb((current) => {
@@ -500,18 +653,21 @@ async function runLoopCycle() {
       current.state.currentTaskId = null;
       current.state.lastError = error.message;
       current.state.lastResult = null;
-      current.state.botOutput = [
-        `Run error for ${task.title}`,
-        new Date().toLocaleString(),
-        "",
-        error.message
-      ].join("\n");
       return current;
     });
 
+    appendBotOutput([
+      `Run error for ${task.title}`,
+      new Date().toLocaleString(),
+      "",
+      error.message
+    ].join("\n"), "error");
+
     addActivity("error", "Task run failed", {
       taskId: task.id,
-      error: error.message
+      title: task.title,
+      error: error.message,
+      status: loadDb().tasks.find((entry) => entry.id === task.id)?.status || "failed"
     });
 
     updateExecFile({
@@ -520,6 +676,10 @@ async function runLoopCycle() {
       lastTaskId: task.id,
       lastTaskStatus: "failed"
     });
+  }
+
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
   }
 
   const latestDb = loadDb();
@@ -611,9 +771,26 @@ function addTask(payload) {
     throw new Error("Task title is required");
   }
 
+  const db = loadDb();
+  const completedMatch = findCompletedTaskMatch(db.tasks, payload);
+  if (completedMatch) {
+    addActivity("task", "Task already completed in bot, duplicate blocked", {
+      existingTaskId: completedMatch.id,
+      title: completedMatch.title,
+      status: "completed"
+    });
+    appendBotOutput([
+      "Task already completed in bot",
+      new Date().toLocaleString(),
+      "",
+      `Blocked duplicate task: ${payload.title.trim()}`
+    ].join("\n"), "task");
+    throw new Error("Task already completed in bot");
+  }
+
   const task = {
     id: crypto.randomUUID(),
-    order: loadDb().tasks.length + 1,
+    order: db.tasks.length + 1,
     title: payload.title.trim(),
     goal: String(payload.goal || "").trim(),
     assignedTaskBlock: String(payload.assignedTaskBlock || "").trim(),
@@ -645,10 +822,49 @@ function addTask(payload) {
 }
 
 function updateTask(taskId, patch) {
+  const currentDb = loadDb();
+  const existingTask = currentDb.tasks.find((entry) => entry.id === taskId);
+  if (!existingTask) {
+    throw new Error("Task not found");
+  }
+
+  const candidateTask = {
+    ...existingTask,
+    ...(Object.hasOwn(patch, "title") ? { title: String(patch.title || "").trim() || existingTask.title } : {}),
+    ...(Object.hasOwn(patch, "goal") ? { goal: String(patch.goal || "").trim() } : {}),
+    ...(Object.hasOwn(patch, "assignedTaskBlock") ? { assignedTaskBlock: String(patch.assignedTaskBlock || "").trim() } : {})
+  };
+  const completedMatch = findCompletedTaskMatch(currentDb.tasks, candidateTask, taskId);
+  if (completedMatch) {
+    addActivity("task", "Task already completed in bot, update blocked", {
+      taskId,
+      existingTaskId: completedMatch.id,
+      title: completedMatch.title,
+      status: "completed"
+    });
+    appendBotOutput([
+      "Task already completed in bot",
+      new Date().toLocaleString(),
+      "",
+      `Blocked duplicate task update: ${candidateTask.title}`
+    ].join("\n"), "task");
+    throw new Error("Task already completed in bot");
+  }
+
   const db = updateDb((current) => {
     const task = current.tasks.find((entry) => entry.id === taskId);
     if (!task) {
       throw new Error("Task not found");
+    }
+
+    if (patch.reset) {
+      task.status = "waiting";
+      task.attempts = 0;
+      task.startedAt = null;
+      task.completedAt = null;
+      task.lastError = null;
+      task.lastOutput = null;
+      task.git = null;
     }
 
     if (patch.status) {
@@ -675,12 +891,13 @@ function updateTask(taskId, patch) {
     return current;
   });
 
-  addActivity("task", "Task updated", {
-    taskId
+  addActivity("task", patch.reset ? "Task reset to waiting" : "Task updated", {
+    taskId,
+    status: patch.reset ? "waiting" : undefined
   });
 
   const updatedTask = db.tasks.find((task) => task.id === taskId);
-  if (updatedTask && updatedTask.status === "pending" && !updatedTask.locked) {
+  if (updatedTask && (updatedTask.status === "pending" || updatedTask.status === "waiting") && !updatedTask.locked) {
     maybeWakeLoop("Pending task available, waking loop");
   }
 
@@ -778,6 +995,12 @@ function addManualNote(title, body) {
   }
 
   addNote(safeTitle, safeBody);
+  appendBotOutput([
+    `Manual note: ${safeTitle}`,
+    new Date().toLocaleString(),
+    "",
+    safeBody
+  ].join("\n"), "note");
   addActivity("note", "Manual note added");
 }
 
@@ -796,6 +1019,7 @@ function getSnapshot() {
 
 function bootstrapLoop() {
   const db = loadDb();
+  saveDb(db);
   if (db.config.enabled) {
     addActivity("loop", "Bot loop restored on server start");
     if (hasRunnableTask(db)) {
