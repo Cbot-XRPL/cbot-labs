@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "crypto-onchain-metrics",
@@ -203,7 +203,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "strategies-risk-management",
@@ -236,7 +236,7 @@
           "url": "https://en.wikipedia.org/wiki/Kelly_criterion"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "tools-data-sources",
@@ -277,7 +277,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "execution-best-practices",
@@ -310,7 +310,7 @@
           "url": "https://www.quantconnect.com/docs"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xrpl-and-xahau-notes",
@@ -339,7 +339,7 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xrpl-core",
@@ -403,7 +403,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xahau-buildout-local",
@@ -431,7 +431,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "evm-sidechain-flare",
@@ -468,7 +468,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "flare-defi-data-sources",
@@ -501,7 +501,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xrpl-amm-vault-multisig",
@@ -538,7 +538,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     },
     {
       "id": "xrpl-auto-bridging-and-paths",
@@ -575,7 +575,246 @@
           "url": "https://interledger.org/docs/"
         }
       ],
-      "updatedAt": "2026-03-07T22:38:56.667Z"
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "agent-design-patterns",
+      "title": "Agent Design Patterns: High-Quality Agent Brain",
+      "summary": "Core architectural patterns and components for building robust trading agents: signal ingestion, feature store, decision engine, risk overlay, execution adapter, and feedback loops.",
+      "tags": [
+        "agent",
+        "architecture",
+        "design-patterns",
+        "agent-brain",
+        "signals"
+      ],
+      "details": [
+        "Decompose the agent into clear layers: Data Ingestion → Feature Store → Signal Engine / Models → Decision Engine → Risk Manager → Execution Adapter → Audit & Replay.",
+        "Signal sources: separate fast (orderbook, trades) and slow (on-chain events, fundamentals) sources; normalize into time-aligned feature feeds.",
+        "Feature store: durable, immutable time-series store with versioning and labeling for backtests and online inference (Parquet/TSDB + metadata).",
+        "Decision engine: deterministic policy layers (ensemble of heuristics + ML scoring) with explicit priority rules and a transparent tie-breaker.",
+        "Risk overlay: enforce per-trade and portfolio-level constraints (max exposure, leverage limits, stop-loss envelope, position concentration) as last gating step before orders.",
+        "Execution adapter: abstract exchange/ledger specifics behind adapters that implement idempotency keys, retries, rate-limit handling and reconciliation hooks.",
+        "Feedback & learning loop: persist outcomes (fills, slippage, partials) to feed model retraining and parameter tuning; mark events for manual review when anomalies occur.",
+        "Explainability & audit: log decision context for every action (input signals, model outputs, effective constraints) to enable post-mortem and compliance reviews.",
+        "Operational modes: explicit modes for paper, canary (small live capital), and production — each using the same codepaths but different config and kill-switch thresholds.",
+        "Separation of concerns: keep deterministic execution code separate from experimental ML code; require feature-flagged rollout and staged promotion to production."
+      ],
+      "links": [
+        {
+          "label": "OpenAI Cookbook (agent patterns & examples)",
+          "url": "https://github.com/openai/openai-cookbook"
+        },
+        {
+          "label": "LangChain Agents (pattern examples)",
+          "url": "https://github.com/langchain-ai/langchain"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "trading-agent-repo-examples",
+      "title": "Concrete Open-Source Trading Bot Repositories (examples)",
+      "summary": "Practical references: existing trading bot projects that illustrate filesystem layout, config models, strategies, execution layers and community guardrails.",
+      "tags": [
+        "examples",
+        "repos",
+        "hummingbot",
+        "freqtrade",
+        "ccxt",
+        "reference"
+      ],
+      "details": [
+        "Hummingbot: modular architecture showing connectors, strategies, client UI and deployment patterns — useful for designing exchange adapters and strategy abstractions.",
+        "Freqtrade: clear separation of strategies, backtesting, hyperopt and live modes; includes configuration profiles, paper trading and CI-friendly test harnesses.",
+        "CCXT: canonical unified API adapter used as a reference for exchange adapter implementations and consistent error/rate-limit handling.",
+        "Zenbot / Gekko / other historical projects: examples of end-to-end scripts, lightweight folder layouts and trade-off lessons about maintenance/technical debt in long-running bots.",
+        "Auto-agent examples (Auto-GPT / LangChain): illustrate orchestration patterns, tool use, and guardrails for autonomous agents — adapt orchestration patterns, not raw LLM-driven autonomy, for trading."
+      ],
+      "links": [
+        {
+          "label": "Hummingbot (repo)",
+          "url": "https://github.com/hummingbot/hummingbot"
+        },
+        {
+          "label": "Hummingbot (docs)",
+          "url": "https://docs.hummingbot.io/"
+        },
+        {
+          "label": "Freqtrade (repo)",
+          "url": "https://github.com/freqtrade/freqtrade"
+        },
+        {
+          "label": "Freqtrade (strategy & docs)",
+          "url": "https://www.freqtrade.io/en/stable/"
+        },
+        {
+          "label": "CCXT (unified exchange library)",
+          "url": "https://github.com/ccxt/ccxt"
+        },
+        {
+          "label": "Auto-GPT (autonomous orchestration example)",
+          "url": "https://github.com/Significant-Gravitas/Auto-GPT"
+        },
+        {
+          "label": "LangChain (agent orchestration patterns)",
+          "url": "https://github.com/langchain-ai/langchain"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "repo-structure-and-filesystem",
+      "title": "Recommended Repository & Filesystem Layouts for Trading Agents",
+      "summary": "Opinionated, operationally-productive repo layouts and file conventions to support development, testing, and secure deployment of trading agents.",
+      "tags": [
+        "repo",
+        "filesystem",
+        "layout",
+        "ops",
+        "development"
+      ],
+      "details": [
+        "Top-level layout: README, LICENSE, docker-compose.yml, infra/, ci/, deployments/, docs/, src/, tests/, data/, tools/, configs/.",
+        "src/ structure: src/adapters/ (exchange/ledger connectors), src/engine/ (decision & risk), src/strategies/, src/sim/ (simulator & backtest runner), src/services/ (indexer, ingestion), src/cli/.",
+        "configs/: environment-specific YAML/JSON (paper, canary, prod) with explicit feature flags; never commit secrets — use placeholders and secret-injection at deploy time.",
+        "data/: store historical market data, labeled feature snapshots, and canonical backtest artifacts; keep large data outside repo or referenced via pointers to artifact storage.",
+        "infra/: deployment manifests (k8s, docker), service definitions for node/indexer, and infra-as-code for observability (prometheus, grafana dashboards).",
+        "ci/: automated test suites, backtest regression checks, linting, and reproducible environment matrix definitions; require unit + integration coverage gates.",
+        "scripts/: utilities for dataset ingestion, ledger indexer bootstrapping, snapshot exports and replay drivers (replay market data into simulator).",
+        "docs/: architecture diagrams, runbooks, on-call procedures, and developer guides for onboarding new strategies or connectors."
+      ],
+      "links": [
+        {
+          "label": "Example project layout discussion (blog)",
+          "url": "https://12factor.net/"
+        },
+        {
+          "label": "Freqtrade repo layout (example)",
+          "url": "https://github.com/freqtrade/freqtrade"
+        },
+        {
+          "label": "Hummingbot repo layout (example)",
+          "url": "https://github.com/hummingbot/hummingbot"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "guardrails-safety-loops",
+      "title": "Guardrails & Safety Loops for Trading Agents",
+      "summary": "Practical guardrails: safety controls, kill switches, audits, and human-in-the-loop patterns to prevent catastrophic loss and to enable auditable automated operations.",
+      "tags": [
+        "guardrails",
+        "safety",
+        "risk",
+        "compliance",
+        "ops"
+      ],
+      "details": [
+        "Multi-tier safety: pre-order validation (syntax & risk checks), pre-execution gating (circuit breakers), post-execution reconciliation (fills vs expected), and human escalation triggers.",
+        "Circuit breakers: global (halt all trading on large drawdown or outage), strategy-level (suspend if edge decays), and exchange-adapter-level (retry/backoff when rate limits or errors spike).",
+        "Per-trade risk checks: max notional, max qty, allowed currency pairs list, min liquidity thresholds, and simple slippage bounds before accepting fills.",
+        "Idempotency & ordinality: use idempotency keys for each logical order, persist external/order-provider ids and reconcile to guard against duplicates on retries.",
+        "Access & secrets: never store API keys in repo; use secrets manager (Vault, AWS Secrets Manager) and least-privilege keys; maintain separate keys for paper/canary/prod.",
+        "Human-in-the-loop gates: require manual approval for high-impact operations (large treasury moves, parameter changes above thresholds, deploy critical upgrades).",
+        "Observability & alerting: critical alerts for gateway insolvency, exchange outages, unexpected filler rates, and reconciliation failures; include automated escalation playbooks.",
+        "Operational logs & audit: immutable append-only logs for orders, cancels, fills and ledger events; store raw market snapshots used for each decision for reproducible investigations.",
+        "Sim-to-live parity: ensure production adapters reuse same codepath as simulator with dependency injection for data feeds to reduce unforeseen divergence."
+      ],
+      "links": [
+        {
+          "label": "Execution Best Practices (workspace)",
+          "url": "FILE:ai/library.json#execution-best-practices"
+        },
+        {
+          "label": "Vault - secrets management (example)",
+          "url": "https://www.vaultproject.io/"
+        },
+        {
+          "label": "AWS Secrets Manager",
+          "url": "https://aws.amazon.com/secrets-manager/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "testing-deployment-monitoring",
+      "title": "Testing, Deployment & Observability for Trading Agents",
+      "summary": "Testing strategy (backtest, replay, integration), deployment patterns (canary, feature flags), and monitoring stacks (metrics, tracing, error reporting) tuned for trading operations.",
+      "tags": [
+        "testing",
+        "deployment",
+        "monitoring",
+        "ci",
+        "replay"
+      ],
+      "details": [
+        "Testing pyramid: unit tests for strategy primitives, component tests for adapters & risk, integration tests against sandbox exchanges, full system backtest/regression suites.",
+        "Historical replay: ship a deterministic replay engine that can inject recorded orderbook & trades into live-like components for regression and incident replay.",
+        "Backtest hygiene: enforce realistic slippage, fees, latency models and hidden-data controls (no lookahead); maintain an out-of-sample period and rolling forward-tests.",
+        "CI/CD: run backtest/regression checks in CI for PRs that touch engine code; block merges on failing regression or reduced edge beyond accepted thresholds.",
+        "Deployment patterns: immutable deployments (containers), canary releases with gradual traffic ramp and configurable kill-switch; use feature flags for experimental models.",
+        "Observability: instrument key metrics (latency, fills, slippage, PnL per strategy, open orders, exchange health) and trace critical flows; integrate alerting with runbooks.",
+        "Error handling & retries: exponential backoff for API errors, circuit breaker pattern for high-error rates, and store failed operations for manual reconciliation.",
+        "Incident response: runbooks for exchange outage, reconciliation mismatch, gateway insolvency and leaked keys; include contact lists and required remediation steps."
+      ],
+      "links": [
+        {
+          "label": "Execution Best Practices (workspace)",
+          "url": "FILE:ai/library.json#execution-best-practices"
+        },
+        {
+          "label": "Prometheus (metrics) + Grafana (dashboards)",
+          "url": "https://prometheus.io/"
+        },
+        {
+          "label": "Sentry (error reporting)",
+          "url": "https://sentry.io/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
+    },
+    {
+      "id": "xrpl-xahau-integration-patterns",
+      "title": "XRPL & Xahau Integration Patterns for Agent Builders",
+      "summary": "Practical patterns to integrate XRPL ledger features and Xahau objectives into agents: ledger subscriptions, pathfinding, gateway monitoring, and indexer design.",
+      "tags": [
+        "xrpl",
+        "xahau",
+        "integration",
+        "pathfinding",
+        "ledger"
+      ],
+      "details": [
+        "Primary sources: use xrpl.org docs and xrpl.js/xrpl-py clients for canonical interaction patterns (ledger subscribe, account_tx, book_offers, path_find).",
+        "Indexer pattern: run a local indexer that persists orderbook snapshots, offers changes, AMM events and gateway deposit/withdraw events for fast queries and reconciliation.",
+        "Pathfinding & auto-bridging: query book_offers first for direct liquidity, then use path_find for multi-hop routes; persist path snapshots chosen at execution time for audit.",
+        "Gateway health & credit risk: monitor gateway inflows/outflows and labeled wallet activity to detect solvency or bridge risk that should influence routing.",
+        "AMM / LP operations: treat AMM pool changes as ledger events, record LP token/account changes, and gate LP automation behind multisig/time-delay patterns for treasury safety.",
+        "Simulations: replay ledger events into simulator and validate path_find outcomes against historical fills to calibrate slippage & fee assumptions.",
+        "Xahau mapping: model Xahau marketplace features to XRPL primitives (offers, AMM pools, escrows) and define agent brain signals that reflect marketplace objectives.",
+        "Operational infra: keep rippled access behind internal adapters, rate-limit rippled calls, and provide local caching to reduce latency and load on public nodes."
+      ],
+      "links": [
+        {
+          "label": "XRPL Developer Docs (canonical)",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "Pathfinding & Payments",
+          "url": "https://xrpl.org/path-find.html"
+        },
+        {
+          "label": "Order Book Queries (offer/book_offers)",
+          "url": "https://xrpl.org/offer.html"
+        },
+        {
+          "label": "Xahau Buildout (workspace entry)",
+          "url": "FILE:ai/library.json#xahau-buildout"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:40:05.275Z"
     }
   ]
 }
