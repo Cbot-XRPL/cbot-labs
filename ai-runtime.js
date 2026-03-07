@@ -15,6 +15,18 @@ const activityLimit = 250;
 const botOutputLimit = 120;
 const consoleLimit = 400;
 const taskHeartbeatMs = 15000;
+const defaultWritableRoots = ["ai/", "admin-projects/", "server.js"];
+const requiredProtectedPaths = [
+  ".env",
+  ".data/",
+  "index.html",
+  "script.js",
+  "style.css",
+  ".well-known/",
+  "sessions.json",
+  "favicon.ico",
+  "ll.png"
+];
 
 let timer = null;
 
@@ -31,12 +43,8 @@ function defaultDb() {
       retryDelaySeconds: 90,
       maxTaskRuntimeMinutes: 20,
       maxRetries: 2,
-      writableRoots: ["ai/"],
-      protectedPaths: [
-        ".env",
-        ".data/",
-        "server.js"
-      ]
+      writableRoots: [...defaultWritableRoots],
+      protectedPaths: [...requiredProtectedPaths]
     },
     goals: [],
     tasks: [],
@@ -91,6 +99,7 @@ function loadDb() {
 
     next.state.botOutputEntries = normalizeBotOutputEntries(next.state, next.notes, next.tasks);
     next.state.botOutput = next.state.botOutputEntries[0]?.text || next.state.botOutput || null;
+    normalizeConfigPolicy(next.config);
     return next;
   } catch (error) {
     return defaultDb();
@@ -133,8 +142,7 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
     }
 
     const createdAt = entry.createdAt || new Date().toISOString();
-    const source = entry.source || "system";
-    const key = `${createdAt}|${source}|${normalizeEntryTextForKey(text)}`;
+    const key = `${createdAt}|${normalizeEntryTextForKey(text)}`;
     if (seen.has(key)) {
       return;
     }
@@ -142,7 +150,7 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
     seen.add(key);
     entries.push({
       id: entry.id || crypto.randomUUID(),
-      source,
+      source: entry.source || "system",
       createdAt,
       text
     });
@@ -252,6 +260,27 @@ function updateDb(mutator) {
   const result = mutator(db) || db;
   saveDb(result);
   return result;
+}
+
+function normalizePolicyList(values) {
+  return (Array.isArray(values) ? values : [])
+    .map((item) => String(item || "").trim().replaceAll("\\", "/"))
+    .filter(Boolean);
+}
+
+function normalizeConfigPolicy(config) {
+  const writableRoots = normalizePolicyList(config.writableRoots);
+  const protectedPaths = normalizePolicyList(config.protectedPaths)
+    .filter((item) => item !== "server.js");
+
+  config.writableRoots = Array.from(new Set([
+    ...defaultWritableRoots,
+    ...writableRoots
+  ]));
+  config.protectedPaths = Array.from(new Set([
+    ...requiredProtectedPaths,
+    ...protectedPaths
+  ]));
 }
 
 function addActivity(type, message, meta = {}) {
@@ -1017,12 +1046,7 @@ function setConfig(patch) {
     current.config.retryDelaySeconds = Math.max(15, Number(current.config.retryDelaySeconds) || 90);
     current.config.maxTaskRuntimeMinutes = Math.max(1, Number(current.config.maxTaskRuntimeMinutes) || 20);
     current.config.maxRetries = Math.max(1, Number(current.config.maxRetries) || 2);
-    current.config.writableRoots = Array.isArray(current.config.writableRoots)
-      ? current.config.writableRoots.map((item) => String(item || "").trim().replaceAll("\\", "/")).filter(Boolean)
-      : ["ai/"];
-    current.config.protectedPaths = Array.isArray(current.config.protectedPaths)
-      ? current.config.protectedPaths.map((item) => String(item || "").trim().replaceAll("\\", "/")).filter(Boolean)
-      : [".env", ".data/", "server.js"];
+    normalizeConfigPolicy(current.config);
     return current;
   });
 
@@ -1254,6 +1278,35 @@ function reorderTasks(taskIds) {
   return normalizeTaskOrder(db.tasks);
 }
 
+function removeTask(taskId) {
+  let removedTask = null;
+
+  const db = updateDb((current) => {
+    removedTask = current.tasks.find((task) => task.id === taskId) || null;
+    if (!removedTask) {
+      throw new Error("Task not found");
+    }
+
+    if (current.state.currentTaskId === taskId || removedTask.status === "running") {
+      throw new Error("Cannot delete a running task. Reset it first.");
+    }
+
+    current.tasks = normalizeTaskOrder(current.tasks.filter((task) => task.id !== taskId));
+    return current;
+  });
+
+  addActivity("task", "Task deleted", {
+    taskId,
+    title: removedTask?.title || "unknown"
+  });
+  addConsoleLine("task deleted", {
+    taskId,
+    title: removedTask?.title || "unknown"
+  });
+
+  return db.tasks;
+}
+
 function addGoal(text) {
   const trimmed = String(text || "").trim();
   if (!trimmed) {
@@ -1386,6 +1439,7 @@ module.exports = {
   getSnapshot,
   removeGoal,
   removeNote,
+  removeTask,
   reorderTasks,
   runLoopCycle,
   setConfig,

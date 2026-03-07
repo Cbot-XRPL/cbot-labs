@@ -5,6 +5,7 @@ let draggedTaskId = null;
 const visibleBotOutputLimit = 20;
 let currentBotOutputEntries = [];
 let lastBotOutputRenderKey = "";
+let currentView = "home";
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
@@ -74,6 +75,26 @@ function showElement(id, visible) {
   if (element) {
     element.classList.toggle("hidden", !visible);
   }
+}
+
+function setActiveNavTab(view) {
+  const homeButton = document.getElementById("nav-home-button");
+  const adminButton = document.getElementById("nav-admin-button");
+
+  if (homeButton) {
+    homeButton.classList.toggle("nav-tab-active", view === "home");
+  }
+  if (adminButton) {
+    adminButton.classList.toggle("nav-tab-active", view === "admin");
+  }
+}
+
+function setView(view, isOwner = false) {
+  currentView = (view === "admin" && isOwner) ? "admin" : "home";
+  showElement("home-page", currentView === "home");
+  showElement("home-content", currentView === "home");
+  showElement("admin-panel", currentView === "admin" && isOwner);
+  setActiveNavTab(currentView);
 }
 
 function formatDateTime(value) {
@@ -220,6 +241,7 @@ function renderTaskList(tasks) {
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
         ${(task.status === "failed" || task.status === "completed" || task.status === "running") ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
+        <button class="mini-button" type="button" data-task-delete="${escapeHtml(task.id)}">Delete</button>
       </div>
     </article>
   `).join("");
@@ -267,27 +289,6 @@ function renderNoteList(notes) {
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-note-remove="${escapeHtml(note.id)}">Delete</button>
       </div>
-    </article>
-  `).join("");
-}
-
-function renderActivityList(activity) {
-  const container = document.getElementById("bot-activity-list");
-  if (!container) {
-    return;
-  }
-
-  if (!activity.length) {
-    container.innerHTML = `<div class="bot-list-item"><span>No activity yet.</span></div>`;
-    return;
-  }
-
-  container.innerHTML = activity.map((entry) => `
-    <article class="bot-list-item">
-      <strong>${escapeHtml(entry.type)}</strong>
-      <span>${escapeHtml(formatDateTime(entry.createdAt))}</span>
-      <p>${escapeHtml(entry.message)}</p>
-      ${entry.meta && Object.keys(entry.meta).length ? `<code class="bot-meta">${escapeHtml(JSON.stringify(entry.meta))}</code>` : ""}
     </article>
   `).join("");
 }
@@ -496,7 +497,6 @@ function renderBot(botData) {
   renderTaskList(botData.tasks || []);
   renderGoalList(botData.goals || []);
   renderNoteList(botData.notes || []);
-  renderActivityList(botData.activity || []);
   renderConsoleList(botData.state.consoleEntries || []);
 }
 
@@ -542,12 +542,18 @@ async function refreshAuthState() {
 
   setText("auth-chip", authChipText);
   showElement("logout-button", auth.loggedIn);
-  showElement("admin-panel", auth.isOwner);
+  showElement("nav-admin-button", auth.isOwner);
 
   const loginButton = document.getElementById("login-button");
   if (loginButton) {
     loginButton.disabled = !auth.configured || auth.loggedIn;
     loginButton.textContent = auth.configured ? "Login with Xaman" : "Xaman not configured";
+  }
+
+  if (!auth.isOwner && currentView === "admin") {
+    setView("home", false);
+  } else {
+    setView(currentView, auth.isOwner);
   }
 
   if (auth.isOwner) {
@@ -799,6 +805,15 @@ async function toggleTaskLock(taskId, locked) {
   await refreshOwnerData();
 }
 
+async function deleteTask(taskId) {
+  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
+    method: "DELETE"
+  });
+
+  setText("ai-output", "Task deleted.");
+  await refreshOwnerData();
+}
+
 async function reorderTaskList(taskIds) {
   await fetchJson("/api/admin/bot/tasks/reorder", {
     method: "POST",
@@ -1009,6 +1024,8 @@ async function bootstrapApp() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const homeNavButton = document.getElementById("nav-home-button");
+  const adminNavButton = document.getElementById("nav-admin-button");
   const tomlButton = document.getElementById("toml-link");
   const aiRunButton = document.getElementById("ai-run-button");
   const botSaveConfigButton = document.getElementById("bot-save-config");
@@ -1028,6 +1045,22 @@ window.addEventListener("DOMContentLoaded", () => {
   const closeTomlButton = document.getElementById("close-toml-dialog");
   const closeBotOutputButton = document.getElementById("close-bot-output-dialog");
   const toggleBotOutputSizeButton = document.getElementById("toggle-bot-output-dialog-size");
+
+  setView("home", false);
+
+  if (homeNavButton) {
+    homeNavButton.addEventListener("click", () => {
+      setView("home", !document.getElementById("nav-admin-button")?.classList.contains("hidden"));
+    });
+  }
+  if (adminNavButton) {
+    adminNavButton.addEventListener("click", async () => {
+      const auth = await fetchJson("/api/auth/session");
+      if (auth.isOwner) {
+        setView("admin", true);
+      }
+    });
+  }
 
   if (tomlButton) {
     tomlButton.addEventListener("click", showToml);
@@ -1142,6 +1175,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const editTaskId = target.dataset.taskEdit;
       const lockTaskId = target.dataset.taskLock;
       const resetTaskId = target.dataset.taskReset;
+      const deleteTaskId = target.dataset.taskDelete;
       const taskId = target.dataset.taskId;
       const action = target.dataset.taskAction;
       if (editTaskId) {
@@ -1154,6 +1188,10 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       if (resetTaskId) {
         await resetTask(resetTaskId);
+        return;
+      }
+      if (deleteTaskId) {
+        await deleteTask(deleteTaskId);
         return;
       }
       if (taskId && action) {

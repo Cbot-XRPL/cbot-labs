@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260307-consolepane">
+    <link rel="stylesheet" href="style.css?v=20260307-topbarstack">
 </head>
 
 <body>
@@ -27,13 +27,20 @@
                 </div>
             </div>
 
-            <div class="nav-actions">
-                <div id="auth-chip" class="auth-chip">Signed out</div>
-                <button id="login-button" class="primary-button" type="button">Login with Xaman</button>
-                <button id="logout-button" class="secondary-button hidden" type="button">Logout</button>
+            <div class="topbar-right">
+                <div class="nav-tabs">
+                    <button id="nav-home-button" class="nav-tab nav-tab-active" type="button">Home</button>
+                    <button id="nav-admin-button" class="nav-tab hidden" type="button">Admin</button>
+                </div>
+                <div class="nav-actions">
+                    <div id="auth-chip" class="auth-chip">Signed out</div>
+                    <button id="login-button" class="primary-button" type="button">Login with Xaman</button>
+                    <button id="logout-button" class="secondary-button hidden" type="button">Logout</button>
+                </div>
             </div>
         </nav>
 
+        <section id="home-page">
         <header class="hero">
             <div class="hero-copy">
                 <p class="eyebrow">CBOT LABS / LOCAL APP</p>
@@ -88,6 +95,7 @@
                 </div>
             </div>
         </header>
+        </section>
 
         <section id="admin-panel" class="panel panel-wide hidden">
             <div class="panel-header">
@@ -244,15 +252,11 @@
                         </div>
                         <div id="bot-note-list" class="bot-list"></div>
                     </div>
-                    <div class="key-box admin-ai-box">
-                        <span class="key-label">Activity feed</span>
-                        <div id="bot-activity-list" class="bot-list"></div>
-                    </div>
                 </div>
             </div>
         </section>
 
-        <main class="content-grid">
+        <main id="home-content" class="content-grid">
             <section class="panel panel-wide">
                 <div class="panel-header">
                     <p class="panel-kicker">Validator</p>
@@ -337,7 +341,7 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260307-terminal"></script>
+    <script src="script.js?v=20260307-adminnav"></script>
 </body>
 
 </html>

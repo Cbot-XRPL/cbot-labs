@@ -120,6 +120,35 @@ code,
   gap: 14px;
 }
 
+.topbar-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-tab {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.nav-tab-active {
+  background: rgba(121, 247, 200, 0.14);
+  border-color: rgba(121, 247, 200, 0.32);
+  color: var(--text);
+  box-shadow: 0 0 22px rgba(121, 247, 200, 0.1);
+}
+
 .nav-logo,
 .hero-logo {
   object-fit: contain;
@@ -482,11 +511,13 @@ code,
 }
 
 .admin-bot-columns.console-row {
-  min-height: min(48vh, 560px);
+  height: min(48vh, 560px);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .admin-bot-columns.console-row > .admin-ai-box {
   min-height: 0;
+  height: 100%;
 }
 
 .admin-bot-primary-row {
@@ -507,6 +538,7 @@ code,
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
 }
 
 .task-queue-pane,
@@ -670,7 +702,7 @@ code,
 #bot-console-list {
   margin-top: 16px;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
@@ -997,7 +1029,11 @@ code,
     align-items: stretch;
   }
 
+  .topbar-right,
+  .nav-tabs,
   .nav-actions {
+    align-items: flex-start;
+    justify-content: flex-start;
     flex-wrap: wrap;
   }
 

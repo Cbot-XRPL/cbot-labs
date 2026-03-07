@@ -18,3 +18,6 @@ This agent is reserved for authenticated owner use inside the Cbot Labs admin pa
 - Prefer local context from this workspace before external actions
 - Keep execution auditable
 - Prefer file updates over chat-style summaries for task execution
+- Treat public site files as protected by default: do not modify `index.html`, `script.js`, `style.css`, `.well-known/`, or login/session storage files for autonomous tasks
+- New pages or mini-projects must live under `admin-projects/` and only be reachable through owner-authenticated routes
+- If `server.js` must be updated, preserve owner authentication, preserve the owner wallet whitelist, and do not weaken access control

@@ -16,6 +16,7 @@ const {
   getSnapshot,
   removeGoal,
   removeNote,
+  removeTask,
   reorderTasks,
   runLoopCycle,
   setConfig,
@@ -30,6 +31,7 @@ const port = process.env.PORT || 3000;
 const rootDir = __dirname;
 const wellKnownDir = path.join(rootDir, ".well-known");
 const dataDir = path.join(rootDir, ".data");
+const adminProjectsDir = path.join(rootDir, "admin-projects");
 const sessionsFile = path.join(dataDir, "sessions.json");
 const ownerAccount = "rCboTXmnomVJzRKVXqDMDFzwTaCKFAcYs";
 const sessionCookieName = "cbot_session";
@@ -45,6 +47,7 @@ const xamanConfigured = Boolean(xamanApiKey && xamanApiSecret);
 const xumm = xamanConfigured ? new Xumm(xamanApiKey, xamanApiSecret) : null;
 
 fs.mkdirSync(dataDir, { recursive: true });
+fs.mkdirSync(adminProjectsDir, { recursive: true });
 
 const appData = {
   brand: {
@@ -217,6 +220,14 @@ app.get("/api/app", (req, res) => {
 app.get("/api/validator", (req, res) => {
   res.json(appData.validator);
 });
+
+app.use("/admin/projects", requireOwner, express.static(adminProjectsDir, {
+  extensions: ["html"],
+  index: "index.html",
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-cache");
+  }
+}));
 
 app.get("/api/links", (req, res) => {
   res.json(appData.links);
@@ -459,6 +470,20 @@ app.patch("/api/admin/bot/tasks/:id", requireOwner, (req, res) => {
     res.json({
       ok: true,
       task: updateTask(req.params.id, req.body || {})
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.delete("/api/admin/bot/tasks/:id", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      tasks: removeTask(req.params.id)
     });
   } catch (error) {
     res.status(400).json({
