@@ -42,7 +42,7 @@
                 <p class="hero-summary" id="brand-summary"></p>
 
                 <div class="hero-actions">
-                    <a class="primary-button" id="toml-link" href="#" target="_blank" rel="noreferrer">Open Xahau TOML</a>
+                    <button class="primary-button" id="toml-link" type="button">View Xahau TOML</button>
                     <a class="secondary-button" id="unl-link" href="#" target="_blank" rel="noreferrer">View UNL Listing</a>
                     <div class="hero-socials-list">
                         <a id="hero-email-link" class="hero-social-link" href="#" target="_blank" rel="noreferrer" aria-label="Email" title="Email">
@@ -108,6 +108,115 @@
                 <span class="key-label">Controls exposed by backend</span>
                 <div id="admin-controls" class="admin-controls"></div>
             </div>
+            <div class="admin-box">
+                <div class="panel-header admin-ai-header">
+                    <div>
+                        <span class="key-label">Admin Bot</span>
+                        <h3>Loop controller</h3>
+                    </div>
+                    <strong id="bot-runtime-status" class="admin-ai-status">Checking...</strong>
+                </div>
+                <div class="admin-ai-grid admin-bot-grid">
+                    <article class="admin-card">
+                        <span class="api-label">Provider</span>
+                        <strong id="ai-config-status">Checking...</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Manifest</span>
+                        <strong id="ai-manifest-name">-</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Exec mode</span>
+                        <strong id="ai-exec-mode">-</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Git branch</span>
+                        <strong id="bot-git-branch">-</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Next run</span>
+                        <strong id="bot-next-run">-</strong>
+                    </article>
+                    <article class="admin-card">
+                        <span class="api-label">Last result</span>
+                        <strong id="bot-last-result">-</strong>
+                    </article>
+                </div>
+                <div class="key-box admin-ai-box">
+                    <span class="key-label">Workspace files</span>
+                    <div id="ai-files" class="admin-controls"></div>
+                </div>
+                <div class="admin-bot-config-grid">
+                    <label class="admin-ai-form" for="bot-loop-minutes">
+                        <span class="key-label">Loop minutes</span>
+                        <input id="bot-loop-minutes" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
+                    </label>
+                    <label class="admin-ai-form" for="bot-idle-delay">
+                        <span class="key-label">Idle delay seconds</span>
+                        <input id="bot-idle-delay" class="admin-ai-input admin-short-input" type="number" min="10" step="5">
+                    </label>
+                    <label class="admin-ai-form" for="bot-max-retries">
+                        <span class="key-label">Max retries</span>
+                        <input id="bot-max-retries" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
+                    </label>
+                </div>
+                <div class="admin-toggle-row">
+                    <label class="toggle-chip"><input id="bot-enabled" type="checkbox"> Loop enabled</label>
+                    <label class="toggle-chip"><input id="bot-auto-call" type="checkbox"> Auto call LLM</label>
+                    <label class="toggle-chip"><input id="bot-auto-commit" type="checkbox"> Auto commit</label>
+                    <label class="toggle-chip"><input id="bot-auto-push" type="checkbox"> Auto push</label>
+                </div>
+                <label class="admin-ai-form" for="ai-prompt">
+                    <span class="key-label">Manual AI prompt</span>
+                    <textarea id="ai-prompt" class="admin-ai-input" rows="4" placeholder="Direct admin-only AI prompt"></textarea>
+                </label>
+                <div class="dialog-actions admin-ai-actions">
+                    <button id="bot-save-config" class="secondary-button" type="button">Save Config</button>
+                    <button id="bot-start-button" class="primary-button" type="button">Start Loop</button>
+                    <button id="bot-stop-button" class="secondary-button" type="button">Stop Loop</button>
+                    <button id="bot-run-now" class="primary-button" type="button">Run Now</button>
+                    <button id="ai-run-button" class="secondary-button" type="button">Manual AI Call</button>
+                </div>
+                <div class="admin-bot-columns">
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Assigned task queue</span>
+                        <div class="admin-ai-form">
+                            <input id="task-title" class="admin-ai-input admin-short-input" type="text" placeholder="Task title">
+                            <input id="task-goal" class="admin-ai-input admin-short-input" type="text" placeholder="Goal">
+                            <textarea id="task-block" class="admin-ai-input" rows="5" placeholder="Assigned task block"></textarea>
+                            <button id="task-add-button" class="primary-button" type="button">Add Task</button>
+                        </div>
+                        <div id="bot-task-list" class="bot-list"></div>
+                    </div>
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Goals</span>
+                        <div class="admin-ai-form">
+                            <input id="goal-text" class="admin-ai-input admin-short-input" type="text" placeholder="Add persistent goal">
+                            <button id="goal-add-button" class="primary-button" type="button">Add Goal</button>
+                        </div>
+                        <div id="bot-goal-list" class="bot-list"></div>
+                    </div>
+                </div>
+                <div class="admin-bot-columns">
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Notes for me</span>
+                        <div class="admin-ai-form">
+                            <input id="note-title" class="admin-ai-input admin-short-input" type="text" placeholder="Note title">
+                            <textarea id="note-body" class="admin-ai-input" rows="4" placeholder="Leave yourself a note or operator comment"></textarea>
+                            <button id="note-add-button" class="primary-button" type="button">Save Note</button>
+                        </div>
+                        <div id="bot-note-list" class="bot-list"></div>
+                    </div>
+                    <div class="key-box admin-ai-box">
+                        <span class="key-label">Activity feed</span>
+                        <div id="bot-activity-list" class="bot-list"></div>
+                    </div>
+                </div>
+                <div class="key-box admin-ai-box">
+                    <span class="key-label">Bot output</span>
+                    <pre id="ai-output" class="toml-content admin-ai-output">Bot output will appear here.</pre>
+                </div>
+            </div>
         </section>
 
         <main class="content-grid">
@@ -143,7 +252,7 @@
             <section class="panel">
                 <div class="panel-header">
                     <p class="panel-kicker">Links</p>
-                    <h2>Outbound</h2>
+                    <h2>Contact</h2>
                 </div>
                 <div id="links-list" class="link-list"></div>
             </section>
@@ -161,6 +270,21 @@
             <div class="dialog-actions">
                 <a id="login-open-link" class="primary-button hidden" href="#" target="_blank" rel="noreferrer">Open in Xaman</a>
                 <button id="close-login-dialog" class="secondary-button" type="button">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="toml-dialog" class="login-dialog">
+        <div class="login-dialog-inner toml-dialog-inner">
+            <div class="panel-header">
+                <p class="panel-kicker">Validator</p>
+                <h2>Xahau TOML</h2>
+            </div>
+            <p id="toml-message" class="dialog-copy">Loading TOML...</p>
+            <pre id="toml-content" class="toml-content hidden"></pre>
+            <div class="dialog-actions">
+                <a id="toml-source-link" class="secondary-button" href="#" target="_blank" rel="noreferrer">Open Source File</a>
+                <button id="close-toml-dialog" class="primary-button" type="button">Close</button>
             </div>
         </div>
     </dialog>

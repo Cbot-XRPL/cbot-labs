@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "id": "validator-ops",
+      "title": "Validator Operations",
+      "summary": "Reference material for validator uptime, identity, and maintenance."
+    },
+    {
+      "id": "xahau-buildout",
+      "title": "Xahau Buildout",
+      "summary": "Working notes for future Xahau marketplace and AI integrations."
+    }
+  ]
+}

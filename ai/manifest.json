@@ -1,0 +1,14 @@
+{
+  "name": "cbot-labs-admin-ai",
+  "version": "0.1.0",
+  "visibility": "owner-only",
+  "provider": "openai",
+  "status": "scaffold",
+  "description": "Admin-only AI workspace for Cbot Labs operator tooling.",
+  "capabilities": [
+    "chat",
+    "playbook-execution",
+    "tool-routing",
+    "content-generation"
+  ]
+}

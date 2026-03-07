@@ -6,6 +6,21 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { Xumm } = require("xumm");
+const { getAiSummary, getAiWorkspace, runAiTask } = require("./ai-service");
+const {
+  addGoal,
+  addManualNote,
+  addTask,
+  bootstrapLoop,
+  getGitSnapshot,
+  getSnapshot,
+  removeGoal,
+  runLoopCycle,
+  setConfig,
+  startLoop,
+  stopLoop,
+  updateTask
+} = require("./ai-runtime");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -62,7 +77,7 @@ const appData = {
   modules: [
     {
       name: "Admin",
-      description: "Private panel that only renders when the authenticated account matches the owner wallet.",
+      description: "Set back up schedules, created warning alerts, and hardened restart systems. Build private panel that only renders when the authenticated account matches the owner wallet.",
       status: "ready"
     },
     {
@@ -208,6 +223,21 @@ app.get("/api/modules", (req, res) => {
   res.json(appData.modules);
 });
 
+app.get("/api/toml/xahau", (req, res) => {
+  const filePath = path.join(wellKnownDir, "xahau.toml");
+
+  try {
+    const content = fs.readFileSync(filePath, "utf8");
+    res.type("text/plain; charset=utf-8");
+    res.send(content);
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: "Failed to load xahau.toml"
+    });
+  }
+});
+
 app.get("/api/auth/session", (req, res) => {
   res.json(buildAuthState(req));
 });
@@ -341,8 +371,129 @@ app.get("/api/admin", requireOwner, (req, res) => {
       "Build private panel with wallet authentication",
       "Back server and VMs",
       "Add higher quality error tracking"
-    ]
+    ],
+    ai: getAiSummary(),
+    bot: {
+      state: getSnapshot().state,
+      config: getSnapshot().config
+    }
   });
+});
+
+app.get("/api/admin/ai", requireOwner, (req, res) => {
+  res.json({
+    ok: true,
+    ...getAiWorkspace(),
+    configured: Boolean(process.env.OPENAI_API_KEY)
+  });
+});
+
+app.post("/api/admin/ai/run", requireOwner, async (req, res) => {
+  try {
+    const result = await runAiTask(req.body?.prompt);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.get("/api/admin/bot", requireOwner, async (req, res) => {
+  res.json({
+    ok: true,
+    ...getSnapshot(),
+    git: await getGitSnapshot()
+  });
+});
+
+app.post("/api/admin/bot/config", requireOwner, (req, res) => {
+  res.json({
+    ok: true,
+    config: setConfig(req.body || {}).config
+  });
+});
+
+app.post("/api/admin/bot/start", requireOwner, (req, res) => {
+  res.json({
+    ok: true,
+    state: startLoop().state
+  });
+});
+
+app.post("/api/admin/bot/stop", requireOwner, (req, res) => {
+  res.json({
+    ok: true,
+    state: stopLoop().state
+  });
+});
+
+app.post("/api/admin/bot/run", requireOwner, async (req, res) => {
+  res.json({
+    ok: true,
+    ...(await runLoopCycle()),
+    git: await getGitSnapshot()
+  });
+});
+
+app.post("/api/admin/bot/tasks", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      task: addTask(req.body || {})
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.patch("/api/admin/bot/tasks/:id", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      task: updateTask(req.params.id, req.body || {})
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.post("/api/admin/bot/goals", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      goal: addGoal(req.body?.text)
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.delete("/api/admin/bot/goals/:id", requireOwner, (req, res) => {
+  removeGoal(req.params.id);
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/bot/notes", requireOwner, (req, res) => {
+  try {
+    addManualNote(req.body?.title, req.body?.body);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
 });
 
 app.use("/.well-known", express.static(wellKnownDir));
@@ -382,6 +533,7 @@ function getNetworkUrls(activePort) {
 }
 
 loadSessions();
+bootstrapLoop();
 
 if (require.main === module) {
   const server = app.listen(port, () => {
