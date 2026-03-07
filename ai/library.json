@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "crypto-onchain-metrics",
@@ -203,7 +203,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "strategies-risk-management",
@@ -236,7 +236,7 @@
           "url": "https://en.wikipedia.org/wiki/Kelly_criterion"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.640Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "tools-data-sources",
@@ -277,7 +277,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.641Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "execution-best-practices",
@@ -310,7 +310,7 @@
           "url": "https://www.quantconnect.com/docs"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.641Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     },
     {
       "id": "xrpl-and-xahau-notes",
@@ -339,7 +339,243 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-07T22:22:18.641Z"
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "xrpl-core",
+      "title": "XRPL Core: Ledger APIs, Pathfinding, AMM & Gateways",
+      "summary": "Authoritative XRPL reference material for ledger interaction, orderbooks, on-ledger AMM, pathfinding (auto-bridging via offers), gateways and rippled API usage.",
+      "tags": [
+        "xrpl",
+        "rippled",
+        "pathfinding",
+        "amms",
+        "gateways",
+        "api"
+      ],
+      "details": [
+        "Primary developer docs: use xrpl.org as the canonical reference for ledger primitives, AMM, pathfinding, escrows and multisign behavior.",
+        "Ledger interaction: prefer xrpl.js (Node) or xrpl-py (Python) clients and rippled JSON-RPC / WebSocket subscriptions for production integration.",
+        "Orderbook & pathfinding: rely on book_offers, account_offers and path_find (pathfinding) mechanisms to implement auto-bridging and routed swaps across offers.",
+        "AMM on XRPL: review XRPL AMM design and on-ledger AMM primitives to understand pools, liquidity provider accounting and fee flows before automating LP operations.",
+        "Gateways & bridging model: treat gateways as off-ledger custodial bridges; combine gateway monitoring (ledger deposits/withdrawals) with pathfinding to detect liquidity routes and bridge flows.",
+        "Operational tips: subscribe to ledger notifications (validated ledgers, account_tx), persist orderbook snapshots and path quotes for reconciliation and slippage modelling."
+      ],
+      "links": [
+        {
+          "label": "XRPL Developer Docs (main)",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "XRPL AMM Guide",
+          "url": "https://xrpl.org/amm.html"
+        },
+        {
+          "label": "Pathfinding & Payments (auto-bridging via offers)",
+          "url": "https://xrpl.org/path-find.html"
+        },
+        {
+          "label": "Gateways & Issued Currencies (bridging model)",
+          "url": "https://xrpl.org/gateways.html"
+        },
+        {
+          "label": "Multi-signing (multisig) on XRPL",
+          "url": "https://xrpl.org/multi-signing.html"
+        },
+        {
+          "label": "Escrow & Payment Channels",
+          "url": "https://xrpl.org/escrow.html"
+        },
+        {
+          "label": "rippled API Reference",
+          "url": "https://xrpl.org/rippled-api.html"
+        },
+        {
+          "label": "xrpl.js (official JS library)",
+          "url": "https://github.com/XRPLF/xrpl.js"
+        },
+        {
+          "label": "xrpl-py (official Python library)",
+          "url": "https://github.com/XRPLF/xrpl-py"
+        },
+        {
+          "label": "rippled (reference implementation)",
+          "url": "https://github.com/ripple/rippled"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "xahau-buildout-local",
+      "title": "Xahau Buildout & Workspace Integration",
+      "summary": "Local workspace notes and the Xahau buildout reference to map marketplace objectives to XRPL data and agent signals.",
+      "tags": [
+        "xahau",
+        "xrpl",
+        "workspace",
+        "local"
+      ],
+      "details": [
+        "Primary workspace link: reference the local Xahau buildout entry for project-specific integration details and objectives.",
+        "Map Xahau features to XRPL primitives: identify which features map to XRPL offers, AMM pools, escrow/multisig and pathfinding routes.",
+        "Agent brain signals: define which ledger events (offer create/cancel, AMM liquidity changes, gateway deposits) will feed the agent brain for alerts and automation.",
+        "Implementation checklist: ensure credentials and keys remain protected (do not store in repo), and design testnet runs (Songbird/Sandbox) before mainnet operations."
+      ],
+      "links": [
+        {
+          "label": "Xahau Buildout (workspace entry)",
+          "url": "FILE:ai/library.json#xahau-buildout"
+        },
+        {
+          "label": "XRPL Developer Docs (for integration mapping)",
+          "url": "https://xrpl.org/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "evm-sidechain-flare",
+      "title": "EVM Sidechain Patterns: Flare, F-Assets & State Connector",
+      "summary": "Resources describing Flare's approach to bringing EVM functionality tied to XRPL/XRP via F-Assets, the State Connector and canonical bridge patterns used by EVM sidechains anchored to XRPL assets.",
+      "tags": [
+        "flare",
+        "evm",
+        "f-assets",
+        "state-connector",
+        "sidechain"
+      ],
+      "details": [
+        "Flare fundamentals: review Flare's documentation to understand State Connector, Spark (FLR) mechanics and how F-Assets (e.g., FXRP) represent XRPL assets on an EVM environment.",
+        "Sidechain anchoring pattern: study F-Asset mint/burn lifecycle, oracle or state-connector attestations, and security assumptions for pegged assets.",
+        "Testnets & tooling: use Songbird (Flare testnet) to prototype cross-chain flows, F-Asset minting and smart-contract interactions in an EVM environment.",
+        "Data & monitoring: monitor Flare nodes, state-connector logs and F-Asset mint/burn transactions for bridge reconciliations and forensic audits."
+      ],
+      "links": [
+        {
+          "label": "Flare Network - Official Site",
+          "url": "https://flare.xyz/"
+        },
+        {
+          "label": "Flare Docs (technical & F-Assets)",
+          "url": "https://docs.flare.xyz/"
+        },
+        {
+          "label": "Flare GitHub (protocol & tooling)",
+          "url": "https://github.com/FlareNetworks"
+        },
+        {
+          "label": "Songbird (Flare testnet)",
+          "url": "https://songbird.network/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "flare-defi-data-sources",
+      "title": "Flare DeFi: Ecosystem & Data Sources",
+      "summary": "Practical data sources and integration touchpoints for tracking DeFi activity on Flare and Songbird, including protocol repositories, block explorers and community-maintained analytics.",
+      "tags": [
+        "flare",
+        "defi",
+        "explorer",
+        "data",
+        "analytics"
+      ],
+      "details": [
+        "Official sources: prioritize Flare Docs and the Flare GitHub to identify protocol contracts, governance documents and technical releases.",
+        "Explorer & node data: use Songbird/Flare explorers and RPC endpoints to fetch transactions, contract events and block history for reconciliation and analytics.",
+        "Ecosystem discovery: catalogue DeFi projects from official Flare ecosystem pages and GitHub to track AMMs, bridges and vault products available on the network.",
+        "Onboarding feeds: subscribe to protocol release notes, project GitHub repos and community channels to detect upgrades, token listings and security advisories."
+      ],
+      "links": [
+        {
+          "label": "Flare Docs (ecosystem & technical)",
+          "url": "https://docs.flare.xyz/"
+        },
+        {
+          "label": "Flare GitHub (projects & contracts)",
+          "url": "https://github.com/FlareNetworks"
+        },
+        {
+          "label": "Songbird (testnet) - Network info",
+          "url": "https://songbird.network/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "xrpl-amm-vault-multisig",
+      "title": "XRPL AMM, Vaults & Multisig Operational Notes",
+      "summary": "Focused notes on how XRPL AMMs operate, recommended vault/multisig patterns on XRPL, and ledger-level primitives to secure multi-sign vaults and LP positions.",
+      "tags": [
+        "xrpl",
+        "amm",
+        "vault",
+        "multisig",
+        "security"
+      ],
+      "details": [
+        "AMM mechanics: review pool lifecycle, liquidity provider share accounting and fee distribution as specified in XRPL AMM docs before implementing LP automation or treasury flows.",
+        "Vault & multisig patterns: combine XRPL multisign features, escrow and regular on-ledger offers to build multisig vaults and timelocked release patterns.",
+        "Monitoring & reconciliation: track AMM pool_offer events, LP token/account changes and use ledger indexes to tie liquidity changes to signed transactions for audits.",
+        "Access control: apply least-privilege for operational keys, use multisign thresholds and signer lists; persist signer configuration snapshots for incident response."
+      ],
+      "links": [
+        {
+          "label": "XRPL AMM Guide",
+          "url": "https://xrpl.org/amm.html"
+        },
+        {
+          "label": "Multi-signing on XRPL",
+          "url": "https://xrpl.org/multi-signing.html"
+        },
+        {
+          "label": "Escrow & Timelocks (XRPL)",
+          "url": "https://xrpl.org/escrow.html"
+        },
+        {
+          "label": "rippled (reference implementation)",
+          "url": "https://github.com/ripple/rippled"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
+    },
+    {
+      "id": "xrpl-auto-bridging-and-paths",
+      "title": "Auto-bridging & Pathfinding on XRPL (Practical Integration)",
+      "summary": "Operational reference for implementing auto-bridging on XRPL using the ledger's pathfinding, orderbook composition and gateway models; includes APIs and monitoring guidance.",
+      "tags": [
+        "xrpl",
+        "auto-bridge",
+        "pathfinding",
+        "gateways",
+        "orderbook"
+      ],
+      "details": [
+        "Auto-bridging concept: use XRPL pathfinding to programmatically route a source asset to a destination asset across offers and gateways (XRPL path_find and book_offers workflows).",
+        "Implementation recipe: 1) query book_offers for direct liquidity; 2) use path_find for multi-hop quotes; 3) simulate slippage and fees; 4) place offer/payment with explicit paths or allow ripple pathing.",
+        "Gateway considerations: monitor gateway deposit/withdrawal ledgers and treat gateway solvency signals as part of routing/credit risk decisions.",
+        "Operational monitoring: persist path snapshots and chosen offers at time of execution, log fill partials and cancellations; alert on rapid offer changes or gateway anomalies."
+      ],
+      "links": [
+        {
+          "label": "Pathfinding & Payments",
+          "url": "https://xrpl.org/path-find.html"
+        },
+        {
+          "label": "Order Book Queries (book_offers)",
+          "url": "https://xrpl.org/offer.html"
+        },
+        {
+          "label": "Gateways & Issued Currencies",
+          "url": "https://xrpl.org/gateways.html"
+        },
+        {
+          "label": "Interledger Protocol (for cross-ledger flows)",
+          "url": "https://interledger.org/docs/"
+        }
+      ],
+      "updatedAt": "2026-03-07T22:38:56.667Z"
     }
   ]
 }

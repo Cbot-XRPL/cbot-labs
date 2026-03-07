@@ -406,15 +406,20 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
   const notes = Array.isArray(parsed.notes)
     ? parsed.notes.map((item) => String(item || "").trim()).filter(Boolean)
     : [];
+  const entryTitles = libraryEntries
+    .map((entry) => String(entry?.title || "").trim())
+    .filter(Boolean);
 
   return {
     summary,
     notes,
     changedFiles: [libraryPath],
     libraryEntryCount: libraryEntries.length,
+    entryTitles,
     output: [
       summary,
       `Library entries added or updated: ${libraryEntries.length}`,
+      ...(entryTitles.length ? ["Entry titles:", ...entryTitles.map((title) => `- ${title}`)] : []),
       `Changed files: ${libraryPath}`,
       ...(notes.length ? ["Notes:", ...notes.map((note) => `- ${note}`)] : [])
     ].join("\n")

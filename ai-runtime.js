@@ -163,6 +163,28 @@ function normalizeBotOutputEntries(state = {}, notes = [], tasks = []) {
   }
 
   for (const task of tasks) {
+    const runHistory = Array.isArray(task.runs) ? task.runs : [];
+
+    if (runHistory.length) {
+      for (const run of runHistory) {
+        if (!run?.output) {
+          continue;
+        }
+
+        pushEntry({
+          source: run.source || "task-run",
+          createdAt: run.createdAt || task.completedAt || task.startedAt || task.createdAt,
+          text: buildRunSummary(
+            task,
+            run.output,
+            run.git,
+            run.createdAt || task.completedAt || task.startedAt || task.createdAt
+          )
+        });
+      }
+      continue;
+    }
+
     if (task.status !== "completed" || !task.lastOutput) {
       continue;
     }
@@ -220,6 +242,7 @@ function normalizeTaskOrder(tasks) {
       ...task,
       locked: Boolean(task.locked),
       allowRerun: Boolean(task.allowRerun),
+      runs: Array.isArray(task.runs) ? task.runs : [],
       order: index + 1
     }));
 }
@@ -310,6 +333,9 @@ function appendBotOutput(text, source = "system", createdAt = new Date().toISOSt
 }
 
 function buildRunSummary(task, resultText, gitResult, createdAt = new Date().toISOString()) {
+  const normalizedResult = String(resultText || "").trim() || "No result text recorded.";
+  const resultLines = normalizedResult.split("\n");
+
   return [
     `Run result for ${task.title}`,
     new Date(createdAt).toLocaleString(),
@@ -317,8 +343,14 @@ function buildRunSummary(task, resultText, gitResult, createdAt = new Date().toI
     `Task: ${task.title}`,
     `Goal: ${task.goal || "n/a"}`,
     `Assigned block: ${task.assignedTaskBlock || "n/a"}`,
-    `Result: ${resultText}`,
-    `Git: ${(gitResult?.actions || []).join("; ") || "no git actions"}`
+    "",
+    "Execution summary:",
+    ...resultLines,
+    "",
+    "Git:",
+    ...(((gitResult?.actions || []).length
+      ? gitResult.actions
+      : ["no git actions"]).map((item) => `- ${item}`))
   ].join("\n");
 }
 
@@ -811,6 +843,15 @@ async function runLoopCycle() {
         currentTask.git = gitResult;
         currentTask.allowRerun = false;
         currentTask.runId = null;
+        currentTask.runs = Array.isArray(currentTask.runs) ? currentTask.runs : [];
+        currentTask.runs.unshift({
+          id: crypto.randomUUID(),
+          createdAt: completedAt,
+          source: "task-run",
+          output: appliedResult.output,
+          git: gitResult
+        });
+        currentTask.runs = currentTask.runs.slice(0, 24);
       }
       current.state.isRunning = false;
       current.state.activeRunId = null;
@@ -1039,7 +1080,8 @@ function addTask(payload) {
     completedAt: null,
     lastOutput: null,
     lastError: null,
-    git: null
+    git: null,
+    runs: []
   };
 
   updateDb((db) => {
