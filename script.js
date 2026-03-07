@@ -1,6 +1,7 @@
 let currentAppData = null;
 let authPollTimer = null;
 let adminPollTimer = null;
+let draggedTaskId = null;
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
@@ -179,15 +180,32 @@ function renderTaskList(tasks) {
     return;
   }
 
-  container.innerHTML = tasks.map((task) => `
-    <article class="bot-list-item">
-      <strong>${escapeHtml(task.title)}</strong>
+  const getTaskStatusTone = (status) => {
+    if (status === "running") {
+      return "running";
+    }
+    if (status === "failed") {
+      return "failed";
+    }
+    if (status === "pending") {
+      return "pending";
+    }
+    return "neutral";
+  };
+
+  container.innerHTML = tasks.map((task, index) => `
+    <article class="bot-list-item bot-task-item bot-task-status-${getTaskStatusTone(task.status)}" draggable="true" data-task-row-id="${escapeHtml(task.id)}">
+      <div class="bot-task-heading">
+        <span class="task-signal" aria-hidden="true"></span>
+        <strong>#${index + 1} ${escapeHtml(task.title)}</strong>
+      </div>
       <span>Status: ${escapeHtml(task.status)} | Attempts: ${escapeHtml(task.attempts)}</span>
       <span>Goal: ${escapeHtml(task.goal || "n/a")}</span>
       <p>${escapeHtml(task.assignedTaskBlock || "No assigned task block.")}</p>
       ${task.lastError ? `<span>Last error: ${escapeHtml(task.lastError)}</span>` : ""}
       ${task.lastOutput ? `<span>Last output: ${escapeHtml(task.lastOutput)}</span>` : ""}
       <div class="bot-list-item-actions">
+        <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-action="pending" data-task-id="${escapeHtml(task.id)}">Queue</button>
         <button class="mini-button" type="button" data-task-action="completed" data-task-id="${escapeHtml(task.id)}">Complete</button>
         <button class="mini-button" type="button" data-task-action="failed" data-task-id="${escapeHtml(task.id)}">Fail</button>
@@ -212,6 +230,7 @@ function renderGoalList(goals) {
       <strong>${escapeHtml(goal.text)}</strong>
       <span>${escapeHtml(formatDateTime(goal.createdAt))}</span>
       <div class="bot-list-item-actions">
+        <button class="mini-button" type="button" data-goal-edit="${escapeHtml(goal.id)}">Edit</button>
         <button class="mini-button" type="button" data-goal-remove="${escapeHtml(goal.id)}">Remove</button>
       </div>
     </article>
@@ -572,6 +591,57 @@ async function updateTaskStatus(taskId, status) {
   await refreshOwnerData();
 }
 
+async function reorderTaskList(taskIds) {
+  await fetchJson("/api/admin/bot/tasks/reorder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ taskIds })
+  });
+
+  setText("ai-output", "Task order updated.");
+  await refreshOwnerData();
+}
+
+async function editTask(taskId) {
+  const botData = await fetchJson("/api/admin/bot");
+  const task = (botData.tasks || []).find((entry) => entry.id === taskId);
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  const title = window.prompt("Edit task title", task.title);
+  if (title === null) {
+    return;
+  }
+
+  const goal = window.prompt("Edit task goal", task.goal || "");
+  if (goal === null) {
+    return;
+  }
+
+  const assignedTaskBlock = window.prompt("Edit assigned task block", task.assignedTaskBlock || "");
+  if (assignedTaskBlock === null) {
+    return;
+  }
+
+  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title,
+      goal,
+      assignedTaskBlock
+    })
+  });
+
+  setText("ai-output", "Task edited.");
+  await refreshOwnerData();
+}
+
 async function addGoal() {
   const goalInput = document.getElementById("goal-text");
 
@@ -599,6 +669,32 @@ async function removeGoal(goalId) {
   });
 
   setText("ai-output", "Goal removed.");
+  await refreshOwnerData();
+}
+
+async function editGoal(goalId) {
+  const botData = await fetchJson("/api/admin/bot");
+  const goal = (botData.goals || []).find((entry) => entry.id === goalId);
+  if (!goal) {
+    throw new Error("Goal not found");
+  }
+
+  const text = window.prompt("Edit goal", goal.text);
+  if (text === null) {
+    return;
+  }
+
+  await fetchJson(`/api/admin/bot/goals/${goalId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text
+    })
+  });
+
+  setText("ai-output", "Goal edited.");
   await refreshOwnerData();
 }
 
@@ -740,14 +836,95 @@ window.addEventListener("DOMContentLoaded", () => {
     noteAddButton.addEventListener("click", addNote);
   }
   if (taskList) {
+    taskList.addEventListener("dragstart", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const taskId = target.dataset.taskRowId;
+      if (!taskId) {
+        return;
+      }
+
+      draggedTaskId = taskId;
+      target.classList.add("dragging");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", taskId);
+      }
+    });
+
+    taskList.addEventListener("dragend", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        target.classList.remove("dragging");
+      }
+
+      draggedTaskId = null;
+      taskList.querySelectorAll(".drag-over").forEach((element) => {
+        element.classList.remove("drag-over");
+      });
+    });
+
+    taskList.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const row = target.closest("[data-task-row-id]");
+      if (!(row instanceof HTMLElement) || !draggedTaskId || row.dataset.taskRowId === draggedTaskId) {
+        return;
+      }
+
+      taskList.querySelectorAll(".drag-over").forEach((element) => {
+        element.classList.remove("drag-over");
+      });
+      row.classList.add("drag-over");
+    });
+
+    taskList.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const row = target.closest("[data-task-row-id]");
+      if (!(row instanceof HTMLElement) || !draggedTaskId) {
+        return;
+      }
+
+      const rows = [...taskList.querySelectorAll("[data-task-row-id]")];
+      const fromIndex = rows.findIndex((element) => element.dataset.taskRowId === draggedTaskId);
+      const toIndex = rows.findIndex((element) => element.dataset.taskRowId === row.dataset.taskRowId);
+
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+        return;
+      }
+
+      const taskIds = rows.map((element) => element.dataset.taskRowId);
+      const [moved] = taskIds.splice(fromIndex, 1);
+      taskIds.splice(toIndex, 0, moved);
+
+      await reorderTaskList(taskIds);
+    });
+
     taskList.addEventListener("click", async (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) {
         return;
       }
 
+      const editTaskId = target.dataset.taskEdit;
       const taskId = target.dataset.taskId;
       const action = target.dataset.taskAction;
+      if (editTaskId) {
+        await editTask(editTaskId);
+        return;
+      }
       if (taskId && action) {
         await updateTaskStatus(taskId, action);
       }
@@ -760,7 +937,12 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const editGoalId = target.dataset.goalEdit;
       const goalId = target.dataset.goalRemove;
+      if (editGoalId) {
+        await editGoal(editGoalId);
+        return;
+      }
       if (goalId) {
         await removeGoal(goalId);
       }

@@ -464,6 +464,10 @@ code,
   font-size: 0.9rem;
 }
 
+.toggle-chip input {
+  margin: 0;
+}
+
 .admin-bot-config-grid,
 .admin-bot-columns {
   display: grid;
@@ -525,14 +529,44 @@ code,
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.bot-task-item {
+  cursor: grab;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.bot-task-item.dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
+
+.bot-task-item.drag-over {
+  border-color: rgba(121, 247, 200, 0.5);
+  background: rgba(121, 247, 200, 0.08);
+}
+
 .bot-list-item strong,
 .bot-list-item p,
 .bot-list-item span {
   display: block;
 }
 
-.bot-list-item strong {
+.bot-task-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 6px;
+}
+
+.task-signal {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bot-list-item strong {
+  margin-bottom: 0;
 }
 
 .bot-list-item p,
@@ -540,6 +574,40 @@ code,
   margin: 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.bot-task-status-running {
+  border-color: rgba(121, 247, 200, 0.38);
+  box-shadow: 0 0 0 1px rgba(121, 247, 200, 0.08), 0 0 28px rgba(121, 247, 200, 0.12);
+}
+
+.bot-task-status-running .task-signal {
+  background: var(--accent);
+  box-shadow: 0 0 18px rgba(121, 247, 200, 0.9);
+}
+
+.bot-task-status-pending {
+  border-color: rgba(240, 181, 107, 0.3);
+  box-shadow: 0 0 0 1px rgba(240, 181, 107, 0.05), 0 0 24px rgba(240, 181, 107, 0.08);
+}
+
+.bot-task-status-pending .task-signal {
+  background: var(--accent-warm);
+  box-shadow: 0 0 16px rgba(240, 181, 107, 0.85);
+}
+
+.bot-task-status-failed {
+  border-color: rgba(255, 107, 107, 0.34);
+  box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.06), 0 0 24px rgba(255, 107, 107, 0.12);
+}
+
+.bot-task-status-failed .task-signal {
+  background: #ff6b6b;
+  box-shadow: 0 0 16px rgba(255, 107, 107, 0.9);
+}
+
+.bot-task-status-neutral .task-signal {
+  background: rgba(156, 179, 201, 0.55);
 }
 
 .bot-list-item-actions {
@@ -728,6 +796,15 @@ code,
   .admin-bot-columns {
     grid-template-columns: 1fr;
   }
+
+  .admin-ai-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-ai-status {
+    width: fit-content;
+  }
 }
 
 @media (max-width: 640px) {
@@ -745,9 +822,41 @@ code,
     display: grid;
   }
 
+  .panel,
+  .hero-copy,
+  .hero-card,
+  .login-dialog-inner {
+    padding: 22px;
+  }
+
   .api-strip,
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-toggle-row,
+  .bot-list-item-actions {
+    display: grid;
+  }
+
+  .toggle-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-ai-input,
+  .auth-chip,
+  .toggle-chip {
+    font-size: 16px;
+  }
+
+  .admin-box,
+  .key-box {
+    padding: 16px;
+  }
+
+  .bot-list-item {
+    padding: 12px 14px;
   }
 
   .primary-button,

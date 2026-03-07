@@ -67,7 +67,7 @@ function loadDb() {
         ...(parsed.state || {})
       },
       goals: Array.isArray(parsed.goals) ? parsed.goals : [],
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      tasks: normalizeTaskOrder(Array.isArray(parsed.tasks) ? parsed.tasks : []),
       notes: Array.isArray(parsed.notes) ? parsed.notes : [],
       activity: Array.isArray(parsed.activity) ? parsed.activity : []
     };
@@ -79,6 +79,24 @@ function loadDb() {
 function saveDb(db) {
   ensureStorage();
   fs.writeFileSync(botDbFile, JSON.stringify(db, null, 2));
+}
+
+function normalizeTaskOrder(tasks) {
+  return [...tasks]
+    .sort((a, b) => {
+      const orderA = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
+
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    })
+    .map((task, index) => ({
+      ...task,
+      order: index + 1
+    }));
 }
 
 function updateDb(mutator) {
@@ -237,9 +255,8 @@ async function maybeRunGitActions(task, config) {
 }
 
 function getPendingTask(db) {
-  return db.tasks
-    .filter((task) => task.status === "pending")
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0] || null;
+  return normalizeTaskOrder(db.tasks)
+    .filter((task) => task.status === "pending")[0] || null;
 }
 
 function buildLoopPrompt(task, db, workspace) {
@@ -463,6 +480,7 @@ function addTask(payload) {
 
   const task = {
     id: crypto.randomUUID(),
+    order: loadDb().tasks.length + 1,
     title: payload.title.trim(),
     goal: String(payload.goal || "").trim(),
     assignedTaskBlock: String(payload.assignedTaskBlock || "").trim(),
@@ -478,6 +496,7 @@ function addTask(payload) {
 
   updateDb((db) => {
     db.tasks.push(task);
+    db.tasks = normalizeTaskOrder(db.tasks);
     return db;
   });
 
@@ -512,6 +531,7 @@ function updateTask(taskId, patch) {
       task.assignedTaskBlock = String(patch.assignedTaskBlock || "").trim();
     }
 
+    current.tasks = normalizeTaskOrder(current.tasks);
     return current;
   });
 
@@ -520,6 +540,29 @@ function updateTask(taskId, patch) {
   });
 
   return db.tasks.find((task) => task.id === taskId);
+}
+
+function reorderTasks(taskIds) {
+  if (!Array.isArray(taskIds) || !taskIds.length) {
+    throw new Error("Task order is required");
+  }
+
+  const db = updateDb((current) => {
+    const currentIds = new Set(current.tasks.map((task) => task.id));
+    if (current.tasks.length !== taskIds.length || taskIds.some((id) => !currentIds.has(id))) {
+      throw new Error("Task order payload does not match current task set");
+    }
+
+    const taskMap = new Map(current.tasks.map((task) => [task.id, task]));
+    current.tasks = taskIds.map((id, index) => ({
+      ...taskMap.get(id),
+      order: index + 1
+    }));
+    return current;
+  });
+
+  addActivity("task", "Tasks reordered");
+  return normalizeTaskOrder(db.tasks);
 }
 
 function addGoal(text) {
@@ -544,6 +587,30 @@ function addGoal(text) {
   });
 
   return goal;
+}
+
+function updateGoal(goalId, text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) {
+    throw new Error("Goal text is required");
+  }
+
+  const db = updateDb((current) => {
+    const goal = current.goals.find((entry) => entry.id === goalId);
+    if (!goal) {
+      throw new Error("Goal not found");
+    }
+
+    goal.text = trimmed;
+    goal.updatedAt = new Date().toISOString();
+    return current;
+  });
+
+  addActivity("goal", "Goal updated", {
+    goalId
+  });
+
+  return db.goals.find((goal) => goal.id === goalId);
 }
 
 function removeGoal(goalId) {
@@ -575,7 +642,7 @@ function getSnapshot() {
     config: db.config,
     state: db.state,
     goals: db.goals,
-    tasks: db.tasks,
+    tasks: normalizeTaskOrder(db.tasks),
     notes: db.notes,
     activity: db.activity,
     git: null
@@ -598,9 +665,11 @@ module.exports = {
   getGitSnapshot,
   getSnapshot,
   removeGoal,
+  reorderTasks,
   runLoopCycle,
   setConfig,
   startLoop,
   stopLoop,
+  updateGoal,
   updateTask
 };

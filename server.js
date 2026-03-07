@@ -15,10 +15,12 @@ const {
   getGitSnapshot,
   getSnapshot,
   removeGoal,
+  reorderTasks,
   runLoopCycle,
   setConfig,
   startLoop,
   stopLoop,
+  updateGoal,
   updateTask
 } = require("./ai-runtime");
 
@@ -465,11 +467,39 @@ app.patch("/api/admin/bot/tasks/:id", requireOwner, (req, res) => {
   }
 });
 
+app.post("/api/admin/bot/tasks/reorder", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      tasks: reorderTasks(req.body?.taskIds)
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.post("/api/admin/bot/goals", requireOwner, (req, res) => {
   try {
     res.json({
       ok: true,
       goal: addGoal(req.body?.text)
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.patch("/api/admin/bot/goals/:id", requireOwner, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      goal: updateGoal(req.params.id, req.body?.text)
     });
   } catch (error) {
     res.status(400).json({
