@@ -481,6 +481,14 @@ code,
   align-items: stretch;
 }
 
+.admin-bot-columns.console-row {
+  min-height: min(48vh, 560px);
+}
+
+.admin-bot-columns.console-row > .admin-ai-box {
+  min-height: 0;
+}
+
 .admin-bot-primary-row {
   height: min(88vh, 1400px);
   grid-template-rows: minmax(0, 1fr);
@@ -493,6 +501,12 @@ code,
 
 .admin-ai-box {
   margin-top: 18px;
+}
+
+.console-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .task-queue-pane,
@@ -655,7 +669,9 @@ code,
 
 #bot-console-list {
   margin-top: 16px;
-  max-height: min(88vh, 1400px);
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px 16px;
