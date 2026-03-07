@@ -194,18 +194,19 @@ function renderTaskList(tasks) {
   };
 
   container.innerHTML = tasks.map((task, index) => `
-    <article class="bot-list-item bot-task-item bot-task-status-${getTaskStatusTone(task.status)}" draggable="true" data-task-row-id="${escapeHtml(task.id)}">
+    <article class="bot-list-item bot-task-item bot-task-status-${getTaskStatusTone(task.status)} ${task.locked ? "bot-task-locked" : ""}" draggable="true" data-task-row-id="${escapeHtml(task.id)}">
       <div class="bot-task-heading">
         <span class="task-signal" aria-hidden="true"></span>
         <strong>#${index + 1} ${escapeHtml(task.title)}</strong>
       </div>
-      <span>Status: ${escapeHtml(task.status)} | Attempts: ${escapeHtml(task.attempts)}</span>
+      <span>Status: ${escapeHtml(task.status)}${task.locked ? " | Locked" : ""} | Attempts: ${escapeHtml(task.attempts)}</span>
       <span>Goal: ${escapeHtml(task.goal || "n/a")}</span>
       <p>${escapeHtml(task.assignedTaskBlock || "No assigned task block.")}</p>
       ${task.lastError ? `<span>Last error: ${escapeHtml(task.lastError)}</span>` : ""}
       ${task.lastOutput ? `<span>Last output: ${escapeHtml(task.lastOutput)}</span>` : ""}
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
+        <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
         <button class="mini-button" type="button" data-task-action="pending" data-task-id="${escapeHtml(task.id)}">Queue</button>
         <button class="mini-button" type="button" data-task-action="completed" data-task-id="${escapeHtml(task.id)}">Complete</button>
         <button class="mini-button" type="button" data-task-action="failed" data-task-id="${escapeHtml(task.id)}">Fail</button>
@@ -284,28 +285,40 @@ function renderBot(botData) {
 
   setText("bot-runtime-status", botData.config.enabled ? "Loop enabled" : "Loop disabled");
   setText("bot-git-branch", botData.git?.available ? `${botData.git.branch} (${botData.git.dirty ? "dirty" : "clean"})` : "Git unavailable");
-  setText("bot-next-run", formatDateTime(botData.state.nextRunAt));
+  setText("bot-next-run", botData.state.nextRunAt ? formatDateTime(botData.state.nextRunAt) : (botData.config.enabled && botData.config.pauseWhenQueueEmpty ? "Paused until new task" : "-"));
   setText("bot-last-result", botData.state.lastResult || botData.state.lastError || "-");
 
-  const loopMinutes = document.getElementById("bot-loop-minutes");
   const idleDelay = document.getElementById("bot-idle-delay");
+  const postTaskDelay = document.getElementById("bot-post-task-delay");
+  const retryDelay = document.getElementById("bot-retry-delay");
+  const maxRuntime = document.getElementById("bot-max-runtime");
   const maxRetries = document.getElementById("bot-max-retries");
   const enabled = document.getElementById("bot-enabled");
+  const pauseWhenEmpty = document.getElementById("bot-pause-empty");
   const autoCall = document.getElementById("bot-auto-call");
   const autoCommit = document.getElementById("bot-auto-commit");
   const autoPush = document.getElementById("bot-auto-push");
 
-  if (loopMinutes) {
-    loopMinutes.value = botData.config.loopMinutes;
-  }
   if (idleDelay) {
     idleDelay.value = botData.config.idleDelaySeconds;
+  }
+  if (postTaskDelay) {
+    postTaskDelay.value = botData.config.postTaskDelaySeconds;
+  }
+  if (retryDelay) {
+    retryDelay.value = botData.config.retryDelaySeconds;
+  }
+  if (maxRuntime) {
+    maxRuntime.value = botData.config.maxTaskRuntimeMinutes;
   }
   if (maxRetries) {
     maxRetries.value = botData.config.maxRetries;
   }
   if (enabled) {
     enabled.checked = Boolean(botData.config.enabled);
+  }
+  if (pauseWhenEmpty) {
+    pauseWhenEmpty.checked = Boolean(botData.config.pauseWhenQueueEmpty);
   }
   if (autoCall) {
     autoCall.checked = Boolean(botData.config.autoCallLlm);
@@ -508,11 +521,14 @@ async function runAdminAi() {
 async function saveBotConfig() {
   const payload = {
     enabled: document.getElementById("bot-enabled")?.checked,
+    pauseWhenQueueEmpty: document.getElementById("bot-pause-empty")?.checked,
     autoCallLlm: document.getElementById("bot-auto-call")?.checked,
     autoCommit: document.getElementById("bot-auto-commit")?.checked,
     autoPush: document.getElementById("bot-auto-push")?.checked,
-    loopMinutes: Number(document.getElementById("bot-loop-minutes")?.value || 15),
     idleDelaySeconds: Number(document.getElementById("bot-idle-delay")?.value || 45),
+    postTaskDelaySeconds: Number(document.getElementById("bot-post-task-delay")?.value || 15),
+    retryDelaySeconds: Number(document.getElementById("bot-retry-delay")?.value || 90),
+    maxTaskRuntimeMinutes: Number(document.getElementById("bot-max-runtime")?.value || 20),
     maxRetries: Number(document.getElementById("bot-max-retries")?.value || 2)
   };
 
@@ -588,6 +604,19 @@ async function updateTaskStatus(taskId, status) {
   });
 
   setText("ai-output", `Task updated to ${status}.`);
+  await refreshOwnerData();
+}
+
+async function toggleTaskLock(taskId, locked) {
+  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ locked })
+  });
+
+  setText("ai-output", locked ? "Task locked." : "Task unlocked.");
   await refreshOwnerData();
 }
 
@@ -919,10 +948,15 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const editTaskId = target.dataset.taskEdit;
+      const lockTaskId = target.dataset.taskLock;
       const taskId = target.dataset.taskId;
       const action = target.dataset.taskAction;
       if (editTaskId) {
         await editTask(editTaskId);
+        return;
+      }
+      if (lockTaskId) {
+        await toggleTaskLock(lockTaskId, target.dataset.taskLocked !== "true");
         return;
       }
       if (taskId && action) {

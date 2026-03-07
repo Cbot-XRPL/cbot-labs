@@ -147,13 +147,21 @@
                     <div id="ai-files" class="admin-controls"></div>
                 </div>
                 <div class="admin-bot-config-grid">
-                    <label class="admin-ai-form" for="bot-loop-minutes">
-                        <span class="key-label">Loop minutes</span>
-                        <input id="bot-loop-minutes" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
-                    </label>
                     <label class="admin-ai-form" for="bot-idle-delay">
                         <span class="key-label">Idle delay seconds</span>
                         <input id="bot-idle-delay" class="admin-ai-input admin-short-input" type="number" min="10" step="5">
+                    </label>
+                    <label class="admin-ai-form" for="bot-post-task-delay">
+                        <span class="key-label">Post-task delay seconds</span>
+                        <input id="bot-post-task-delay" class="admin-ai-input admin-short-input" type="number" min="5" step="5">
+                    </label>
+                    <label class="admin-ai-form" for="bot-retry-delay">
+                        <span class="key-label">Retry delay seconds</span>
+                        <input id="bot-retry-delay" class="admin-ai-input admin-short-input" type="number" min="15" step="5">
+                    </label>
+                    <label class="admin-ai-form" for="bot-max-runtime">
+                        <span class="key-label">Max task minutes</span>
+                        <input id="bot-max-runtime" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
                     </label>
                     <label class="admin-ai-form" for="bot-max-retries">
                         <span class="key-label">Max retries</span>
@@ -162,6 +170,7 @@
                 </div>
                 <div class="admin-toggle-row">
                     <label class="toggle-chip"><input id="bot-enabled" type="checkbox"> Loop enabled</label>
+                    <label class="toggle-chip"><input id="bot-pause-empty" type="checkbox"> Pause when queue empty</label>
                     <label class="toggle-chip"><input id="bot-auto-call" type="checkbox"> Auto call LLM</label>
                     <label class="toggle-chip"><input id="bot-auto-commit" type="checkbox"> Auto commit</label>
                     <label class="toggle-chip"><input id="bot-auto-push" type="checkbox"> Auto push</label>

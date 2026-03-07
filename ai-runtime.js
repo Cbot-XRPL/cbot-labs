@@ -22,8 +22,11 @@ function defaultDb() {
       autoCallLlm: false,
       autoCommit: false,
       autoPush: false,
-      loopMinutes: 15,
+      pauseWhenQueueEmpty: true,
       idleDelaySeconds: 45,
+      postTaskDelaySeconds: 15,
+      retryDelaySeconds: 90,
+      maxTaskRuntimeMinutes: 20,
       maxRetries: 2
     },
     goals: [],
@@ -95,6 +98,7 @@ function normalizeTaskOrder(tasks) {
     })
     .map((task, index) => ({
       ...task,
+      locked: Boolean(task.locked),
       order: index + 1
     }));
 }
@@ -149,6 +153,17 @@ function updateExecFile(patch) {
   }
 }
 
+function withTimeout(promise, timeoutMs, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`${label} exceeded ${Math.round(timeoutMs / 60000)} minute limit`));
+      }, timeoutMs);
+    })
+  ]);
+}
+
 function scheduleNextRun(seconds) {
   if (timer) {
     clearTimeout(timer);
@@ -171,6 +186,18 @@ function scheduleNextRun(seconds) {
       });
     });
   }, seconds * 1000);
+}
+
+function clearScheduledRun() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+
+  updateDb((current) => {
+    current.state.nextRunAt = null;
+    return current;
+  });
 }
 
 async function git(args) {
@@ -256,7 +283,21 @@ async function maybeRunGitActions(task, config) {
 
 function getPendingTask(db) {
   return normalizeTaskOrder(db.tasks)
-    .filter((task) => task.status === "pending")[0] || null;
+    .filter((task) => task.status === "pending" && !task.locked)[0] || null;
+}
+
+function hasRunnableTask(db) {
+  return Boolean(getPendingTask(db));
+}
+
+function maybeWakeLoop(reason) {
+  const db = loadDb();
+  if (!db.config.enabled || db.state.isRunning || !hasRunnableTask(db)) {
+    return;
+  }
+
+  addActivity("loop", reason);
+  scheduleNextRun(1);
 }
 
 function buildLoopPrompt(task, db, workspace) {
@@ -310,11 +351,18 @@ async function runLoopCycle() {
     updateDb((current) => {
       current.state.isRunning = false;
       current.state.currentTaskId = null;
-      current.state.lastResult = "Idle";
+      current.state.lastResult = initialDb.config.pauseWhenQueueEmpty
+        ? "Queue empty, loop paused"
+        : "Idle";
       return current;
     });
 
-    scheduleNextRun(loadDb().config.loopMinutes * 60);
+    const latest = loadDb();
+    if (latest.config.enabled && latest.config.pauseWhenQueueEmpty) {
+      clearScheduledRun();
+    } else {
+      scheduleNextRun(latest.config.idleDelaySeconds);
+    }
     return getSnapshot();
   }
 
@@ -336,15 +384,24 @@ async function runLoopCycle() {
 
   try {
     const prompt = buildLoopPrompt(task, db, workspace);
-    const aiResult = db.config.autoCallLlm
-      ? await runAiTask(prompt)
-      : {
-          ok: true,
-          mode: "manual-disabled",
-          output: "autoCallLlm is disabled. Task processed in scaffold mode."
-        };
+    const maxRuntimeMs = db.config.maxTaskRuntimeMinutes * 60 * 1000;
+    const aiResult = await withTimeout(
+      db.config.autoCallLlm
+        ? runAiTask(prompt)
+        : Promise.resolve({
+            ok: true,
+            mode: "manual-disabled",
+            output: "autoCallLlm is disabled. Task processed in scaffold mode."
+          }),
+      maxRuntimeMs,
+      "Task run"
+    );
 
-    const gitResult = await maybeRunGitActions(task, db.config);
+    const gitResult = await withTimeout(
+      maybeRunGitActions(task, db.config),
+      maxRuntimeMs,
+      "Git follow-up"
+    );
     const noteBody = [
       `Task: ${task.title}`,
       `Goal: ${task.goal || "n/a"}`,
@@ -410,9 +467,15 @@ async function runLoopCycle() {
   }
 
   const latestDb = loadDb();
-  const delaySeconds = latestDb.config.enabled
-    ? latestDb.config.loopMinutes * 60
-    : latestDb.config.idleDelaySeconds;
+  const currentTaskState = latestDb.tasks.find((entry) => entry.id === task.id);
+  const hasQueuedTask = latestDb.tasks.some((entry) => entry.status === "pending" && !entry.locked);
+  const delaySeconds = !latestDb.config.enabled
+    ? latestDb.config.idleDelaySeconds
+    : currentTaskState?.status === "pending"
+      ? latestDb.config.retryDelaySeconds
+      : hasQueuedTask
+        ? latestDb.config.postTaskDelaySeconds
+        : latestDb.config.idleDelaySeconds;
 
   scheduleNextRun(delaySeconds);
   return getSnapshot();
@@ -425,7 +488,13 @@ function startLoop() {
   });
 
   addActivity("loop", "Bot loop enabled");
-  scheduleNextRun(1);
+  if (hasRunnableTask(db)) {
+    scheduleNextRun(1);
+  } else if (db.config.pauseWhenQueueEmpty) {
+    clearScheduledRun();
+  } else {
+    scheduleNextRun(db.config.idleDelaySeconds);
+  }
   return db;
 }
 
@@ -447,7 +516,7 @@ function stopLoop() {
 }
 
 function setConfig(patch) {
-  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "loopMinutes", "idleDelaySeconds", "maxRetries", "enabled"];
+  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "enabled"];
 
   const db = updateDb((current) => {
     for (const key of allowed) {
@@ -456,8 +525,10 @@ function setConfig(patch) {
       }
     }
 
-    current.config.loopMinutes = Math.max(1, Number(current.config.loopMinutes) || 15);
     current.config.idleDelaySeconds = Math.max(10, Number(current.config.idleDelaySeconds) || 45);
+    current.config.postTaskDelaySeconds = Math.max(5, Number(current.config.postTaskDelaySeconds) || 15);
+    current.config.retryDelaySeconds = Math.max(15, Number(current.config.retryDelaySeconds) || 90);
+    current.config.maxTaskRuntimeMinutes = Math.max(1, Number(current.config.maxTaskRuntimeMinutes) || 20);
     current.config.maxRetries = Math.max(1, Number(current.config.maxRetries) || 2);
     return current;
   });
@@ -467,7 +538,13 @@ function setConfig(patch) {
   });
 
   if (db.config.enabled) {
-    scheduleNextRun(1);
+    if (hasRunnableTask(db)) {
+      scheduleNextRun(1);
+    } else if (db.config.pauseWhenQueueEmpty) {
+      clearScheduledRun();
+    } else {
+      scheduleNextRun(db.config.idleDelaySeconds);
+    }
   }
 
   return db;
@@ -485,6 +562,7 @@ function addTask(payload) {
     goal: String(payload.goal || "").trim(),
     assignedTaskBlock: String(payload.assignedTaskBlock || "").trim(),
     status: "pending",
+    locked: false,
     attempts: 0,
     createdAt: new Date().toISOString(),
     startedAt: null,
@@ -505,6 +583,8 @@ function addTask(payload) {
     title: task.title
   });
 
+  maybeWakeLoop("New task added, waking loop");
+
   return task;
 }
 
@@ -517,6 +597,10 @@ function updateTask(taskId, patch) {
 
     if (patch.status) {
       task.status = patch.status;
+    }
+
+    if (Object.hasOwn(patch, "locked")) {
+      task.locked = Boolean(patch.locked);
     }
 
     if (Object.hasOwn(patch, "title")) {
@@ -539,7 +623,12 @@ function updateTask(taskId, patch) {
     taskId
   });
 
-  return db.tasks.find((task) => task.id === taskId);
+  const updatedTask = db.tasks.find((task) => task.id === taskId);
+  if (updatedTask && updatedTask.status === "pending" && !updatedTask.locked) {
+    maybeWakeLoop("Pending task available, waking loop");
+  }
+
+  return updatedTask;
 }
 
 function reorderTasks(taskIds) {
@@ -653,7 +742,13 @@ function bootstrapLoop() {
   const db = loadDb();
   if (db.config.enabled) {
     addActivity("loop", "Bot loop restored on server start");
-    scheduleNextRun(2);
+    if (hasRunnableTask(db)) {
+      scheduleNextRun(2);
+    } else if (!db.config.pauseWhenQueueEmpty) {
+      scheduleNextRun(db.config.idleDelaySeconds);
+    } else {
+      clearScheduledRun();
+    }
   }
 }
 

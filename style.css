@@ -610,6 +610,15 @@ code,
   background: rgba(156, 179, 201, 0.55);
 }
 
+.bot-task-locked {
+  border-style: dashed;
+}
+
+.bot-task-locked .task-signal {
+  background: #8fb2cf;
+  box-shadow: 0 0 12px rgba(143, 178, 207, 0.5);
+}
+
 .bot-list-item-actions {
   display: flex;
   flex-wrap: wrap;
