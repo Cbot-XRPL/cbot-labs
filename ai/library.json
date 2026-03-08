@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     },
     {
       "id": "admin-project-xrpl-trading-bot",
@@ -198,7 +198,26 @@
           "url": "FILE:lib/xrpl/client.js"
         }
       ],
-      "updatedAt": "2026-03-08T01:15:03.270Z"
+      "updatedAt": "2026-03-08T01:16:14.417Z"
+    },
+    {
+      "id": "connected-xrpl-wallet-rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
+      "title": "Connected XRPL Wallet: rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
+      "summary": "Record that the owner indicated an XRPL address to be used with the admin XRPL trading bot dashboard. Seed is not stored in repo; operator must configure XRPL_WALLET_SEED in environment or secrets manager at runtime.",
+      "tags": [
+        "xrpl",
+        "wallet",
+        "admin-projects",
+        "owner-only"
+      ],
+      "details": [
+        "Address: rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X (public address only).",
+        "DO NOT store the wallet seed in the repository. The server-side XRPL adapter reads XRPL_WALLET_SEED and RIPPLED_URL at runtime from environment variables.",
+        "Dashboard: admin-projects/xrpl-trading-bot shows connection status and balance by calling GET /api/admin/trading/status. Owner authentication required via OWNER_WALLETS and x-owner-wallet header in this skeleton implementation.",
+        "If you want to operate the bot, set XRPL_WALLET_SEED in your secret manager and configure OWNER_WALLETS (comma-separated) to include the owner address(es)."
+      ],
+      "links": [],
+      "updatedAt": "2026-03-08T01:16:14.417Z"
     }
   ]
 }

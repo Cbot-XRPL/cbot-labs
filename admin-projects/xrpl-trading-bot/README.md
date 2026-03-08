@@ -1,22 +1,17 @@
-# XRPL Trading Bot — Owner-Only Admin Project
+# XRPL Trading Bot — Owner Dashboard
 
-This folder contains an owner-only, observation-only dashboard for the personal XRPL trading bot. It is read-only in the browser: no private seeds or signing functionality are present client-side.
+This mini-project provides an owner-only dashboard to show the configured XRPL wallet connection and balance. Per workspace guardrails, no secrets (wallet seeds) are stored in the repository.
 
-Files:
-- index.html — owner-only UI skeleton (red/black theme)
-- client.js — minimal client wiring to owner-only server endpoints
-- style.css — red & black theme styles
+Runtime requirements (set these in your secrets manager or environment variables):
 
-Server endpoints expected (owner-only, must be implemented and protected by existing owner authentication):
-- GET /api/admin/trading/status -> { address, balanceDrops, balanceXRP, lastLedger, connected, lastSyncTs, network, snapshotId }
-- GET /api/admin/trading/txs?limit= -> { txs: [...] }
-- GET /api/admin/trading/metrics -> { xahau: {...}, flare: {...}, evm: {...} }
+- XRPL_WALLET_SEED - the wallet seed for the XRPL account (KEEP THIS SECRET; do NOT store in repo)
+- RIPPLED_URL - optional WebSocket URL for rippled (defaults to wss://s1.ripple.com)
+- OWNER_WALLETS - comma-separated list of owner wallet addresses allowed to access the admin endpoints (server auth middleware uses this)
 
-Server-side responsibilities and guardrails:
-- Load XRPL_WALLET_SEED and RIPPLED_URL from secret manager at runtime. Never commit seeds into repo.
-- Expose sanitized owner-only endpoints listed above. Preserve existing owner auth/whitelist logic when mounting routes.
-- Persist append-only snapshots to external SNAPSHOT_STORAGE for audit/replay. Do not write secrets into snapshots.
+How it works:
 
-Developer notes:
-- This commit includes a minimal server-side xrpl client adapter skeleton at lib/xrpl/client.js. Install xrpl.js in server environment (npm install xrpl) and wire the adapter in your server to provide the endpoints.
-- For development use XRPL Testnet and ensure owner-only access before exposing these pages.
+- lib/xrpl/client.js reads XRPL_WALLET_SEED and RIPPLED_URL at runtime and exposes getStatus() and getBalance().
+- The dashboard (index.html + client.js) calls an owner-only endpoint at GET /api/admin/trading/status to fetch online/balance info.
+- The server must expose the endpoints under /api/admin/trading/* behind owner authentication. A sample server.js is included in the repo to bootstrap this.
+
+IMPORTANT: Do not put seeds or other secrets into the repo. Manage them via environment variables or your secret manager when running the server.
