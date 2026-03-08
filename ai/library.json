@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "crypto-onchain-metrics",
@@ -203,7 +203,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "strategies-risk-management",
@@ -236,7 +236,7 @@
           "url": "https://en.wikipedia.org/wiki/Kelly_criterion"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "tools-data-sources",
@@ -277,7 +277,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "execution-best-practices",
@@ -310,7 +310,7 @@
           "url": "https://www.quantconnect.com/docs"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-and-xahau-notes",
@@ -339,7 +339,7 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-core",
@@ -403,7 +403,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xahau-buildout-local",
@@ -431,7 +431,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "evm-sidechain-flare",
@@ -468,7 +468,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "flare-defi-data-sources",
@@ -501,7 +501,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-amm-vault-multisig",
@@ -538,7 +538,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-auto-bridging-and-paths",
@@ -575,7 +575,7 @@
           "url": "https://interledger.org/docs/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.248Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "agent-design-patterns",
@@ -610,7 +610,7 @@
           "url": "https://github.com/langchain-ai/langchain"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "trading-agent-repo-examples",
@@ -661,7 +661,7 @@
           "url": "https://github.com/langchain-ai/langchain"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "repo-structure-and-filesystem",
@@ -698,7 +698,7 @@
           "url": "https://github.com/hummingbot/hummingbot"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "guardrails-safety-loops",
@@ -736,7 +736,7 @@
           "url": "https://aws.amazon.com/secrets-manager/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "testing-deployment-monitoring",
@@ -773,7 +773,7 @@
           "url": "https://sentry.io/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-xahau-integration-patterns",
@@ -814,7 +814,7 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-wallet-connection",
@@ -850,7 +850,7 @@
           "url": "https://github.com/XRPLF/xrpl-py"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "wallet-dashboard",
@@ -883,7 +883,7 @@
           "url": "FILE:server.js"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "wallet-secrets-handling",
@@ -914,7 +914,7 @@
           "url": "https://aws.amazon.com/secrets-manager/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-interface",
@@ -968,7 +968,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-interface-server-endpoints",
@@ -1013,7 +1013,7 @@
           "url": "https://www.vaultproject.io/"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-interface-ops-guardrails",
@@ -1051,7 +1051,7 @@
           "url": "FILE:ai/library.json#execution-best-practices"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "connected-wallet-rvehp61g",
@@ -1101,7 +1101,7 @@
           "url": "FILE:ai/library.json#wallet-integration-implementation-checklist"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "wallet-integration-implementation-checklist",
@@ -1142,7 +1142,7 @@
           "url": "FILE:ai/library.json#wallet-secrets-handling"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-strategies",
@@ -1188,7 +1188,7 @@
           "url": "FILE:ai/library.json#agent-design-patterns"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-strategy-monitoring-ui",
@@ -1230,7 +1230,7 @@
           "url": "FILE:ai/library.json#agent-design-patterns"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "admin-xrpl-trading-bot",
@@ -1272,7 +1272,7 @@
           "url": "FILE:ai/library.json#wallet-dashboard"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-bot-server-integration",
@@ -1315,7 +1315,7 @@
           "url": "FILE:ai/library.json#xrpl-trading-interface-server-endpoints"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "xrpl-trading-bot-deps-and-files",
@@ -1345,7 +1345,7 @@
           "url": "FILE:ai/library.json#wallet-integration-implementation-checklist"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "admin-projects-index-link",
@@ -1373,7 +1373,7 @@
           "url": "FILE:ai/library.json#wallet-dashboard"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "wallet-dashboard-implementation",
@@ -1411,7 +1411,7 @@
           "url": "FILE:ai/library.json#admin-projects-index-link"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     },
     {
       "id": "lib-xrpl-client-adapter",
@@ -1448,7 +1448,97 @@
           "url": "FILE:ai/library.json#xrpl-trading-interface-server-endpoints"
         }
       ],
-      "updatedAt": "2026-03-08T00:57:18.249Z"
+      "updatedAt": "2026-03-08T00:58:02.807Z"
+    },
+    {
+      "id": "xrpl-strategies-catalog",
+      "title": "XRPL Strategies Catalog: Watchable Strategies & Agent Brain",
+      "summary": "Concrete, operational trading strategy designs for an owner-only XRPL wallet agent. Each strategy lists preconditions (trustlines, issuer checks), signal generation, execution recipe (book_offers / path_find / AMM interaction), monitoring hooks, and explicit risk controls suited for watchable/admin UI integration.",
+      "tags": [
+        "xrpl",
+        "strategies",
+        "agent-brain",
+        "watcher",
+        "xahau"
+      ],
+      "details": [
+        "Agent-brain primitives (how strategies plug in): separate Signal Ingestion (orderbook, trades, ledger events) → Feature Store (time-aligned series, snapshots) → Decision Engine (deterministic rules + ML score) → Risk Overlay (per-trade + portfolio gates) → Execution Adapter (idempotent xrpl.js wrapper) → Audit & Replay (ledger-indexed snapshots).",
+        "Global preconditions for all strategies: never attempt token operations without a trustline; verify issuer solvency and gateway inflow/outflow signals; perform all signing only server-side with secrets from secret manager and only after manual ops approvals for live signing.",
+        "RSI Mean-Reversion (XRP <-> rUSD): Preconditions: trustline to rUSD, issuer allowed; Signals: RSI overbought (>70) to sell XRP for rUSD, RSI oversold (<30) to buy back; Execution: simulate with path_find -> if simulated net meets slippage threshold, place capped offer/payment with explicit path; Risk gates: per-trade cap (1–3% wallet), cooldown between roundtrips, issuer allowlist check; Monitoring: persist path_find snapshot, chosen offers, fills, slippage, ledger index.",
+        "Orderbook Market-Making (issued token pairs): Preconditions: trustlines, whitelist issuers, min depth heuristic; Signals: spread & depth changes, volatility metric; Execution: maintain symmetric offers around mid (book_offers), update on snapshots, use idempotent account_offers updates; Risk gates: max inventory, dynamic spread widening, withdraw on gateway anomaly; Monitoring: quote freq, fills, realized spread, inventory exposure.",
+        "Path-Find Multi-Hop Arbitrage / Auto-Bridge Capture: Preconditions: trustlines for route hops, gateway registry; Signals: detected positive simulated arbitrage after fees/slippage; Execution: 1) query book_offers, 2) run path_find simulation, 3) persist path snapshot, 4) attempt atomic sequence (payment with explicit paths/offers); Risk gates: require snapshot locking, min depth on all hops, abort if any offer disappears before submit; Monitoring: simulation vs realized outcome, ledger-indexed traces.",
+        "XRPL AMM Opportunistic LP (pool management): Preconditions: AMM pool support, treasury multisig controls; Signals: TVL dip, fee revenue vs historical IL estimate; Execution: deposit/withdraw via AMM primitives with multisig approval if above threshold; Risk gates: max treasury % in LP, multisig/time-delay for large moves; Monitoring: TVL time-series, fee accrual, LP share snapshots.",
+        "Gateway Spread Capture & Peg Arbitrage (issued stablecoins): Preconditions: trustlines to stable issuers, issuer health check; Signals: observed spread between gateway on/off-chain rates and XRPL orderbook; Execution: place small crossing offers for immediate fills or use narrow IOC orders; Risk gates: max exposure per issuer, issuer solvency checks, throttle to limit wash-trade risk; Monitoring: gateway inflows/outflows, settlement reconciliation.",
+        "Volatility Breakout with Volume Confirmation: Preconditions: robust orderbook tape; Signals: structure break (HH/HL) + volume surge + orderbook depth removal; Execution: laddered limit entries or market with slippage cap; Risk gates: volatility-adaptive position sizing, trailing stop rules, cancel-on-network-instability; Monitoring: entry snapshot, expected vs actual slippage, fills timeline.",
+        "Reactive Whale-Flow Hedging & Rebalancing: Preconditions: address labeling & exchange/gateway watchlist; Signals: large inbound to exchange/gateway or large outbound accumulation; Execution: pre-emptive hedge (small %) or rebalance via path_find routes; Risk gates: require multi-signal confirmation (on-chain + orderbook + price), limit number of reactive trades per time window; Monitoring: event correlation logs, outcome reconciliation.",
+        "Conservative Portfolio Rebalance Engine: Preconditions: inventory tracking for all trust-lined assets and target allocations; Signals: periodic schedule or threshold drift triggers; Execution: use path_find to choose low-slippage routes, break transactions into micro-trades, prefer trusted stable issuer for consolidation; Risk gates: max daily reposition notional, issuer allowlist, fail if slippage threshold exceeded; Monitoring: scheduled snapshots, rebalancing PnL, fee tallies.",
+        "Operational & safety controls common to all strategies: run in paper/canary/prod modes, require operator enable flags for live modes, implement circuit-breakers (global + per-strategy), use idempotency keys for orders/offers, persist raw market snapshots (orderbook, path_find) for each decision, append-only logs with ledger index for replay.",
+        "Integration notes for Xahau & XRPL specifics: map Xahau marketplace signals (listed token counts, on-ledger offers) into strategy inputs; use ledger events (offer_create/cancel, AMM events, account_tx) as primary ground truth; always persist pre-flight path snapshots when path_find is used to select routes.",
+        "Observability fields to record per decision: strategy_id, mode, signal_timestamp, signal_type, input_hash (snapshot id), simulated_output, chosen_route (path_find/book_offers), tx_hash (if executed), fill_details (ledger-indexed), realized_slippage, pnl_delta, risk_flags, ledger_index."
+      ],
+      "links": [
+        {
+          "label": "XRPL Developer Docs (canonical)",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "Pathfinding & Payments (XRPL)",
+          "url": "https://xrpl.org/path-find.html"
+        },
+        {
+          "label": "XRPL AMM Guide",
+          "url": "https://xrpl.org/amm.html"
+        },
+        {
+          "label": "Xahau Buildout (workspace entry)",
+          "url": "FILE:ai/library.json#xahau-buildout"
+        },
+        {
+          "label": "Agent Design Patterns (workspace entry)",
+          "url": "FILE:ai/library.json#agent-design-patterns"
+        }
+      ],
+      "updatedAt": "2026-03-08T00:58:02.807Z"
+    },
+    {
+      "id": "xrpl-strategies-ui-contract",
+      "title": "Strategy Watcher UI & Server Contract: Watchable Strategies for Owner Dashboard",
+      "summary": "Owner-only UI and server endpoint contract to observe and audit active XRPL strategies. Designed for admin-projects read-only interfaces and to integrate with the agent brain; preserves guardrails (no client-side seeds, owner-only routes, append-only snapshots).",
+      "tags": [
+        "ui",
+        "server",
+        "api",
+        "xrpl",
+        "strategies",
+        "admin-projects",
+        "audit"
+      ],
+      "details": [
+        "UI placement & access: host watch pages under admin-projects/xrpl-trading-bot/strategies/ (owner-only). UI is read-only unless operator explicitly enables live signing server-side under multisig/time-delay policies.",
+        "Per-strategy display model: each strategy card must show strategy_id, name, mode (paper/canary/prod), enabled boolean, lastSignal { ts, type, score, inputSnapshotId }, lastAction { ts, type, txHash?, outcome }, pnlEstimate, riskFlags and small sparklines for balance/TVL trends.",
+        "Required server endpoints (owner-only, reuse server.js auth): GET /api/admin/trading/strategies -> descriptors, GET /api/admin/trading/strategies/status -> live states array, GET /api/admin/trading/strategies/:id/logs?limit= -> append-only logs, GET /api/admin/trading/snapshots/:id -> raw snapshot payload, optional POST /api/admin/trading/strategies/refresh (rate-limited) to trigger re-evaluation in the agent brain.",
+        "Event push model: prefer SSE/WebSocket to stream strategy events (signal fired, order placed, fill, slippage) to UI. Fallback to conservative polling (default 10s) with server-side caching of heavy calls (book_offers/path_find).",
+        "Snapshot & audit contract: every decision must persist an append-only snapshot object: { snapshotId, ledgerIndex, timestamp, rawInputs (orderbook, path_find result), simulatedOutput, chosenAction }, and snapshot retrieval must be available via GET /api/admin/trading/snapshots/:id for replay.",
+        "Safety & secrets: UI must never accept seeds; server loads XRPL_WALLET_SEED from secret manager at runtime only. No signing endpoints until explicit owner workflow is implemented (multisig/time-delay + manual approval).",
+        "Monitoring & alerts integration: surface critical riskFlags (issuer_untrusted, gateway_anomaly, low_liquidity, circuit_breaker_triggered) in UI and push alerts to on-call. Include ability to mark events for manual review/annotation in the audit log.",
+        "Implementation notes for server adapters: adapt lib/xrpl/client.js to publish sanitized snapshots to services/indexer; indexer persists to SNAPSHOT_STORAGE (S3/object-store or host data path outside repo). Cache book_offers/path_find for 3–10s TTL to protect public nodes.",
+        "Test & deploy guidance: develop and validate on XRPL Testnet / Songbird; verify endpoints work in paper mode showing simulated fills; include smoke tests to assert no secret material appears in endpoints or logs."
+      ],
+      "links": [
+        {
+          "label": "Strategy Monitoring System (workspace entry)",
+          "url": "FILE:ai/library.json#xrpl-strategy-monitoring-ui"
+        },
+        {
+          "label": "XRPL Trading Interface Server Endpoints (workspace entry)",
+          "url": "FILE:ai/library.json#xrpl-trading-interface-server-endpoints"
+        },
+        {
+          "label": "Wallet Integration Implementation Checklist (workspace entry)",
+          "url": "FILE:ai/library.json#wallet-integration-implementation-checklist"
+        }
+      ],
+      "updatedAt": "2026-03-08T00:58:02.807Z"
     }
   ]
 }
