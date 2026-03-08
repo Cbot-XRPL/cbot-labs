@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # AI Change Log
 
 ## 2026-03-08
@@ -82,6 +81,7 @@
 
 - `XRPL Trading Interface` is now building into `admin-projects/workspaces/personal-xrpl-bot`.
 - The local goal is to validate workspace quality and previewability through the main app before moving to the VM for real installs and persistent backend processes.
-=======
-2026-03-08: VM XRPL status path validated.
->>>>>>> bc2db9120c82fa53838408466fdde5174d925f45
+
+### VM validation checkpoint
+
+- VM XRPL status path validated against the live root-mounted personal bot route.

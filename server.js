@@ -171,6 +171,12 @@ function requireOwner(req, res, next) {
 
 function getAppPayload() {
   const validator = getValidatorConfig();
+  const projectModules = getProjectEntries().map((project) => ({
+    name: project.name,
+    description: project.description,
+    status: project.type === "workspace" ? "Workspace" : "Built-in"
+  }));
+
   return {
     brand: {
       name: "Cbot Labs",
@@ -206,7 +212,8 @@ function getAppPayload() {
         name: "Project hub",
         description: "Owner-only project area for bot-built interfaces and backend experiments.",
         status: "Active"
-      }
+      },
+      ...projectModules
     ],
     links: [
       {
