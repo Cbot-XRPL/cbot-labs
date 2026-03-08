@@ -1,126 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cbot Labs Project Hub</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/admin/projects/project-hub.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Projects — Owner Only</title>
+  <style>
+    body { background:#000; color:#fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; padding:24px }
+    .container { max-width:1000px; margin:0 auto }
+    h1 { color:#ff2b2b }
+    .project { background:#0b0b0b; border:1px solid #222; padding:12px; margin:12px 0; border-left:6px solid #8B0000 }
+    a.project-link { color:#ff3b3b; text-decoration:none; font-weight:600 }
+    .note { color:#aaa; font-size:0.9rem }
+  </style>
 </head>
-
 <body>
-    <div class="page-shell">
-        <header class="panel header">
-            <div class="brand">
-                <div class="brand-mark">[]</div>
-                <div>
-                    <p class="eyebrow">CBOT LABS</p>
-                    <strong>Admin Project Hub</strong>
-                </div>
-            </div>
-            <div class="header-actions">
-                <a class="button button-secondary" href="/">Back to Site</a>
-                <a class="button button-primary" href="/#admin">Back to Admin</a>
-            </div>
-        </header>
+  <div class="container">
+    <h1>Owner-Only Projects</h1>
+    <p class="note">This listing is owner-only. Do not expose these links publicly. Links below are intended for authenticated owner sessions only.</p>
 
-        <section class="hero">
-            <div class="panel">
-                <p class="section-kicker">Owner Only</p>
-                <h1>Project workspace for bot-built pages</h1>
-                <p class="summary">
-                    This area is reserved for admin-only projects and sub-pages created by the bot. Keep new work under
-                    <code>admin-projects/</code> so it stays private behind the owner login and off the public home page.
-                </p>
-                <div class="summary-list">
-                    <div class="summary-item">
-                        <strong>Private by route</strong>
-                        Everything here is served from <code>/admin/projects/</code> behind owner auth.
-                    </div>
-                    <div class="summary-item">
-                        <strong>Bot build target</strong>
-                        Future generated tabs, tools, and project pages should live under this folder tree.
-                    </div>
-                    <div class="summary-item">
-                        <strong>Public site protected</strong>
-                        Home page assets stay untouched unless you deliberately change the protection policy.
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-side">
-                <div class="stat-card">
-                    <span class="section-kicker">Current path</span>
-                    <strong>/admin/projects/</strong>
-                </div>
-                <div class="stat-card">
-                    <span class="section-kicker">Intended use</span>
-                    <strong>Bot-built admin modules</strong>
-                </div>
-                <div class="stat-card">
-                    <span class="section-kicker">Visibility</span>
-                    <strong>Owner session only</strong>
-                </div>
-            </div>
-        </section>
-
-        <section class="tab-shell">
-            <nav class="tab-nav" aria-label="Project hub tabs">
-                <button class="tab-button tab-button-active" type="button" data-tab-target="overview-tab">Overview</button>
-                <button class="tab-button" type="button" data-tab-target="projects-tab">Projects</button>
-                <button class="tab-button" type="button" data-tab-target="sandbox-tab">Sandbox</button>
-            </nav>
-
-            <section id="overview-tab" class="tab-pane tab-pane-active">
-                <div class="project-grid">
-                    <article class="project-card">
-                        <p class="section-kicker">Overview</p>
-                        <h3>Ready container</h3>
-                        <p>
-                            Use this first tab as the landing surface for whatever the bot builds next. It can link out
-                            to deeper admin-only tools or render embedded summaries of generated projects.
-                        </p>
-                    </article>
-                    <article class="project-card">
-                        <p class="section-kicker">Pattern</p>
-                        <h3>Navbar-style sections</h3>
-                        <p>
-                            The tab strip is intentionally simple so the bot can append more sections later without
-                            disturbing the main public site.
-                        </p>
-                    </article>
-                </div>
-            </section>
-
-            <section id="projects-tab" class="tab-pane">
-                <div class="placeholder-box">
-                    This tab is reserved for generated project pages.
-                    <br>
-                    Suggested convention:
-                    <br>
-                    <code>admin-projects/project-name/index.html</code>
-                    <br>
-                    <code>admin-projects/project-name/assets/</code>
-                    <br><br>
-                    The bot can later add tab links here or replace this placeholder with a project registry.
-                </div>
-            </section>
-
-            <section id="sandbox-tab" class="tab-pane">
-                <div class="placeholder-box">
-                    Use this area for temporary test builds, previews, or one-off admin-only tools.
-                    <br><br>
-                    Keep public-facing assets out of this folder unless you explicitly move them into the public app.
-                </div>
-            </section>
-        </section>
+    <div class="project">
+      <a class="project-link" href="/admin-projects/xrpl-trading-bot/">XRPL Trading Bot</a>
+      <div class="note">Owner-only trading bot dashboard (red/black theme). Observation-only UI for wallet & multi-ecosystem metrics (XRPL, Xahau, Flare, EVM sidechain).</div>
     </div>
 
-    <script src="/admin/projects/project-hub.js"></script>
+    <div class="project">
+      <span style="color:#888">(Other owner projects may be listed here...)</span>
+    </div>
+  </div>
 </body>
-
 </html>

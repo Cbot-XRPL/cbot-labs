@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>XRPL Trading Bot — Owner Dashboard</title>
+  <link rel="stylesheet" href="/admin-projects/xrpl-trading-bot/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <h1>XRPL Trading Bot</h1>
+      <div class="meta">Network: <span id="networkLabel">UNKNOWN</span> • Mode: <span id="modeLabel">OBSERVE</span></div>
+      <button id="refreshBtn" class="btn btn-primary">Refresh Now</button>
+      <label class="auto">Auto-refresh <input id="autoRefreshToggle" type="checkbox" checked></label>
+    </header>
+
+    <section class="status">
+      <div class="card">
+        <h2>Wallet</h2>
+        <div class="field"><strong>Address:</strong> <span id="address">—</span></div>
+        <div class="field"><strong>Balance:</strong> <span id="balance">—</span></div>
+        <div class="field"><strong>Last Ledger:</strong> <span id="lastLedger">—</span></div>
+        <div class="field"><strong>Connection:</strong> <span id="connStatus" class="dot">red</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Recent XRPL Transactions</h2>
+        <div id="txList">(no data)</div>
+      </div>
+
+      <div class="card">
+        <h2>Xahau Tokens</h2>
+        <div id="xahauPanel">(placeholder for Xahau token metrics)</div>
+      </div>
+
+      <div class="card">
+        <h2>Flare / F-Assets</h2>
+        <div id="flarePanel">(placeholder for Flare metrics)</div>
+      </div>
+
+      <div class="card">
+        <h2>EVM Sidechain Balances</h2>
+        <div id="evmPanel">(placeholder for EVM sidechain balances)</div>
+      </div>
+
+      <div class="card">
+        <h2>Telemetry</h2>
+        <div class="telemetry">
+          <div><strong>Last Sync:</strong> <span id="lastSync">—</span></div>
+          <div><strong>Snapshot:</strong> <span id="snapshotId">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">Note: UI is read-only. No wallet seeds or signing inputs are accepted in the browser. Server-side secrets must be injected into the runtime (XRPL_WALLET_SEED, RIPPLED_URL). See README for developer notes.</footer>
+  </div>
+
+  <script src="/admin-projects/xrpl-trading-bot/client.js"></script>
+</body>
+</html>

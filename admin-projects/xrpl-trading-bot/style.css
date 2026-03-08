@@ -1,0 +1,18 @@
+/* Red & Black theme for owner-only XRPL Trading Bot */
+:root{--red:#8B0000;--accent:#ff3b3b;--bg:#000;--card:#0b0b0b;--muted:#999}
+body{background:var(--bg);color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;padding:18px}
+.app{max-width:1100px;margin:0 auto}
+.hero{display:flex;gap:12px;align-items:center}
+.hero h1{color:var(--red);margin:0 12px 12px 0}
+.meta{color:var(--muted);font-size:0.95rem}
+.btn{background:#111;border:1px solid #222;padding:8px 12px;color:#fff;border-radius:6px;cursor:pointer}
+.btn-primary{background:var(--red);border-color:#550000}
+.auto{margin-left:12px;color:var(--muted)}
+.status{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:18px}
+.card{background:var(--card);border:1px solid #222;padding:12px;border-radius:8px}
+.card h2{margin:0 0 8px 0;color:var(--accent)}
+.field{margin:6px 0}
+.dot{display:inline-block;padding:4px 8px;border-radius:6px}
+.dot.red{background:#440000}
+.dot.green{background:#003300}
+.footer{margin-top:18px;color:var(--muted);font-size:0.9rem}

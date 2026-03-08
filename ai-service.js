@@ -360,7 +360,7 @@ async function callOpenAi({ prompt, workspace, metadata = {}, mode = "text" }) {
     output
   };
 
-  if (mode === "library-update") {
+  if (mode === "library-update" || mode === "workspace-update") {
     result.parsed = extractJsonObject(output);
   }
 
@@ -418,6 +418,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
   }
 
   const fileWrites = Array.isArray(parsed.fileWrites) ? parsed.fileWrites : [];
+  let nonLibraryFileWriteCount = 0;
   if (action === "workspace_update") {
     for (const fileWrite of fileWrites) {
       const relativePath = normalizeRepoPath(fileWrite?.path);
@@ -437,6 +438,9 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
       writeText(absolutePath, content);
       changedFiles.push(relativePath);
+      if (relativePath !== "ai/library.json") {
+        nonLibraryFileWriteCount += 1;
+      }
     }
   }
 
@@ -456,6 +460,10 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
       writeJson(files.library, nextLibrary);
       changedFiles.push(libraryPath);
     }
+  }
+
+  if (action === "workspace_update" && nonLibraryFileWriteCount < 1) {
+    throw new Error("Workspace task produced no non-library file changes");
   }
 
   if (!changedFiles.length) {
