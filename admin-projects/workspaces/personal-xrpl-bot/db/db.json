@@ -1,4 +1,43 @@
 {
-  "metrics": [],
-  "trades": []
+  "metrics": [
+    {
+      "ts": "2026-03-08T04:57:02.890Z",
+      "sample": {
+        "ts": "2026-03-08T04:57:02.888Z",
+        "xrpl": {
+          "connected": false,
+          "online": false,
+          "address": "rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
+          "ledger_index": null,
+          "note": "XRPL client unavailable in local preview mode"
+        },
+        "xahau": {
+          "token": "XAHAU",
+          "price_estimate": "0.649989",
+          "liquidity_note": "simulated"
+        },
+        "flare": {
+          "token": "FLR",
+          "price_estimate": "0.200461",
+          "note": "simulated"
+        },
+        "evm": {
+          "chain": "Example-EVM",
+          "native_price_estimate": "10.0151",
+          "note": "simulated"
+        }
+      }
+    }
+  ],
+  "trades": [
+    {
+      "id": "sim-1772945831602",
+      "ts": "2026-03-08T04:57:11.602Z",
+      "side": "buy",
+      "token": "XRP",
+      "size": 1,
+      "price": 0.01,
+      "note": "manual simulate"
+    }
+  ]
 }

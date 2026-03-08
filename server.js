@@ -559,6 +559,13 @@ try {
   console.error("Failed to mount admin trading routes:", error.message);
 }
 
+try {
+  const adminPersonalBotRouter = require("./routes/admin-personal-bot");
+  app.use("/api/admin/personal-bot", requireOwner, adminPersonalBotRouter);
+} catch (error) {
+  console.error("Failed to mount personal bot routes:", error.message);
+}
+
 app.get("/", (_req, res) => {
   res.sendFile(path.join(rootDir, "index.html"));
 });
