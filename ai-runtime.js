@@ -43,6 +43,7 @@ function defaultDb() {
       retryDelaySeconds: 90,
       maxTaskRuntimeMinutes: 20,
       maxRetries: 2,
+      recurringTaskIntervalMinutes: 60,
       writableRoots: [...defaultWritableRoots],
       protectedPaths: [...requiredProtectedPaths]
     },
@@ -250,6 +251,9 @@ function normalizeTaskOrder(tasks) {
       ...task,
       locked: Boolean(task.locked),
       allowRerun: Boolean(task.allowRerun),
+      recurring: Boolean(task.recurring),
+      recurringIntervalMinutes: Math.max(5, Number(task.recurringIntervalMinutes) || 60),
+      nextRecurringAt: task.nextRecurringAt || null,
       runs: Array.isArray(task.runs) ? task.runs : [],
       order: index + 1
     }));
@@ -438,6 +442,79 @@ function startTaskHeartbeat(task) {
   }, taskHeartbeatMs);
 }
 
+function isRecurringTaskDue(task, now = Date.now()) {
+  if (!task || !task.recurring || task.locked || task.status === "failed" || task.status === "running") {
+    return false;
+  }
+
+  if (task.status === "pending" || task.status === "waiting") {
+    return true;
+  }
+
+  const nextRecurringAt = task.nextRecurringAt ? new Date(task.nextRecurringAt).getTime() : 0;
+  if (!nextRecurringAt || Number.isNaN(nextRecurringAt)) {
+    return true;
+  }
+
+  return nextRecurringAt <= now;
+}
+
+function getNextRecurringDelaySeconds(db) {
+  if (!db.config.autoCallLlm) {
+    return null;
+  }
+
+  const now = Date.now();
+  const nextRecurringTime = normalizeTaskOrder(db.tasks)
+    .filter((task) => task.recurring && !task.locked && task.status !== "failed" && task.status !== "running")
+    .map((task) => {
+      const nextTime = task.nextRecurringAt ? new Date(task.nextRecurringAt).getTime() : now;
+      return Number.isNaN(nextTime) ? now : nextTime;
+    })
+    .sort((a, b) => a - b)[0];
+
+  if (!nextRecurringTime) {
+    return null;
+  }
+
+  return Math.max(1, Math.ceil((nextRecurringTime - now) / 1000));
+}
+
+function syncLoopSchedule(db, reason = null) {
+  if (!db.config.enabled) {
+    clearScheduledRun();
+    return;
+  }
+
+  if (db.state.isRunning) {
+    return;
+  }
+
+  if (hasRunnableTask(db)) {
+    if (reason) {
+      addActivity("loop", reason);
+    }
+    scheduleNextRun(1);
+    return;
+  }
+
+  const recurringDelaySeconds = getNextRecurringDelaySeconds(db);
+  if (recurringDelaySeconds !== null) {
+    if (reason) {
+      addActivity("loop", reason);
+    }
+    scheduleNextRun(recurringDelaySeconds);
+    return;
+  }
+
+  if (db.config.pauseWhenQueueEmpty) {
+    clearScheduledRun();
+    return;
+  }
+
+  scheduleNextRun(db.config.idleDelaySeconds);
+}
+
 function withTimeout(promise, timeoutMs, label) {
   return Promise.race([
     promise,
@@ -567,18 +644,28 @@ async function maybeRunGitActions(task, config) {
 }
 
 function getPendingTask(db) {
-  return normalizeTaskOrder(db.tasks)
-    .filter((task) => {
-      if (task.locked) {
-        return false;
-      }
+  const orderedTasks = normalizeTaskOrder(db.tasks);
+  const standardTask = orderedTasks.find((task) => {
+    if (task.locked) {
+      return false;
+    }
 
-      if (task.status === "pending") {
-        return true;
-      }
+    if (task.status === "pending") {
+      return true;
+    }
 
-      return task.status === "waiting" && db.config.autoCallLlm;
-    })[0] || null;
+    return task.status === "waiting" && db.config.autoCallLlm;
+  });
+
+  if (standardTask) {
+    return standardTask;
+  }
+
+  if (!db.config.autoCallLlm) {
+    return null;
+  }
+
+  return orderedTasks.find((task) => isRecurringTaskDue(task)) || null;
 }
 
 function hasRunnableTask(db) {
@@ -587,12 +674,10 @@ function hasRunnableTask(db) {
 
 function maybeWakeLoop(reason) {
   const db = loadDb();
-  if (!db.config.enabled || db.state.isRunning || !hasRunnableTask(db)) {
+  if (!db.config.enabled || db.state.isRunning) {
     return;
   }
-
-  addActivity("loop", reason);
-  scheduleNextRun(1);
+  syncLoopSchedule(db, reason);
 }
 
 function buildLoopPrompt(task, db, workspace) {
@@ -710,7 +795,7 @@ async function runLoopCycle() {
   heartbeatTimer = startTaskHeartbeat(task);
 
   const duplicateCompletedTask = findCompletedTaskMatch(db.tasks, task, task.id);
-  if (duplicateCompletedTask && !task.allowRerun) {
+  if (duplicateCompletedTask && !task.allowRerun && !task.recurring) {
     if (heartbeatTimer) {
       clearInterval(heartbeatTimer);
       heartbeatTimer = null;
@@ -872,6 +957,9 @@ async function runLoopCycle() {
         currentTask.git = gitResult;
         currentTask.allowRerun = false;
         currentTask.runId = null;
+        currentTask.nextRecurringAt = currentTask.recurring
+          ? new Date(Date.parse(completedAt) + (currentTask.recurringIntervalMinutes * 60 * 1000)).toISOString()
+          : null;
         currentTask.runs = Array.isArray(currentTask.runs) ? currentTask.runs : [];
         currentTask.runs.unshift({
           id: crypto.randomUUID(),
@@ -978,13 +1066,14 @@ async function runLoopCycle() {
 
   const currentTaskState = latestDb.tasks.find((entry) => entry.id === task.id);
   const hasQueuedTask = hasRunnableTask(latestDb);
+  const recurringDelaySeconds = getNextRecurringDelaySeconds(latestDb);
   const delaySeconds = !latestDb.config.enabled
     ? latestDb.config.idleDelaySeconds
     : currentTaskState?.status === "pending"
       ? latestDb.config.retryDelaySeconds
       : hasQueuedTask
         ? latestDb.config.postTaskDelaySeconds
-        : latestDb.config.idleDelaySeconds;
+        : (recurringDelaySeconds ?? latestDb.config.idleDelaySeconds);
 
   scheduleNextRun(delaySeconds);
   return getSnapshot();
@@ -999,13 +1088,7 @@ function startLoop() {
 
   addActivity("loop", "Bot loop enabled");
   addConsoleLine("loop enabled");
-  if (hasRunnableTask(db)) {
-    scheduleNextRun(1);
-  } else if (db.config.pauseWhenQueueEmpty) {
-    clearScheduledRun();
-  } else {
-    scheduleNextRun(db.config.idleDelaySeconds);
-  }
+  syncLoopSchedule(db);
   return db;
 }
 
@@ -1032,7 +1115,7 @@ function stopLoop() {
 }
 
 function setConfig(patch) {
-  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "enabled", "writableRoots", "protectedPaths"];
+  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "recurringTaskIntervalMinutes", "enabled", "writableRoots", "protectedPaths"];
 
   const db = updateDb((current) => {
     for (const key of allowed) {
@@ -1046,6 +1129,7 @@ function setConfig(patch) {
     current.config.retryDelaySeconds = Math.max(15, Number(current.config.retryDelaySeconds) || 90);
     current.config.maxTaskRuntimeMinutes = Math.max(1, Number(current.config.maxTaskRuntimeMinutes) || 20);
     current.config.maxRetries = Math.max(1, Number(current.config.maxRetries) || 2);
+    current.config.recurringTaskIntervalMinutes = Math.max(5, Number(current.config.recurringTaskIntervalMinutes) || 60);
     normalizeConfigPolicy(current.config);
     return current;
   });
@@ -1054,15 +1138,7 @@ function setConfig(patch) {
     keys: Object.keys(patch)
   });
 
-  if (db.config.enabled) {
-    if (hasRunnableTask(db)) {
-      scheduleNextRun(1);
-    } else if (db.config.pauseWhenQueueEmpty) {
-      clearScheduledRun();
-    } else {
-      scheduleNextRun(db.config.idleDelaySeconds);
-    }
-  }
+  syncLoopSchedule(db);
 
   return db;
 }
@@ -1098,6 +1174,9 @@ function addTask(payload) {
     status: "pending",
     locked: false,
     allowRerun: false,
+    recurring: Boolean(payload.recurring),
+    recurringIntervalMinutes: Math.max(5, Number(payload.recurringIntervalMinutes) || db.config.recurringTaskIntervalMinutes || 60),
+    nextRecurringAt: payload.recurring ? new Date().toISOString() : null,
     attempts: 0,
     createdAt: new Date().toISOString(),
     startedAt: null,
@@ -1135,7 +1214,9 @@ function updateTask(taskId, patch) {
     ...existingTask,
     ...(Object.hasOwn(patch, "title") ? { title: String(patch.title || "").trim() || existingTask.title } : {}),
     ...(Object.hasOwn(patch, "goal") ? { goal: String(patch.goal || "").trim() } : {}),
-    ...(Object.hasOwn(patch, "assignedTaskBlock") ? { assignedTaskBlock: String(patch.assignedTaskBlock || "").trim() } : {})
+    ...(Object.hasOwn(patch, "assignedTaskBlock") ? { assignedTaskBlock: String(patch.assignedTaskBlock || "").trim() } : {}),
+    ...(Object.hasOwn(patch, "recurring") ? { recurring: Boolean(patch.recurring) } : {}),
+    ...(Object.hasOwn(patch, "recurringIntervalMinutes") ? { recurringIntervalMinutes: Math.max(5, Number(patch.recurringIntervalMinutes) || existingTask.recurringIntervalMinutes || currentDb.config?.recurringTaskIntervalMinutes || 60) } : {})
   };
   const completedMatch = findCompletedTaskMatch(currentDb.tasks, candidateTask, taskId);
   if (completedMatch) {
@@ -1198,6 +1279,9 @@ function updateTask(taskId, patch) {
       task.startedAt = null;
       task.lastError = null;
       task.runId = null;
+      if (task.recurring) {
+        task.nextRecurringAt = new Date().toISOString();
+      }
       if (current.state.currentTaskId === taskId) {
         current.state.isRunning = false;
         current.state.currentTaskId = null;
@@ -1230,6 +1314,19 @@ function updateTask(taskId, patch) {
       task.assignedTaskBlock = String(patch.assignedTaskBlock || "").trim();
     }
 
+    if (Object.hasOwn(patch, "recurring")) {
+      task.recurring = Boolean(patch.recurring);
+      task.recurringIntervalMinutes = Math.max(5, Number(patch.recurringIntervalMinutes) || task.recurringIntervalMinutes || current.config.recurringTaskIntervalMinutes || 60);
+      task.nextRecurringAt = task.recurring ? new Date().toISOString() : null;
+    }
+
+    if (Object.hasOwn(patch, "recurringIntervalMinutes")) {
+      task.recurringIntervalMinutes = Math.max(5, Number(patch.recurringIntervalMinutes) || task.recurringIntervalMinutes || current.config.recurringTaskIntervalMinutes || 60);
+      if (task.recurring && !task.nextRecurringAt) {
+        task.nextRecurringAt = new Date().toISOString();
+      }
+    }
+
     current.tasks = normalizeTaskOrder(current.tasks);
     return current;
   });
@@ -1250,6 +1347,8 @@ function updateTask(taskId, patch) {
   const updatedTask = db.tasks.find((task) => task.id === taskId);
   if (updatedTask && (updatedTask.status === "pending" || updatedTask.status === "waiting") && !updatedTask.locked) {
     maybeWakeLoop("Pending task available, waking loop");
+  } else if (updatedTask?.recurring && !updatedTask.locked) {
+    maybeWakeLoop("Recurring task updated, waking loop");
   }
 
   return updatedTask;
@@ -1420,13 +1519,7 @@ function bootstrapLoop() {
   saveDb(db);
   if (db.config.enabled) {
     addActivity("loop", "Bot loop restored on server start");
-    if (hasRunnableTask(db)) {
-      scheduleNextRun(2);
-    } else if (!db.config.pauseWhenQueueEmpty) {
-      scheduleNextRun(db.config.idleDelaySeconds);
-    } else {
-      clearScheduledRun();
-    }
+    syncLoopSchedule(db);
   }
 }
 

@@ -709,6 +709,15 @@ code,
   max-height: none;
 }
 
+.admin-editor-dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+}
+
+.admin-editor-dialog-inner {
+  width: 100%;
+}
+
 .bot-list {
   display: grid;
   gap: 12px;
@@ -866,6 +875,16 @@ code,
 .bot-task-status-failed .task-signal {
   background: #ff6b6b;
   box-shadow: 0 0 16px rgba(255, 107, 107, 0.9);
+}
+
+.bot-task-status-recurring {
+  border-color: rgba(190, 132, 255, 0.38);
+  box-shadow: 0 0 0 1px rgba(190, 132, 255, 0.08), 0 0 28px rgba(190, 132, 255, 0.14);
+}
+
+.bot-task-status-recurring .task-signal {
+  background: #c18cff;
+  box-shadow: 0 0 18px rgba(193, 140, 255, 0.9);
 }
 
 .bot-task-status-neutral .task-signal {

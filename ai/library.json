@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "crypto-onchain-metrics",
@@ -203,7 +203,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "strategies-risk-management",
@@ -236,7 +236,7 @@
           "url": "https://en.wikipedia.org/wiki/Kelly_criterion"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "tools-data-sources",
@@ -277,7 +277,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.182Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "execution-best-practices",
@@ -310,7 +310,7 @@
           "url": "https://www.quantconnect.com/docs"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-and-xahau-notes",
@@ -339,7 +339,7 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-core",
@@ -403,7 +403,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xahau-buildout-local",
@@ -431,7 +431,7 @@
           "url": "https://xrpl.org/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "evm-sidechain-flare",
@@ -468,7 +468,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "flare-defi-data-sources",
@@ -501,7 +501,7 @@
           "url": "https://songbird.network/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-amm-vault-multisig",
@@ -538,7 +538,7 @@
           "url": "https://github.com/ripple/rippled"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-auto-bridging-and-paths",
@@ -575,7 +575,7 @@
           "url": "https://interledger.org/docs/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "agent-design-patterns",
@@ -610,7 +610,7 @@
           "url": "https://github.com/langchain-ai/langchain"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "trading-agent-repo-examples",
@@ -661,7 +661,7 @@
           "url": "https://github.com/langchain-ai/langchain"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "repo-structure-and-filesystem",
@@ -698,7 +698,7 @@
           "url": "https://github.com/hummingbot/hummingbot"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "guardrails-safety-loops",
@@ -736,7 +736,7 @@
           "url": "https://aws.amazon.com/secrets-manager/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "testing-deployment-monitoring",
@@ -773,7 +773,7 @@
           "url": "https://sentry.io/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-xahau-integration-patterns",
@@ -814,7 +814,7 @@
           "url": "FILE:ai/library.json#xahau-buildout"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "xrpl-wallet-connection",
@@ -850,7 +850,7 @@
           "url": "https://github.com/XRPLF/xrpl-py"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "wallet-dashboard",
@@ -883,7 +883,7 @@
           "url": "FILE:server.js"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     },
     {
       "id": "wallet-secrets-handling",
@@ -914,7 +914,144 @@
           "url": "https://aws.amazon.com/secrets-manager/"
         }
       ],
-      "updatedAt": "2026-03-07T23:58:47.183Z"
+      "updatedAt": "2026-03-08T00:42:20.283Z"
+    },
+    {
+      "id": "xrpl-trading-interface",
+      "title": "XRPL Trading Interface (admin-projects/xrpl-trading-bot)",
+      "summary": "Project spec and file-layout for an owner-only XRPL trading-bot UI placed under admin-projects. Tracks XRPL, Xahau, Flare and EVM-sidechain metrics, themed red/black, and built to observe (not sign) until wallet secrets are supplied via secrets manager.",
+      "tags": [
+        "admin-projects",
+        "xrpl",
+        "xahau",
+        "flare",
+        "evm",
+        "ui",
+        "dashboard",
+        "monitoring",
+        "wallet"
+      ],
+      "details": [
+        "Target path: admin-projects/xrpl-trading-bot/ (new folder; owner-only route per workspace guardrails).",
+        "Files to create: index.html (UI), client.js (client-side logic), style.css (local; red/black theme), assets/ (icons, logos), README.md (developer notes). Do NOT modify top-level index.html, script.js, style.css or other protected files.",
+        "UI design: dark-red (#8B0000) + black theme; prominent red action buttons styled consistently (no signing UI visible); connection indicator (green/yellow/red), public address, formatted XRP balance, last ledger/time, recent transactions table, metrics panels (XRPL offers, AMM liquidity, Xahau tokens, Flare F-Assets, EVM sidechain balances), manual refresh and auto-refresh toggle.",
+        "Metrics to surface (minimum): XRP wallet balance (drops & XRP), recent account_tx (direction, amount, ledger, memo), open offers/book_offers snapshots, AMM pool liquidity & TVL (XRPL AMM), path_find snapshots & selected route, Xahau token metrics (listed tokens and on-ledger offers), Flare F-Asset balances and Songbird testnet indicators, EVM-sidechain account balances for pegged assets, PnL & recent fills (derived), slippage & last-execution snapshot.",
+        "Data update model: prefer server-pushed events (SSE/WebSocket) for account_tx and ledger changes; fallback to polling (e.g. 5–10s) with configurable rate limits to avoid public node overload.",
+        "Storage & audit: persist timestamped snapshots and audit logs outside the repo (external data path or secret-configured storage). UI shows latest snapshot but raw snapshots written to configured datastore for replay and post-mortem.",
+        "Test mode: default to XRPL Testnet / Songbird for development. UI should display network label (TESTNET / MAINNET) prominently.",
+        "No secrets in UI: never accept or display private seeds in the browser. The UI is observation-only until operator-supplied seed is injected server-side via secrets manager.",
+        "Project listing: add an owner-only link entry under admin-projects index/listing (internal projects listing page) to make the page navigable from admin projects; do NOT alter public navigation or protected files."
+      ],
+      "links": [
+        {
+          "label": "XRPL Developer Docs (canonical)",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "XRPL AMM Guide",
+          "url": "https://xrpl.org/amm.html"
+        },
+        {
+          "label": "Pathfinding & Payments (XRPL)",
+          "url": "https://xrpl.org/path-find.html"
+        },
+        {
+          "label": "Xahau Buildout (workspace entry)",
+          "url": "FILE:ai/library.json#xahau-buildout"
+        },
+        {
+          "label": "Flare Docs (F-Assets & State Connector)",
+          "url": "https://docs.flare.xyz/"
+        },
+        {
+          "label": "Songbird (Flare testnet)",
+          "url": "https://songbird.network/"
+        }
+      ],
+      "updatedAt": "2026-03-08T00:42:20.283Z"
+    },
+    {
+      "id": "xrpl-trading-interface-server-endpoints",
+      "title": "Server Endpoints & Secrets Handling for XRPL Trading Interface",
+      "summary": "Server-side recipe and required endpoints for XRPL connectivity, safe seed handling, telemetry endpoints and owner-auth preservation when wiring the trading interface to rippled via xrpl.js.",
+      "tags": [
+        "server",
+        "api",
+        "xrpl",
+        "secrets",
+        "security",
+        "owner-only",
+        "rippled",
+        "xrpl.js"
+      ],
+      "details": [
+        "Use xrpl.js (Node) on the server. Prefer Node if server.js is Node-based; otherwise note xrpl-py alternative. Do not store seeds in repo.",
+        "Secrets: load XRPL_WALLET_SEED and RIPPLED_URL from secrets manager or environment injection at runtime. Never log seeds or write them to repo files. Use Vault/AWS Secrets Manager recommended.",
+        "Preserve authentication: any new endpoints must reuse existing owner authentication and owner-wallet whitelist in server.js; do NOT weaken access control or expose endpoints publicly.",
+        "Recommended endpoints (owner-only): GET /api/admin/trading/status -> { address, balanceDrops, balanceXRP, lastLedger, connected }, GET /api/admin/trading/metrics -> latest metrics snapshot, GET /api/admin/trading/txs?limit= -> recent tx list, GET /api/admin/trading/path?suggest -> persist chosen path snapshot. Optional POST /api/admin/trading/refresh to trigger immediate refresh (owner-only).",
+        "Server flow for XRPL connection: 1) load XRPL_WALLET_SEED from secret store; 2) Wallet.fromSeed(seed) -> derive address; 3) connect to rippled client (RIPPLED_URL) with retry/backoff; 4) request account_info and subscribe to account_tx and ledger streams; 5) publish sanitized status to owner-only endpoints / SSE or WebSocket.",
+        "No server-side signing until operator provides wallet seed and manual operator confirmation. If signing endpoints are later added, enforce multisig/time-delay + manual approval and require high-sensitivity audit logs.",
+        "Rate-limiting & caching: cache book_offers and path_find snapshots for a short TTL to avoid hammering public nodes. Implement exponential backoff on rippled errors and keep idempotency for refresh requests.",
+        "Audit & logs: write append-only logs for every server action involving the wallet and any metric snapshots. Persist ledger-indexed snapshots for replayability and reconciliation.",
+        "Storage: snapshots and logs should be saved to configured external storage (S3, object store, or a local data path outside repo) referenced by config; avoid writing into protected .data/ in repo."
+      ],
+      "links": [
+        {
+          "label": "xrpl.js (official JS client)",
+          "url": "https://github.com/XRPLF/xrpl.js"
+        },
+        {
+          "label": "XRPL Developer Docs (path_find & account_tx)",
+          "url": "https://xrpl.org/"
+        },
+        {
+          "label": "Workspace server.js (reference for preserving owner auth)",
+          "url": "FILE:server.js"
+        },
+        {
+          "label": "Secrets Manager - Vault (example)",
+          "url": "https://www.vaultproject.io/"
+        }
+      ],
+      "updatedAt": "2026-03-08T00:42:20.283Z"
+    },
+    {
+      "id": "xrpl-trading-interface-ops-guardrails",
+      "title": "Operational Guardrails: Safety, Testing & Deployment for XRPL Trading Interface",
+      "summary": "Operational and security guardrails to follow when implementing and running the XRPL trading interface, including testnet-first, secrets handling, and auditability.",
+      "tags": [
+        "ops",
+        "guardrails",
+        "testing",
+        "audit",
+        "security",
+        "xrpl"
+      ],
+      "details": [
+        "Testnet-first: develop and validate all features on XRPL Testnet and Songbird (Flare testnet). UI must display network mode clearly.",
+        "No secrets in repo: never commit seeds or actual private data. Use secrets manager and inject XRPL_WALLET_SEED at runtime only.",
+        "Owner-only routes: host UI under admin-projects and guard with owner auth. Do not modify public site files or global nav.",
+        "Read-only vs signing: default interface is observational/read-only. Introduce signing only after explicit operator approval and with multisig/time-delay patterns.",
+        "Observability: instrument metrics (connection health, last ledger, snapshot latency, number of offers tracked, last path_find result, snapshot errors) and surface critical alerts in admin UI.",
+        "Reproducibility: persist raw snapshots (orderbook, path quotes, account_tx) for replay engines and post-mortem debugging.",
+        "Incident playbook: include a runbook for compromised seed (rotate, freeze, move funds via multisig if available), rippled outage, and gateway insolvency detection.",
+        "Privacy & throttling: do not publish any identifiable operator data in UI. Throttle client polling to avoid overloading internal/external nodes."
+      ],
+      "links": [
+        {
+          "label": "Wallet Secrets Handling (workspace entry)",
+          "url": "FILE:ai/library.json#wallet-secrets-handling"
+        },
+        {
+          "label": "Wallet Dashboard (workspace entry)",
+          "url": "FILE:ai/library.json#wallet-dashboard"
+        },
+        {
+          "label": "Execution Best Practices (workspace)",
+          "url": "FILE:ai/library.json#execution-best-practices"
+        }
+      ],
+      "updatedAt": "2026-03-08T00:42:20.283Z"
     }
   ]
 }

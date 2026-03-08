@@ -6,6 +6,7 @@ const visibleBotOutputLimit = 20;
 let currentBotOutputEntries = [];
 let lastBotOutputRenderKey = "";
 let currentView = "home";
+let adminEditorState = null;
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
@@ -175,9 +176,9 @@ function renderHeroLinks(links) {
 }
 
 function renderAdmin(adminData, botData) {
+  setText("admin-account", adminData.ownerAccount);
   const controls = document.getElementById("admin-controls");
   if (controls) {
-    setText("admin-account", adminData.ownerAccount);
     controls.innerHTML = adminData.controls.map((control) => `
       <span class="admin-control-pill">${escapeHtml(control)}</span>
     `).join("");
@@ -215,7 +216,11 @@ function renderTaskList(tasks) {
     return;
   }
 
-  const getTaskStatusTone = (status) => {
+  const getTaskStatusTone = (task) => {
+    if (task.recurring) {
+      return "recurring";
+    }
+    const status = task.status;
     if (status === "running" || status === "completed") {
       return "running";
     }
@@ -229,17 +234,19 @@ function renderTaskList(tasks) {
   };
 
   container.innerHTML = tasks.map((task, index) => `
-    <article class="bot-list-item bot-task-item bot-task-status-${getTaskStatusTone(task.status)} ${task.locked ? "bot-task-locked" : ""}" draggable="true" data-task-row-id="${escapeHtml(task.id)}">
+    <article class="bot-list-item bot-task-item bot-task-status-${getTaskStatusTone(task)} ${task.locked ? "bot-task-locked" : ""}" draggable="true" data-task-row-id="${escapeHtml(task.id)}">
       <div class="bot-task-heading">
         <span class="task-signal" aria-hidden="true"></span>
         <strong>#${index + 1} ${escapeHtml(task.title)}</strong>
       </div>
-      <span>Status: ${escapeHtml(task.status)}${task.locked ? " | Locked" : ""} | Attempts: ${escapeHtml(task.attempts)}</span>
+      <span>Status: ${escapeHtml(task.recurring ? "recurring" : task.status)}${task.locked ? " | Locked" : ""} | Attempts: ${escapeHtml(task.attempts)}</span>
+      ${task.recurring ? `<span>Recurring every ${escapeHtml(task.recurringIntervalMinutes)} min${task.nextRecurringAt ? ` | Next run: ${escapeHtml(formatDateTime(task.nextRecurringAt))}` : ""}</span>` : ""}
       <span>Goal: ${escapeHtml(task.goal || "n/a")}</span>
       <p>${escapeHtml(task.assignedTaskBlock || "No assigned task block.")}</p>
       <div class="bot-list-item-actions">
         <button class="mini-button" type="button" data-task-edit="${escapeHtml(task.id)}">Edit</button>
         <button class="mini-button" type="button" data-task-lock="${escapeHtml(task.id)}" data-task-locked="${task.locked ? "true" : "false"}">${task.locked ? "Unlock" : "Lock"}</button>
+        <button class="mini-button" type="button" data-task-recurring="${escapeHtml(task.id)}" data-task-recurring-enabled="${task.recurring ? "true" : "false"}">${task.recurring ? "Recurring On" : "Make Recurring"}</button>
         ${(task.status === "failed" || task.status === "completed" || task.status === "running") ? `<button class="mini-button" type="button" data-task-reset="${escapeHtml(task.id)}">Reset</button>` : ""}
         <button class="mini-button" type="button" data-task-delete="${escapeHtml(task.id)}">Delete</button>
       </div>
@@ -427,6 +434,79 @@ function toggleBotOutputDialogSize() {
   toggleButton.textContent = maximized ? "Restore" : "Maximize";
 }
 
+function openAdminEditorDialog(config) {
+  const dialog = document.getElementById("admin-editor-dialog");
+  const nameWrap = document.getElementById("admin-editor-name-wrap");
+  const nameInput = document.getElementById("admin-editor-name");
+  const goalWrap = document.getElementById("admin-editor-goal-wrap");
+  const goalInput = document.getElementById("admin-editor-goal");
+  const bodyInput = document.getElementById("admin-editor-body");
+
+  adminEditorState = config;
+  setText("admin-editor-kicker", config.kicker || "Admin Edit");
+  setText("admin-editor-title", config.title || "Edit item");
+  setText("admin-editor-name-label", config.nameLabel || "Title");
+  setText("admin-editor-body-label", config.bodyLabel || "Body");
+
+  if (nameWrap) {
+    nameWrap.classList.toggle("hidden", config.showName === false);
+  }
+  if (nameInput) {
+    nameInput.value = config.nameValue || "";
+    nameInput.placeholder = config.namePlaceholder || "";
+  }
+  if (goalInput) {
+    goalInput.value = config.goalValue || "";
+    goalInput.placeholder = config.goalPlaceholder || "";
+  }
+  if (bodyInput) {
+    bodyInput.value = config.bodyValue || "";
+    bodyInput.placeholder = config.bodyPlaceholder || "";
+  }
+  if (goalWrap) {
+    goalWrap.classList.toggle("hidden", !config.showGoal);
+  }
+
+  if (dialog && typeof dialog.showModal === "function") {
+    dialog.showModal();
+  }
+}
+
+function closeAdminEditorDialog() {
+  const dialog = document.getElementById("admin-editor-dialog");
+  adminEditorState = null;
+  if (dialog) {
+    dialog.close();
+  }
+}
+
+async function saveAdminEditorDialog() {
+  if (!adminEditorState) {
+    return;
+  }
+
+  const nameInput = document.getElementById("admin-editor-name");
+  const goalInput = document.getElementById("admin-editor-goal");
+  const bodyInput = document.getElementById("admin-editor-body");
+  const payload = adminEditorState.buildPayload({
+    name: nameInput?.value || "",
+    goal: goalInput?.value || "",
+    body: bodyInput?.value || ""
+  });
+
+  await fetchJson(adminEditorState.url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  closeAdminEditorDialog();
+  setText("ai-output", adminEditorState.successMessage || "Saved.");
+  await refreshOwnerData();
+}
+
 function renderBot(botData) {
   if (!botData) {
     return;
@@ -449,6 +529,7 @@ function renderBot(botData) {
   const retryDelay = document.getElementById("bot-retry-delay");
   const maxRuntime = document.getElementById("bot-max-runtime");
   const maxRetries = document.getElementById("bot-max-retries");
+  const recurringInterval = document.getElementById("bot-recurring-interval");
   const enabled = document.getElementById("bot-enabled");
   const pauseWhenEmpty = document.getElementById("bot-pause-empty");
   const autoCall = document.getElementById("bot-auto-call");
@@ -471,6 +552,9 @@ function renderBot(botData) {
   }
   if (maxRetries) {
     maxRetries.value = botData.config.maxRetries;
+  }
+  if (recurringInterval) {
+    recurringInterval.value = botData.config.recurringTaskIntervalMinutes ?? 60;
   }
   if (enabled) {
     enabled.checked = Boolean(botData.config.enabled);
@@ -700,6 +784,7 @@ async function saveBotConfig() {
     retryDelaySeconds: Number(document.getElementById("bot-retry-delay")?.value || 90),
     maxTaskRuntimeMinutes: Number(document.getElementById("bot-max-runtime")?.value || 20),
     maxRetries: Number(document.getElementById("bot-max-retries")?.value || 2),
+    recurringTaskIntervalMinutes: Number(document.getElementById("bot-recurring-interval")?.value || 60),
     writableRoots: parsePolicyLines(document.getElementById("bot-writable-roots")?.value),
     protectedPaths: parsePolicyLines(document.getElementById("bot-protected-paths")?.value)
   };
@@ -792,6 +877,30 @@ async function resetTask(taskId) {
   await refreshOwnerData();
 }
 
+async function toggleRecurringTask(taskId, recurring) {
+  const botData = await fetchJson("/api/admin/bot");
+  const task = (botData.tasks || []).find((entry) => entry.id === taskId);
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  const fallbackInterval = Number(document.getElementById("bot-recurring-interval")?.value || botData.config?.recurringTaskIntervalMinutes || 60);
+
+  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      recurring,
+      recurringIntervalMinutes: task.recurringIntervalMinutes || fallbackInterval
+    })
+  });
+
+  setText("ai-output", recurring ? "Task marked recurring." : "Task set back to one-shot mode.");
+  await refreshOwnerData();
+}
+
 async function toggleTaskLock(taskId, locked) {
   await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
     method: "PATCH",
@@ -833,36 +942,27 @@ async function editTask(taskId) {
   if (!task) {
     throw new Error("Task not found");
   }
-
-  const title = window.prompt("Edit task title", task.title);
-  if (title === null) {
-    return;
-  }
-
-  const goal = window.prompt("Edit task goal", task.goal || "");
-  if (goal === null) {
-    return;
-  }
-
-  const assignedTaskBlock = window.prompt("Edit assigned task block", task.assignedTaskBlock || "");
-  if (assignedTaskBlock === null) {
-    return;
-  }
-
-  await fetchJson(`/api/admin/bot/tasks/${taskId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      title,
+  openAdminEditorDialog({
+    kicker: "Task Edit",
+    title: "Edit task",
+    showName: true,
+    nameLabel: "Task title",
+    namePlaceholder: "Enter task title",
+    nameValue: task.title || "",
+    showGoal: true,
+    goalValue: task.goal || "",
+    goalPlaceholder: "Describe the task goal",
+    bodyLabel: "Assigned task block",
+    bodyPlaceholder: "Enter the assigned work block",
+    bodyValue: task.assignedTaskBlock || "",
+    url: `/api/admin/bot/tasks/${taskId}`,
+    successMessage: "Task edited.",
+    buildPayload: ({ name, goal, body }) => ({
+      title: name,
       goal,
-      assignedTaskBlock
+      assignedTaskBlock: body
     })
   });
-
-  setText("ai-output", "Task edited.");
-  await refreshOwnerData();
 }
 
 async function addGoal() {
@@ -901,24 +1001,20 @@ async function editGoal(goalId) {
   if (!goal) {
     throw new Error("Goal not found");
   }
-
-  const text = window.prompt("Edit goal", goal.text);
-  if (text === null) {
-    return;
-  }
-
-  await fetchJson(`/api/admin/bot/goals/${goalId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      text
+  openAdminEditorDialog({
+    kicker: "Goal Edit",
+    title: "Edit goal",
+    showName: false,
+    showGoal: false,
+    bodyLabel: "Goal",
+    bodyPlaceholder: "Describe the goal",
+    bodyValue: goal.text || "",
+    url: `/api/admin/bot/goals/${goalId}`,
+    successMessage: "Goal edited.",
+    buildPayload: ({ body }) => ({
+      text: body
     })
   });
-
-  setText("ai-output", "Goal edited.");
-  await refreshOwnerData();
 }
 
 async function addNote() {
@@ -1045,6 +1141,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const closeTomlButton = document.getElementById("close-toml-dialog");
   const closeBotOutputButton = document.getElementById("close-bot-output-dialog");
   const toggleBotOutputSizeButton = document.getElementById("toggle-bot-output-dialog-size");
+  const adminEditorDialog = document.getElementById("admin-editor-dialog");
+  const adminEditorCancelButton = document.getElementById("admin-editor-cancel");
+  const adminEditorSaveButton = document.getElementById("admin-editor-save");
 
   setView("home", false);
 
@@ -1174,6 +1273,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const editTaskId = target.dataset.taskEdit;
       const lockTaskId = target.dataset.taskLock;
+      const recurringTaskId = target.dataset.taskRecurring;
       const resetTaskId = target.dataset.taskReset;
       const deleteTaskId = target.dataset.taskDelete;
       const taskId = target.dataset.taskId;
@@ -1184,6 +1284,10 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       if (lockTaskId) {
         await toggleTaskLock(lockTaskId, target.dataset.taskLocked !== "true");
+        return;
+      }
+      if (recurringTaskId) {
+        await toggleRecurringTask(recurringTaskId, target.dataset.taskRecurringEnabled !== "true");
         return;
       }
       if (resetTaskId) {
@@ -1260,6 +1364,17 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   if (toggleBotOutputSizeButton) {
     toggleBotOutputSizeButton.addEventListener("click", toggleBotOutputDialogSize);
+  }
+  if (adminEditorCancelButton) {
+    adminEditorCancelButton.addEventListener("click", closeAdminEditorDialog);
+  }
+  if (adminEditorSaveButton) {
+    adminEditorSaveButton.addEventListener("click", saveAdminEditorDialog);
+  }
+  if (adminEditorDialog) {
+    adminEditorDialog.addEventListener("cancel", () => {
+      adminEditorState = null;
+    });
   }
 
   bootstrapApp();

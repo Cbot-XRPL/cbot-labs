@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260307-topbarstack">
+    <link rel="stylesheet" href="style.css?v=20260307-recurring-task">
 </head>
 
 <body>
@@ -170,6 +170,10 @@
                     <label class="admin-ai-form" for="bot-max-retries">
                         <span class="key-label">Max retries</span>
                         <input id="bot-max-retries" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
+                    </label>
+                    <label class="admin-ai-form" for="bot-recurring-interval">
+                        <span class="key-label">Recurring task minutes</span>
+                        <input id="bot-recurring-interval" class="admin-ai-input admin-short-input" type="number" min="5" step="5">
                     </label>
                 </div>
                 <div class="admin-bot-columns">
@@ -334,7 +338,32 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260307-adminnav"></script>
+    <dialog id="admin-editor-dialog" class="login-dialog admin-editor-dialog">
+        <div class="login-dialog-inner admin-editor-dialog-inner">
+            <div class="panel-header">
+                <p id="admin-editor-kicker" class="panel-kicker">Admin Edit</p>
+                <h2 id="admin-editor-title">Edit item</h2>
+            </div>
+            <label id="admin-editor-name-wrap" class="admin-ai-form" for="admin-editor-name">
+                <span id="admin-editor-name-label" class="key-label">Title</span>
+                <input id="admin-editor-name" class="admin-ai-input admin-short-input" type="text" placeholder="Enter title">
+            </label>
+            <label id="admin-editor-goal-wrap" class="admin-ai-form" for="admin-editor-goal">
+                <span class="key-label">Goal</span>
+                <textarea id="admin-editor-goal" class="admin-ai-input" rows="3" placeholder="Describe the goal"></textarea>
+            </label>
+            <label class="admin-ai-form" for="admin-editor-body">
+                <span id="admin-editor-body-label" class="key-label">Body</span>
+                <textarea id="admin-editor-body" class="admin-ai-input" rows="8" placeholder="Enter details"></textarea>
+            </label>
+            <div class="dialog-actions">
+                <button id="admin-editor-cancel" class="secondary-button" type="button">Cancel</button>
+                <button id="admin-editor-save" class="primary-button" type="button">Save</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="script.js?v=20260307-recurring-task"></script>
 </body>
 
 </html>
