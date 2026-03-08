@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "xrpl": "^2.4.0"
+    "xrpl": "^2.9.0"
   }
 }

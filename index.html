@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260307-recurring-task">
+    <link rel="stylesheet" href="style.css?v=20260307-task-editor-recurring">
 </head>
 
 <body>
@@ -352,6 +352,13 @@
                 <span class="key-label">Goal</span>
                 <textarea id="admin-editor-goal" class="admin-ai-input" rows="3" placeholder="Describe the goal"></textarea>
             </label>
+            <div id="admin-editor-recurring-wrap" class="admin-ai-form hidden">
+                <label class="toggle-chip"><input id="admin-editor-recurring" type="checkbox"> Recurring task</label>
+                <label class="admin-ai-form" for="admin-editor-recurring-interval">
+                    <span class="key-label">Recurring minutes</span>
+                    <input id="admin-editor-recurring-interval" class="admin-ai-input admin-short-input" type="number" min="5" step="5" placeholder="60">
+                </label>
+            </div>
             <label class="admin-ai-form" for="admin-editor-body">
                 <span id="admin-editor-body-label" class="key-label">Body</span>
                 <textarea id="admin-editor-body" class="admin-ai-input" rows="8" placeholder="Enter details"></textarea>
@@ -363,7 +370,7 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260307-recurring-task"></script>
+    <script src="script.js?v=20260307-task-editor-recurring"></script>
 </body>
 
 </html>

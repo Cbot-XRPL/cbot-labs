@@ -1,56 +1,60 @@
-// Registerable routes for admin XRPL trading endpoints.
-// This module exports a function so server.js can inject ownerAuth middleware from existing app auth.
+'use strict';
 
 const express = require('express');
+const router = express.Router();
 const xrplClient = require('../../lib/xrpl/client');
 
-module.exports = function registerTradingRoutes(app, ownerAuth) {
-  const router = express.Router();
+// Owner-only middleware
+function ownerAuth(req, res, next) {
+  // OWNER_WALLETS env should be a comma-separated list of public addresses.
+  const header = req.header('x-owner-wallet') || req.query['x-owner-wallet'];
+  const ownerList = (process.env.OWNER_WALLETS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!ownerList.length) {
+    // If OWNER_WALLETS is not configured, deny access for safety
+    return res.status(403).json({ error: 'Owner access not configured on server' });
+  }
+  if (!header) return res.status(401).json({ error: 'Missing x-owner-wallet header' });
+  if (!ownerList.includes(header)) return res.status(403).json({ error: 'Unauthorized owner wallet' });
+  // Proceed
+  next();
+}
 
-  // Protect routes with provided ownerAuth middleware if available.
-  // If ownerAuth is not provided, apply a conservative header-based check using OWNER_WALLETS env var.
-  const fallbackAuth = (req, res, next) => {
-    const owners = (process.env.OWNER_WALLETS || '').split(',').map(s => s.trim()).filter(Boolean);
-    if (owners.length === 0) {
-      return res.status(403).json({ error: 'Owner authentication not configured on server.' });
-    }
-    // Very small fallback: require x-owner-wallet header to match an owner address.
-    const header = req.headers['x-owner-wallet'];
-    if (!header || !owners.includes(header)) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    return next();
-  };
+// Health / status: returns connection status and wallet balance (public address only)
+router.get('/api/admin/trading/status', ownerAuth, async (req, res) => {
+  try {
+    const status = await xrplClient.getStatus();
+    // Never return/echo seeds or private info.
+    res.json({ ok: true, timestamp: new Date().toISOString(), status });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
 
-  const protect = ownerAuth || fallbackAuth;
+// Recent account transactions (best-effort). Query param: limit
+router.get('/api/admin/trading/txs', ownerAuth, async (req, res) => {
+  const limit = parseInt(req.query.limit || '10', 10);
+  try {
+    const txs = await xrplClient.getAccountTxs(limit);
+    res.json({ ok: true, txs });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
 
-  // GET /api/admin/trading/status
-  router.get('/status', protect, async (req, res) => {
-    try {
-      const status = await xrplClient.getStatus();
-      let balance = null;
-      if (status.address && status.online) {
-        try {
-          balance = await xrplClient.getBalance();
-        } catch (err) {
-          // Non-fatal: return status with null balance and an error hint
-          return res.json({ online: status.online, address: status.address, balance: null, error: String(err.message || err) });
-        }
-      }
-      res.json({ online: status.online, address: status.address, balance });
-    } catch (err) {
-      res.status(500).json({ error: String(err.message || err) });
-    }
-  });
+// Basic metrics placeholder
+router.get('/api/admin/trading/metrics', ownerAuth, async (req, res) => {
+  try {
+    const status = await xrplClient.getStatus();
+    const metrics = {
+      connected: !!status.connected,
+      address: status.address || null,
+      balanceXRP: status.balanceXRP || null,
+      ledgerIndex: status.ledgerIndex || null,
+    };
+    res.json({ ok: true, metrics });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
 
-  // Placeholder endpoints; implement as needed server-side if you want transactions/metrics
-  router.get('/txs', protect, (req, res) => {
-    res.json({ txs: [], note: 'Server tx listing not implemented in skeleton.' });
-  });
-
-  router.get('/metrics', protect, (req, res) => {
-    res.json({ metrics: {}, note: 'Server metrics not implemented in skeleton.' });
-  });
-
-  app.use('/api/admin/trading', router);
-};
+module.exports = router;

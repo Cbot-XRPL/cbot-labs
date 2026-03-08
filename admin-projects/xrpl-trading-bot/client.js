@@ -1,45 +1,29 @@
-// Simple client for the XRPL trading bot dashboard.
-// Calls owner-only endpoint /api/admin/trading/status
+'use strict';
+
+// Read x-owner-wallet from prompt-less location: the UI should not store secrets.
+// For owner-only testing, the operator can configure the browser devtools to send the header.
+// This client reads a small shim value from localStorage if present for convenience in owner-only environments.
+
+const output = document.getElementById('output');
+const refreshBtn = document.getElementById('refresh');
 
 async function fetchStatus() {
+  output.textContent = 'Fetching status...';
+  // Optionally send x-owner-wallet header from localStorage (owner-only convenience).
+  const ownerHeader = localStorage.getItem('x-owner-wallet') || '';
   try {
-    const res = await fetch('/api/admin/trading/status', { credentials: 'same-origin' });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error('Server error: ' + res.status + ' ' + txt);
-    }
-    return await res.json();
+    const resp = await fetch('/api/admin/trading/status', {
+      method: 'GET',
+      headers: ownerHeader ? { 'x-owner-wallet': ownerHeader } : {},
+    });
+    const json = await resp.json();
+    output.textContent = JSON.stringify(json, null, 2);
   } catch (err) {
-    throw err;
+    output.textContent = 'Error fetching status: ' + String(err);
   }
 }
 
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
+refreshBtn.addEventListener('click', fetchStatus);
 
-async function refresh() {
-  setText('notice', 'Refreshing...');
-  try {
-    const data = await fetchStatus();
-    setText('addr', data.address || 'Not configured');
-    setText('online', data.online ? 'Yes' : 'No');
-    setText('balance', (data.balance && data.balance.xrp) ? data.balance.xrp : '—');
-    setText('notice', 'Updated at ' + new Date().toLocaleString());
-  } catch (err) {
-    setText('notice', 'Error: ' + (err && err.message ? err.message : err));
-    setText('addr', '—');
-    setText('online', 'No');
-    setText('balance', '—');
-  }
-}
-
-document.getElementById('refresh').addEventListener('click', () => {
-  refresh();
-});
-
-// Auto-refresh on load
-window.addEventListener('load', () => {
-  refresh();
-});
+// Initial load
+fetchStatus();

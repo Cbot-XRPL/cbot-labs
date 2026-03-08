@@ -440,6 +440,9 @@ function openAdminEditorDialog(config) {
   const nameInput = document.getElementById("admin-editor-name");
   const goalWrap = document.getElementById("admin-editor-goal-wrap");
   const goalInput = document.getElementById("admin-editor-goal");
+  const recurringWrap = document.getElementById("admin-editor-recurring-wrap");
+  const recurringInput = document.getElementById("admin-editor-recurring");
+  const recurringIntervalInput = document.getElementById("admin-editor-recurring-interval");
   const bodyInput = document.getElementById("admin-editor-body");
 
   adminEditorState = config;
@@ -458,6 +461,16 @@ function openAdminEditorDialog(config) {
   if (goalInput) {
     goalInput.value = config.goalValue || "";
     goalInput.placeholder = config.goalPlaceholder || "";
+  }
+  if (recurringWrap) {
+    recurringWrap.classList.toggle("hidden", !config.showRecurring);
+  }
+  if (recurringInput) {
+    recurringInput.checked = Boolean(config.recurringValue);
+  }
+  if (recurringIntervalInput) {
+    recurringIntervalInput.value = config.recurringIntervalValue || "";
+    recurringIntervalInput.placeholder = config.recurringIntervalPlaceholder || "60";
   }
   if (bodyInput) {
     bodyInput.value = config.bodyValue || "";
@@ -487,10 +500,14 @@ async function saveAdminEditorDialog() {
 
   const nameInput = document.getElementById("admin-editor-name");
   const goalInput = document.getElementById("admin-editor-goal");
+  const recurringInput = document.getElementById("admin-editor-recurring");
+  const recurringIntervalInput = document.getElementById("admin-editor-recurring-interval");
   const bodyInput = document.getElementById("admin-editor-body");
   const payload = adminEditorState.buildPayload({
     name: nameInput?.value || "",
     goal: goalInput?.value || "",
+    recurring: Boolean(recurringInput?.checked),
+    recurringIntervalMinutes: Number(recurringIntervalInput?.value || 60),
     body: bodyInput?.value || ""
   });
 
@@ -952,14 +969,20 @@ async function editTask(taskId) {
     showGoal: true,
     goalValue: task.goal || "",
     goalPlaceholder: "Describe the task goal",
+    showRecurring: true,
+    recurringValue: Boolean(task.recurring),
+    recurringIntervalValue: task.recurringIntervalMinutes || 60,
+    recurringIntervalPlaceholder: "Recurring minutes",
     bodyLabel: "Assigned task block",
     bodyPlaceholder: "Enter the assigned work block",
     bodyValue: task.assignedTaskBlock || "",
     url: `/api/admin/bot/tasks/${taskId}`,
     successMessage: "Task edited.",
-    buildPayload: ({ name, goal, body }) => ({
+    buildPayload: ({ name, goal, recurring, recurringIntervalMinutes, body }) => ({
       title: name,
       goal,
+      recurring,
+      recurringIntervalMinutes,
       assignedTaskBlock: body
     })
   });
@@ -1006,6 +1029,7 @@ async function editGoal(goalId) {
     title: "Edit goal",
     showName: false,
     showGoal: false,
+    showRecurring: false,
     bodyLabel: "Goal",
     bodyPlaceholder: "Describe the goal",
     bodyValue: goal.text || "",

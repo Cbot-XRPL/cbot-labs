@@ -294,6 +294,7 @@ function buildAutonomousTaskInstructions(mode) {
       "fileWrites must be an array of objects with: path, content.",
       "Each path must be repo-relative and only target intended implementation files.",
       "Create new files when needed.",
+      "Do not replace the whole existing server bootstrap or public app; prefer adding focused modules and small integrations.",
       "Use libraryEntries only if the task should also update ai/library.json.",
       "Do not include markdown fences or commentary outside the JSON object."
     );
@@ -302,43 +303,66 @@ function buildAutonomousTaskInstructions(mode) {
   return base.join(" ");
 }
 
-async function callOpenAi({ prompt, workspace, metadata = {}, mode = "text" }) {
+async function callOpenAi({ prompt, workspace, metadata = {}, mode = "text", timeoutMs = 0 }) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const response = await fetch(`${defaultBaseUrl}/responses`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: defaultModel,
-      instructions: buildAutonomousTaskInstructions(mode),
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: [
-                "Workspace docs:",
-                buildWorkspaceContext(workspace),
-                "",
-                "Task request:",
-                prompt,
-                "",
-                "Metadata:",
-                JSON.stringify(metadata, null, 2)
-              ].join("\n")
-            }
-          ]
-        }
-      ]
-    })
-  });
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timeout = controller && timeoutMs > 0
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+
+  let response;
+  try {
+    response = await fetch(`${defaultBaseUrl}/responses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      signal: controller?.signal,
+      body: JSON.stringify({
+        model: defaultModel,
+        instructions: buildAutonomousTaskInstructions(mode),
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: [
+                  "Workspace docs:",
+                  buildWorkspaceContext(workspace),
+                  "",
+                  "Task request:",
+                  prompt,
+                  "",
+                  "Metadata:",
+                  JSON.stringify(metadata, null, 2)
+                ].join("\n")
+              }
+            ]
+          }
+        ]
+      })
+    });
+  } catch (error) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    if (error?.name === "AbortError") {
+      throw new Error(`OpenAI request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
+    }
+
+    throw error;
+  }
+
+  if (timeout) {
+    clearTimeout(timeout);
+  }
 
   const data = await response.json();
 
@@ -395,7 +419,8 @@ async function runAiTask(prompt, options = {}) {
     prompt: trimmedPrompt,
     workspace,
     metadata: options,
-    mode
+    mode,
+    timeoutMs: options.timeoutMs
   });
 }
 

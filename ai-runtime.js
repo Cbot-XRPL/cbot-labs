@@ -932,6 +932,7 @@ async function runLoopCycle() {
     const aiResult = await withTimeout(
       runAiTask(prompt, {
         mode: taskMode,
+        timeoutMs: maxRuntimeMs,
         taskTitle: task.title,
         taskGoal: task.goal,
         assignedTaskBlock: task.assignedTaskBlock

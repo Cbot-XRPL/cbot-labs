@@ -1,32 +1,19 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>XRPL Trading Bot — Owner Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <header>
+  <head>
+    <meta charset="utf-8" />
+    <title>XRPL Trading Bot (Owner Only)</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
       <h1>XRPL Trading Bot — Owner Dashboard</h1>
-      <p class="muted">Owner-only dashboard. Backend must be configured with XRPL_WALLET_SEED and RIPPLED_URL.</p>
-    </header>
-
-    <section id="status" class="card">
-      <h2>Wallet Connection</h2>
-      <div class="row"><span class="label">Address</span><span id="addr">—</span></div>
-      <div class="row"><span class="label">Online</span><span id="online">—</span></div>
-      <div class="row"><span class="label">Balance (XRP)</span><span id="balance">—</span></div>
-      <div class="row"><button id="refresh">Refresh</button></div>
-      <div id="notice" class="notice" aria-live="polite"></div>
-    </section>
-
-    <footer>
-      <small>This UI is owner-only and should be served behind authenticated endpoints. No seed is stored in the browser.</small>
-    </footer>
-  </div>
-
-  <script src="client.js"></script>
-</body>
+      <p class="note">Owner-only dashboard. Authenticate requests using the x-owner-wallet header (must be listed in OWNER_WALLETS on the server).</p>
+      <div id="status">
+        <button id="refresh">Refresh Status</button>
+        <pre id="output">Loading...</pre>
+      </div>
+    </div>
+    <script src="client.js"></script>
+  </body>
 </html>
