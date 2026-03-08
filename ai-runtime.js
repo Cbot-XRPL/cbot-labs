@@ -895,12 +895,72 @@ function buildTaskSignature(payload) {
   ].join("::");
 }
 
+function inferTaskConstraints(task) {
+  const combined = [
+    task?.title,
+    task?.goal,
+    task?.assignedTaskBlock
+  ].join(" ").toLowerCase();
+  const explicitRepoPaths = Array.from(new Set(
+    ((task?.assignedTaskBlock || "").match(/\b(?:ai|admin-projects|routes|services|lib|db)\/[A-Za-z0-9._/-]+\b/g) || [])
+      .map((item) => item.trim())
+      .filter(Boolean)
+  ));
+  const forbidsWorkspaceCreation = [
+    "do not create any workspace",
+    "do not create workspace",
+    "do not create any new workspace",
+    "do not create a workspace"
+  ].some((phrase) => combined.includes(phrase));
+  const forbidsNewFiles = [
+    "do not create any new files",
+    "do not create new files",
+    "do not create files",
+    "no new files"
+  ].some((phrase) => combined.includes(phrase));
+  const forbidsCommands = [
+    "do not install packages",
+    "do not request commands",
+    "do not run git commands",
+    "do not run commands",
+    "no commands"
+  ].some((phrase) => combined.includes(phrase));
+  const restrictsToSingleFile = (
+    explicitRepoPaths.length === 1
+    && (
+      combined.includes("update only ")
+      || combined.includes("modify only ")
+      || combined.includes("append ")
+      || combined.includes("do not modify any file except")
+      || combined.includes("only update")
+      || combined.includes("only modify")
+    )
+  );
+
+  return {
+    explicitRepoPaths,
+    forbidsWorkspaceCreation,
+    forbidsNewFiles,
+    forbidsCommands,
+    restrictsToSingleFile
+  };
+}
+
 function inferTaskExecutionMode(task) {
   const combined = [
     task?.title,
     task?.goal,
     task?.assignedTaskBlock
   ].join(" ").toLowerCase();
+  const constraints = inferTaskConstraints(task);
+
+  if (
+    constraints.forbidsWorkspaceCreation
+    || constraints.restrictsToSingleFile
+    || (constraints.explicitRepoPaths.length && (constraints.forbidsNewFiles || constraints.forbidsCommands))
+  ) {
+    return "repo-update";
+  }
 
   if (
     combined.includes("build a page")
@@ -1212,6 +1272,13 @@ function buildLoopPrompt(task, db, workspace) {
   const taskBlock = task.assignedTaskBlock || "No assigned task block provided.";
   const writableRoots = (db.config.writableRoots || []).map((item) => `- ${item}`).join("\n") || "- none";
   const protectedPaths = (db.config.protectedPaths || []).map((item) => `- ${item}`).join("\n") || "- none";
+  const taskConstraints = inferTaskConstraints(task);
+  const constraintLines = [
+    taskConstraints.forbidsWorkspaceCreation ? "- Do not create a workspace" : null,
+    taskConstraints.forbidsNewFiles ? "- Do not create new files" : null,
+    taskConstraints.forbidsCommands ? "- Do not run or request commands" : null,
+    ...(taskConstraints.explicitRepoPaths || []).map((item) => `- Explicit repo path: ${item}`)
+  ].filter(Boolean).join("\n") || "- none";
 
   return [
     "You are the admin-only Cbot Labs automation agent.",
@@ -1228,6 +1295,8 @@ function buildLoopPrompt(task, db, workspace) {
     writableRoots,
     "Protected paths:",
     protectedPaths,
+    "Explicit task constraints:",
+    constraintLines,
     `Project workspace base: ${db.config.projectWorkspaceBase || defaultProjectWorkspaceBase}`,
     `Project git remote base: ${db.config.projectGitRemoteBase || "(not configured)"}`,
     "For project/app tasks, build a self-contained app inside the project workspace base with its own package.json, .env.example, index.html, server.js, README, and support files.",
@@ -1429,6 +1498,7 @@ async function runLoopCycle() {
   try {
     const prompt = buildLoopPrompt(task, db, workspace);
     const taskMode = inferTaskExecutionMode(task);
+    const taskConstraints = inferTaskConstraints(task);
     const maxRuntimeMs = db.config.maxTaskRuntimeMinutes * 60 * 1000;
     addConsoleLine("calling AI task runner", {
       taskId: task.id,
@@ -1442,7 +1512,8 @@ async function runLoopCycle() {
         projectWorkspaceBase: db.config.projectWorkspaceBase,
         taskTitle: task.title,
         taskGoal: task.goal,
-        assignedTaskBlock: task.assignedTaskBlock
+        assignedTaskBlock: task.assignedTaskBlock,
+        taskConstraints
       }),
       maxRuntimeMs,
       "Task run"
@@ -1452,7 +1523,9 @@ async function runLoopCycle() {
       title: task.title
     });
     appliedResult = applyAutonomousTaskResult(task, aiResult, db.config, {
-      projectWorkspaceBase: db.config.projectWorkspaceBase
+      projectWorkspaceBase: db.config.projectWorkspaceBase,
+      taskMode,
+      taskConstraints
     });
     addConsoleLine("autonomous result applied", {
       taskId: task.id,

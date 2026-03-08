@@ -648,6 +648,20 @@ function buildAutonomousTaskInstructions(mode) {
     );
   }
 
+  if (mode === "repo-update") {
+    base.push(
+      "Your job is to make narrow durable repo changes without creating a project workspace.",
+      "Return an object with keys: action, summary, fileWrites, notes.",
+      "Set action to repo_update.",
+      "fileWrites must be an array of objects with: path and content.",
+      "Every fileWrites path must be repo-relative and must respect the task constraints in metadata.",
+      "Do not create a workspace scaffold.",
+      "Do not create files outside the explicitly allowed or requested repo paths.",
+      "Do not emit commands.",
+      "Do not include markdown fences or commentary outside the JSON object."
+    );
+  }
+
   return base.join(" ");
 }
 
@@ -732,7 +746,7 @@ async function callOpenAi({ prompt, workspace, metadata = {}, mode = "text", tim
     output
   };
 
-  if (mode === "library-update" || mode === "workspace-update") {
+  if (mode === "library-update" || mode === "workspace-update" || mode === "repo-update") {
     result.parsed = extractJsonObject(output);
   }
 
@@ -786,7 +800,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
   const changedFiles = [];
   const outputLines = [summary];
 
-  if (action !== "update_library" && action !== "workspace_update") {
+  if (action !== "update_library" && action !== "workspace_update" && action !== "repo_update") {
     throw new Error(`Unsupported AI action: ${action}`);
   }
 
@@ -837,6 +851,36 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
       })
       .filter((command) => command.name)
     : [];
+  const taskConstraints = context?.taskConstraints || {};
+  const workspaceBase = normalizeRepoPath(context?.projectWorkspaceBase || defaultProjectWorkspaceBase);
+  const allowedExactPaths = Array.isArray(taskConstraints.explicitRepoPaths)
+    ? taskConstraints.explicitRepoPaths.map((item) => normalizeRepoPath(item)).filter(Boolean)
+    : [];
+
+  if (action === "repo_update" && commands.length) {
+    throw new Error("Repo update task returned commands, which are not allowed for constrained repo updates");
+  }
+
+  if (taskConstraints.forbidsCommands && commands.length) {
+    throw new Error("Task explicitly forbids commands but the AI requested commands");
+  }
+
+  const enforceTaskPathConstraints = (relativePath, existedBeforeWrite) => {
+    const normalizedPath = normalizeRepoPath(relativePath);
+
+    if (taskConstraints.forbidsWorkspaceCreation && normalizedPath.startsWith(`${workspaceBase}/`)) {
+      throw new Error(`Task explicitly forbids workspace creation: ${normalizedPath}`);
+    }
+
+    if (allowedExactPaths.length && !allowedExactPaths.includes(normalizedPath)) {
+      throw new Error(`Task is constrained to explicit repo paths, but AI wrote: ${normalizedPath}`);
+    }
+
+    if (taskConstraints.forbidsNewFiles && !existedBeforeWrite) {
+      throw new Error(`Task explicitly forbids creating new files: ${normalizedPath}`);
+    }
+  };
+
   let nonLibraryFileWriteCount = 0;
   if (action === "workspace_update") {
     const scaffoldChanges = ensureProjectWorkspaceScaffold(projectContext);
@@ -859,6 +903,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
 
       const absolutePath = getAbsoluteRepoPath(relativePath);
       const beforeText = fs.existsSync(absolutePath) ? readText(absolutePath) : null;
+      enforceTaskPathConstraints(relativePath, beforeText !== null);
       if (beforeText === content) {
         continue;
       }
@@ -875,6 +920,33 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
     if (metadataResult.changed && !changedFiles.includes(metadataResult.path)) {
       changedFiles.push(metadataResult.path);
       nonLibraryFileWriteCount += 1;
+    }
+  }
+
+  if (action === "repo_update") {
+    for (const fileWrite of fileWrites) {
+      const relativePath = sanitizePathSegments(fileWrite?.path);
+      const content = typeof fileWrite?.content === "string" ? fileWrite.content : "";
+      if (!relativePath) {
+        continue;
+      }
+
+      assertRepoWriteAllowed(relativePath, policy);
+      assertCriticalFileIntegrity(relativePath, content);
+
+      const absolutePath = getAbsoluteRepoPath(relativePath);
+      const beforeText = fs.existsSync(absolutePath) ? readText(absolutePath) : null;
+      enforceTaskPathConstraints(relativePath, beforeText !== null);
+      if (beforeText === content) {
+        continue;
+      }
+
+      fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeText(absolutePath, content);
+      changedFiles.push(relativePath);
+      if (relativePath !== "ai/library.json") {
+        nonLibraryFileWriteCount += 1;
+      }
     }
   }
 
@@ -896,8 +968,8 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
     }
   }
 
-  if (action === "workspace_update" && nonLibraryFileWriteCount < 1) {
-    throw new Error("Workspace task produced no non-library file changes");
+  if ((action === "workspace_update" || action === "repo_update") && nonLibraryFileWriteCount < 1) {
+    throw new Error("Task produced no non-library file changes");
   }
 
   if (!changedFiles.length) {
