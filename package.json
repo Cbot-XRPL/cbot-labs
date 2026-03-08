@@ -10,6 +10,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "xrpl": "^4.6.0",
     "xumm": "^1.8.0"
   },
   "devDependencies": {

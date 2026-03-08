@@ -70,6 +70,7 @@
 
 - Added known package-version normalization for bot-written workspace `package.json` files so `xrpl` is pinned to a published version (`^4.6.0`) instead of hallucinated future versions.
 - Added install-time recovery for workspace dependency installs: if `npm install` fails with `ETARGET` for a known package such as `xrpl`, the bot repairs the workspace `package.json` to the approved version and retries once automatically.
+- Added `xrpl` to the root app dependencies because the mounted owner-only personal bot route uses the shared root XRPL client, not the workspace-local package tree.
 
 ### Current workspace checkpoint
 
