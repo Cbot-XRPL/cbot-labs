@@ -14,6 +14,9 @@ const files = {
 };
 
 const defaultProjectWorkspaceBase = "admin-projects/workspaces";
+const knownPackageVersionRules = {
+  xrpl: "^4.6.0"
+};
 
 function readText(filePath) {
   return fs.readFileSync(filePath, "utf8");
@@ -29,6 +32,40 @@ function writeJson(filePath, value) {
 
 function writeText(filePath, value) {
   fs.writeFileSync(filePath, String(value));
+}
+
+function normalizeKnownDependencyVersions(pkg = {}) {
+  const normalized = {
+    ...pkg,
+    dependencies: { ...(pkg.dependencies || {}) },
+    devDependencies: { ...(pkg.devDependencies || {}) }
+  };
+
+  for (const [packageName, packageVersion] of Object.entries(knownPackageVersionRules)) {
+    if (normalized.dependencies[packageName] && normalized.dependencies[packageName] !== packageVersion) {
+      normalized.dependencies[packageName] = packageVersion;
+    }
+    if (normalized.devDependencies[packageName] && normalized.devDependencies[packageName] !== packageVersion) {
+      normalized.devDependencies[packageName] = packageVersion;
+    }
+  }
+
+  return normalized;
+}
+
+function normalizePackageJsonContent(relativePath, content) {
+  if (normalizeRepoPath(relativePath) !== "package.json" && !normalizeRepoPath(relativePath).endsWith("/package.json")) {
+    return String(content || "");
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(String(content || ""));
+  } catch (_error) {
+    return String(content || "");
+  }
+
+  return `${JSON.stringify(normalizeKnownDependencyVersions(parsed), null, 2)}\n`;
 }
 
 function getAiWorkspace() {
@@ -447,7 +484,7 @@ function assertCriticalFileIntegrity(relativePath, content) {
   if (normalizedPath === "package.json") {
     let parsed;
     try {
-      parsed = JSON.parse(String(content || ""));
+      parsed = normalizeKnownDependencyVersions(JSON.parse(String(content || "")));
     } catch (_error) {
       throw new Error("Rejected package.json write because it is not valid JSON");
     }
@@ -893,7 +930,10 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
 
     for (const fileWrite of fileWrites) {
       const relativePath = scopeWorkspaceFilePath(fileWrite?.path, projectContext.workspaceRoot);
-      const content = typeof fileWrite?.content === "string" ? fileWrite.content : "";
+      const content = normalizePackageJsonContent(
+        relativePath,
+        typeof fileWrite?.content === "string" ? fileWrite.content : ""
+      );
       if (!relativePath) {
         continue;
       }
@@ -926,7 +966,10 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
   if (action === "repo_update") {
     for (const fileWrite of fileWrites) {
       const relativePath = sanitizePathSegments(fileWrite?.path);
-      const content = typeof fileWrite?.content === "string" ? fileWrite.content : "";
+      const content = normalizePackageJsonContent(
+        relativePath,
+        typeof fileWrite?.content === "string" ? fileWrite.content : ""
+      );
       if (!relativePath) {
         continue;
       }
@@ -1006,5 +1049,6 @@ module.exports = {
   defaultProjectWorkspaceBase,
   getAiWorkspace,
   getAiSummary,
+  knownPackageVersionRules,
   runAiTask
 };

@@ -66,6 +66,11 @@
 - Added stronger path sanitization to reduce malformed filenames and control-character paths.
 - Cleaned malformed duplicate workspace clutter such as the bad duplicate `README` file in `personal-xrpl-bot`.
 
+### VM dependency guardrails added
+
+- Added known package-version normalization for bot-written workspace `package.json` files so `xrpl` is pinned to a published version (`^4.6.0`) instead of hallucinated future versions.
+- Added install-time recovery for workspace dependency installs: if `npm install` fails with `ETARGET` for a known package such as `xrpl`, the bot repairs the workspace `package.json` to the approved version and retries once automatically.
+
 ### Current workspace checkpoint
 
 - `XRPL Trading Interface` is now building into `admin-projects/workspaces/personal-xrpl-bot`.

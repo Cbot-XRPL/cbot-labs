@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
-const { applyAutonomousTaskResult, defaultProjectWorkspaceBase, getAiWorkspace, runAiTask } = require("./ai-service");
+const { applyAutonomousTaskResult, defaultProjectWorkspaceBase, getAiWorkspace, knownPackageVersionRules, runAiTask } = require("./ai-service");
 
 const execFileAsync = promisify(execFile);
 
@@ -400,6 +400,48 @@ function truncateCommandOutput(value) {
   return text.length > 4000 ? `${text.slice(0, 4000)}\n...[truncated]` : text;
 }
 
+function tryRepairWorkspacePackageVersion(relativeCwd, error) {
+  const message = String(error?.stderr || error?.stdout || error?.message || "");
+  const match = message.match(/No matching version found for\s+(@?[^@\s]+)@/i);
+  const packageName = match ? match[1] : "";
+  const forcedVersion = knownPackageVersionRules?.[packageName];
+  if (!packageName || !forcedVersion) {
+    return null;
+  }
+
+  const packageJsonPath = path.join(__dirname, normalizeRepoPath(relativeCwd), "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    return null;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  } catch (_error) {
+    return null;
+  }
+
+  const dependencySections = ["dependencies", "devDependencies"];
+  let changed = false;
+  for (const section of dependencySections) {
+    if (parsed?.[section]?.[packageName] && parsed[section][packageName] !== forcedVersion) {
+      parsed[section][packageName] = forcedVersion;
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return null;
+  }
+
+  fs.writeFileSync(packageJsonPath, `${JSON.stringify(parsed, null, 2)}\n`);
+  return {
+    packageName,
+    forcedVersion,
+    packageJsonPath
+  };
+}
+
 async function executeAllowedCommand(commandName) {
   const npmExecutable = getNpmExecutable();
   const commands = {
@@ -640,7 +682,32 @@ async function executeProjectCommand(commandRequest, config) {
         stderr: ""
       };
     }
-    return simpleExec(npmExecutable, ["install", "--no-fund", "--no-audit"]);
+    try {
+      return await simpleExec(npmExecutable, ["install", "--no-fund", "--no-audit"]);
+    } catch (error) {
+      const repaired = tryRepairWorkspacePackageVersion(cwd, error);
+      if (!repaired) {
+        throw error;
+      }
+
+      addConsoleLine("repaired workspace package version after install failure", {
+        cwd,
+        packageName: repaired.packageName,
+        forcedVersion: repaired.forcedVersion
+      });
+      addActivity("command", "Repaired workspace package version after install failure", {
+        cwd,
+        packageName: repaired.packageName,
+        forcedVersion: repaired.forcedVersion
+      });
+
+      const retried = await simpleExec(npmExecutable, ["install", "--no-fund", "--no-audit"]);
+      retried.stdout = [
+        `Repaired ${repaired.packageName} to ${repaired.forcedVersion} in ${normalizeRepoPath(cwd)} package.json after ETARGET.`,
+        retried.stdout
+      ].filter(Boolean).join("\n");
+      return retried;
+    }
   }
 
   if (name === "npm_run_dev") {
