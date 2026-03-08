@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T02:24:48.736Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "admin-project-xrpl-trading-bot",
@@ -198,7 +198,7 @@
           "url": "FILE:lib/xrpl/client.js"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "connected-xrpl-wallet-rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
@@ -217,7 +217,7 @@
         "If you want to operate the bot, set XRPL_WALLET_SEED in your secret manager and configure OWNER_WALLETS (comma-separated) to include the owner address(es)."
       ],
       "links": [],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "xrpl-trading-strategies",
@@ -246,7 +246,7 @@
           "url": "FILE:admin-projects/xrpl-trading-bot/strategies.json"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
     },
     {
       "id": "agent-brain-xrpl",
@@ -270,7 +270,93 @@
           "url": "FILE:admin-projects/xrpl-trading-bot/strategies.html"
         }
       ],
-      "updatedAt": "2026-03-08T02:24:48.737Z"
+      "updatedAt": "2026-03-08T03:53:03.962Z"
+    },
+    {
+      "id": "xrpl-strategy-runner",
+      "title": "XRPL Strategy Runner: sma-small-01",
+      "summary": "Initial strategy runner workspace created: a small SMA crossover example that polls a simulated orderbook, logs trades, and exposes an owner-only dashboard. Simulated trades by default; real execution enabled only when XRPL_WALLET_SEED and RIPPLED_URL are provided at runtime.",
+      "tags": [
+        "xrpl",
+        "strategy",
+        "admin-projects",
+        "agent"
+      ],
+      "details": [
+        "Workspace: admin-projects/workspaces/xrpl-strategy-bot/ contains a self-contained app (server, public UI, adapter skeleton, JSON DB).",
+        "Strategy: simple SMA crossover on mid-price with very small default trade size (TRADE_SIZE env var). Enter on short>long crossover, exit on opposite. Trades simulated unless secrets are present. All trades persisted to local db/db.json for auditing.",
+        "Owner access: endpoints require x-owner-wallet header to match OWNER_WALLETS. Do not put secrets into the repo; use runtime secret manager for XRPL_WALLET_SEED and RIPPLED_URL.",
+        "Next steps (automated): monitor metrics/trades, iterate on strategy parameters, add additional strategies to the runner loop and maintain per-strategy state."
+      ],
+      "links": [
+        {
+          "label": "XRPL Strategy Bot Project",
+          "url": "FILE:admin-projects/workspaces/xrpl-strategy-bot/"
+        }
+      ],
+      "updatedAt": "2026-03-08T03:53:03.962Z"
+    },
+    {
+      "id": "personal-xrpl-bot",
+      "title": "Personal XRPL Trading Bot (owner-only)",
+      "summary": "Owner-only personal trading bot UI and XRPL adapter skeleton for monitoring Xahau, XRPL, Flare and an EVM sidechain. Red/black themed dashboard with owner-gated API endpoints and a local DB for metrics/trades. No secrets in-repo; XRPL seed must be injected at runtime.",
+      "tags": [
+        "admin-projects",
+        "xrpl",
+        "xahau",
+        "owner-only",
+        "bot"
+      ],
+      "details": [
+        "Workspace created at admin-projects/workspaces/personal-xrpl-bot/ with a self-contained server, UI, and XRPL adapter.",
+        "UI: index.html, client.js, style.css — red/black theme, visually oriented to watch XRPL, Xahau, Flare and EVM-sidechain metrics.",
+        "Server: server.js exposes owner-protected endpoints: GET /api/admin/personal-bot/status, GET /api/admin/personal-bot/metrics, POST /api/admin/personal-bot/poll, POST /api/admin/personal-bot/simulate-trade.",
+        "XRPL adapter: lib/xrpl/client.js with init() and getStatus() using xrpl.js; will attempt connection only when RIPPLED_URL (and optionally XRPL_WALLET_SEED) are provided at runtime.",
+        "Security: Owner auth enforced by x-owner-wallet header matching OWNER_WALLETS env var. DO NOT put XRPL_WALLET_SEED in repo; use secret manager at runtime.",
+        "Local DB: db/db.json stores metrics and simulated trades for audit and review."
+      ],
+      "links": [
+        {
+          "label": "Workspace UI",
+          "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/index.html"
+        },
+        {
+          "label": "XRPL Client Adapter",
+          "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/lib/xrpl/client.js"
+        }
+      ],
+      "updatedAt": "2026-03-08T03:53:03.962Z"
+    },
+    {
+      "id": "xrpl-trading-interface",
+      "title": "Project: Personal XRPL Trading Bot — Workspace Added",
+      "summary": "Added an owner-only Personal XRPL Trading Bot workspace under admin-projects/workspaces/personal-xrpl-bot. Includes a red/black themed UI, owner-guarded Express server, XRPL adapter skeleton using xrpl.js, and initial DB for metrics and simulated trades. No secrets are stored; use runtime environment variables for XRPL seed and node URL.",
+      "tags": [
+        "admin-projects",
+        "xrpl",
+        "personal-bot",
+        "owner-only"
+      ],
+      "details": [
+        "Workspace files: index.html, client.js, style.css, server.js, lib/xrpl/client.js, db/db.json, package.json, .env.example, README.md, cbot-project.json.",
+        "XRPL adapter: lib/xrpl/client.js provides init(), getStatus(), and pollSample() using xrpl.js. It performs read-only probes by default. XRPL_WALLET_SEED is optional and must be provided via secure runtime secrets to enable signing (not implemented in this skeleton).",
+        "Owner auth: server enforces x-owner-wallet header against OWNER_WALLETS environment variable for all API endpoints. If OWNER_WALLETS is not set, the endpoints allow access but the server includes a warning — owners should set OWNER_WALLETS in runtime configuration.",
+        "APIs: GET /api/admin/personal-bot/status, GET /api/admin/personal-bot/metrics, POST /api/admin/personal-bot/poll, POST /api/admin/personal-bot/simulate-trade.",
+        "UI: simple dashboard showing status, latest metrics, simulated trades and ecosystem token placeholders for Xahau, Flare and an EVM sidechain. Buttons are themed red & black.",
+        "Security: DO NOT commit XRPL_WALLET_SEED or other secrets. Use .env or secret manager at runtime.",
+        "Preview: Project is accessible via the owner-only project hub route: /admin/projects/workspaces/personal-xrpl-bot/ when the workspace server is run for preview."
+      ],
+      "links": [
+        {
+          "label": "Workspace UI",
+          "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/index.html"
+        },
+        {
+          "label": "XRPL Adapter",
+          "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/lib/xrpl/client.js"
+        }
+      ],
+      "updatedAt": "2026-03-08T03:53:03.963Z"
     }
   ]
 }

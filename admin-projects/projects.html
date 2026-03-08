@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cbot Labs — Admin Projects</title>
+  <style>
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#111;color:#fff;margin:0;padding:32px}
+    .container{max-width:900px;margin:0 auto}
+    h1{color:#ff2b2b}
+    a.project-link{display:block;padding:16px;margin:8px 0;background:#1a1a1a;border-left:6px solid #ff2b2b;color:#fff;text-decoration:none}
+    .note{color:#bbb;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Projects</h1>
+    <p class="note">Owner-only project pages. Use your owner wallet header (x-owner-wallet) when accessing project pages or the project server UI to authenticate.</p>
+
+    <a class="project-link" href="./workspaces/xrpl-trading-bot/">XRPL Trading Bot — Observability & Agent Brain</a>
+
+    <section style="margin-top:24px">
+      <h2 style="color:#ff2b2b">Notes</h2>
+      <ul>
+        <li>XRPL Trading Bot workspace: admin-projects/workspaces/xrpl-trading-bot/</li>
+        <li>Server expects OWNER_WALLETS (comma-separated) and optional XRPL_WALLET_SEED & RIPPLED_URL injected at runtime via secrets manager.</li>
+        <li>No secrets are stored in the repository.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

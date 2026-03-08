@@ -225,6 +225,50 @@ function getAppPayload() {
   };
 }
 
+function getProjectEntries() {
+  const entries = [];
+  const workspaceRoot = path.join(projectRoot, "workspaces");
+
+  if (fs.existsSync(workspaceRoot)) {
+    for (const dirent of fs.readdirSync(workspaceRoot, { withFileTypes: true })) {
+      if (!dirent.isDirectory()) {
+        continue;
+      }
+
+      const slug = dirent.name;
+      const metadataPath = path.join(workspaceRoot, slug, "cbot-project.json");
+      let metadata = {};
+      if (fs.existsSync(metadataPath)) {
+        try {
+          metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+        } catch (_error) {
+          metadata = {};
+        }
+      }
+
+      entries.push({
+        slug,
+        name: metadata.name || slug,
+        description: metadata.description || "Bot-built project workspace",
+        routePath: metadata.routePath || `/admin/projects/workspaces/${slug}/`,
+        updatedAt: metadata.updatedAt || null,
+        type: "workspace"
+      });
+    }
+  }
+
+  entries.unshift({
+    slug: "xrpl-trading-bot",
+    name: "XRPL Trading Bot",
+    description: "Owner-only trading bot dashboard and observation interface.",
+    routePath: "/admin/projects/xrpl-trading-bot/",
+    updatedAt: null,
+    type: "built-in"
+  });
+
+  return entries;
+}
+
 function getXamanSdk() {
   if (!process.env.XAMAN_API_KEY || !process.env.XAMAN_API_SECRET) {
     return null;
@@ -360,6 +404,12 @@ app.get("/api/admin", requireOwner, (_req, res) => {
       "guarded commands"
     ],
     ai: getAiSummary()
+  });
+});
+
+app.get("/api/admin/projects", requireOwner, (_req, res) => {
+  res.json({
+    projects: getProjectEntries()
   });
 });
 

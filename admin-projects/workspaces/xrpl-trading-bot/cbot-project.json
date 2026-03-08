@@ -1,0 +1,7 @@
+{
+  "slug": "xrpl-trading-bot",
+  "name": "XRPL Trading Bot (owner-only)",
+  "description": "Owner-only observability and control interface for an experimental XRPL trading bot. Provides XRPL connectivity skeleton, metrics aggregation across Xahau / XRPL / Flare / EVM sidechain, and an owner-authenticated UI (red/black theme). Secrets are read from environment variables and not stored in the repo.",
+  "routePath": "/admin/projects/workspaces/xrpl-trading-bot/",
+  "updatedAt": "2026-03-08T02:52:55.282Z"
+}

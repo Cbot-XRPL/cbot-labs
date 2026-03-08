@@ -1,0 +1,17 @@
+/* Red & black theme */
+:root{--bg:#0b0b0b;--card:#0f0f0f;--accent:#ff2b2b;--muted:#bfbfbf}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#070707,#0f0f0f);font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;color:var(--muted)}
+.wrap{max-width:1100px;margin:24px auto;padding:20px}
+header h1{color:var(--accent);margin:0}
+.sub{color:#cfcfcf;margin-top:6px}
+.controls{display:flex;gap:12px;align-items:center;margin:18px 0}
+.controls input{padding:8px;border-radius:6px;border:1px solid #222;background:#0b0b0b;color:var(--muted)}
+.btn{background:var(--accent);color:#111;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn.alt{background:#222;color:var(--accent);border:1px solid var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:var(--card);padding:12px;border-radius:8px;border:1px solid #1a1a1a}
+.card h3{margin:0 0 8px 0;color:#fff}
+pre{white-space:pre-wrap;color:#d7d7d7}
+.val{color:var(--accent);font-weight:700}
+footer{margin-top:18px;color:#999}

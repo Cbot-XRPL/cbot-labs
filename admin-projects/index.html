@@ -1,31 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8" />
+  <title>Cbot Labs - Admin Projects</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Projects — Owner Only</title>
   <style>
-    body { background:#000; color:#fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; padding:24px }
-    .container { max-width:1000px; margin:0 auto }
-    h1 { color:#ff2b2b }
-    .project { background:#0b0b0b; border:1px solid #222; padding:12px; margin:12px 0; border-left:6px solid #8B0000 }
-    a.project-link { color:#ff3b3b; text-decoration:none; font-weight:600 }
-    .note { color:#aaa; font-size:0.9rem }
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#0b0b0b;color:#eee;margin:0;padding:24px}
+    header{display:flex;align-items:center;gap:12px}
+    h1{color:#ff2b2b;margin:0}
+    .projects{margin-top:20px}
+    .card{background:#111;border:1px solid #220000;padding:16px;border-radius:8px;margin-bottom:12px}
+    a.link{color:#ff2b2b;text-decoration:none;font-weight:600}
+    .note{color:#bbb;font-size:0.9em}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Owner-Only Projects</h1>
-    <p class="note">This listing is owner-only. Do not expose these links publicly. Links below are intended for authenticated owner sessions only.</p>
-
-    <div class="project">
-      <a class="project-link" href="/admin-projects/xrpl-trading-bot/">XRPL Trading Bot</a>
-      <div class="note">Owner-only trading bot dashboard (red/black theme). Observation-only UI for wallet & multi-ecosystem metrics (XRPL, Xahau, Flare, EVM sidechain).</div>
+  <header>
+    <h1>Admin Projects</h1>
+  </header>
+  <section class="projects">
+    <div class="card">
+      <h2 style="margin:0 0 8px 0"><a class="link" href="/admin/projects/workspaces/personal-xrpl-bot/">Personal XRPL Trading Bot</a></h2>
+      <p class="note">Owner-only workspace: dashboard, XRPL adapter skeleton, metrics and simulated trades. Requires OWNER_WALLETS and optional XRPL runtime secrets to enable signing. This repo file is the project hub entry; the workspace runs independently under <code>admin-projects/workspaces/personal-xrpl-bot/</code>.</p>
     </div>
-
-    <div class="project">
-      <span style="color:#888">(Other owner projects may be listed here...)</span>
-    </div>
-  </div>
+  </section>
 </body>
 </html>

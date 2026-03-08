@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>XRPL Trading Bot — Observability</title>
+  <style>
+    :root{--bg:#0b0b0b;--panel:#121212;--accent:#ff2b2b;--muted:#9a9a9a}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:#fff}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:56px;height:56px;background:linear-gradient(135deg,#200,#600);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    h1{margin:0;font-size:20px}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+    input[type=text]{padding:8px;border-radius:6px;border:1px solid #222;background:#0b0b0b;color:#fff}
+    button.connect{background:var(--accent);color:#111;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:16px;margin-top:16px}
+    .panel{background:var(--panel);padding:14px;border-radius:8px;border:1px solid #1a1a1a}
+    .panel h2{margin:0 0 8px 0;color:var(--accent)}
+    .metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #151515}
+    .metric:last-child{border-bottom:none}
+    .small{color:var(--muted);font-size:13px}
+    .btn{background:#1a1a1a;color:#fff;border:1px solid #2a2a2a;padding:8px 10px;border-radius:6px;margin-left:8px}
+    .actions{display:flex;gap:8px;align-items:center}
+    footer{margin-top:20px;color:#777;font-size:13px}
+    .danger{color:var(--accent)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">X</div>
+      <div>
+        <h1>XRPL Trading Bot — Observability</h1>
+        <div class="small">Owner-only dashboard · Red / Black theme</div>
+      </div>
+      <div class="controls">
+        <input id="ownerWallet" type="text" placeholder="Owner wallet (r...)" />
+        <button class="connect" id="connectBtn">Connect</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <h2>XRPL Status</h2>
+          <div id="xrplStatus">
+            <div class="small">Not connected</div>
+          </div>
+          <div style="margin-top:10px">
+            <button class="btn" id="refreshBtn">Refresh</button>
+            <span class="small" style="margin-left:8px">Auto-refresh every 10s</span>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h2>Tracked Tokens & Balances</h2>
+          <div id="balances"></div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h2>Agent Brain — Recent Notes</h2>
+          <div id="brainNotes">
+            <div class="small">No activity yet. Agent brain will summarize signals and suggestions here.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Ecosystem Metrics</h2>
+          <div id="ecosystemMetrics">
+            <div class="metric"><div>XRPL Liquidity</div><div id="m-xrp-liq">—</div></div>
+            <div class="metric"><div>Xahau Token Flow</div><div id="m-xah-flow">—</div></div>
+            <div class="metric"><div>Flare Bridge Activity</div><div id="m-flare-act">—</div></div>
+            <div class="metric"><div>EVM Sidechain TPS</div><div id="m-evm-tps">—</div></div>
+            <div style="margin-top:12px" class="small">Metrics are aggregated server-side. This UI polls the protected endpoints and displays the latest snapshots.</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h2>Recent XRPL TXs</h2>
+          <div id="txs" class="small">Use the Refresh button to fetch recent transactions (when XRPL client is configured).</div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h2>Controls</h2>
+          <div class="actions">
+            <button class="btn" id="simBtn">Run Simulation</button>
+            <button class="btn danger" id="clearBtn">Clear Local Config</button>
+          </div>
+          <div class="small" style="margin-top:8px">Simulation uses simulated strategies and local heuristics. No signing or on-chain actions are performed from the UI.</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div>Workspace: admin-projects/workspaces/xrpl-trading-bot</div>
+    </footer>
+  </div>
+
+  <script>
+    const connectBtn = document.getElementById('connectBtn');
+    const ownerInput = document.getElementById('ownerWallet');
+    const xrplStatusEl = document.getElementById('xrplStatus');
+    const balancesEl = document.getElementById('balances');
+    const ecosystemMetrics = {
+      xrp: document.getElementById('m-xrp-liq'),
+      xah: document.getElementById('m-xah-flow'),
+      flare: document.getElementById('m-flare-act'),
+      evm: document.getElementById('m-evm-tps')
+    };
+    const txsEl = document.getElementById('txs');
+    const brainEl = document.getElementById('brainNotes');
+
+    let ownerWallet = localStorage.getItem('xrpl_owner_wallet') || '';
+    if(ownerWallet) ownerInput.value = ownerWallet;
+
+    function setHeader() {
+      ownerWallet = ownerInput.value.trim();
+      if(ownerWallet) {
+        localStorage.setItem('xrpl_owner_wallet', ownerWallet);
+      } else {
+        localStorage.removeItem('xrpl_owner_wallet');
+      }
+    }
+
+    async function apiGet(path) {
+      setHeader();
+      const headers = {};
+      if(ownerWallet) headers['x-owner-wallet'] = ownerWallet;
+      try {
+        const res = await fetch(path, {headers});
+        if(res.status === 401) {
+          throw new Error('Unauthorized. Ensure x-owner-wallet header matches an owner wallet.');
+        }
+        return await res.json();
+      } catch(e) {
+        return {error: String(e)};
+      }
+    }
+
+    async function refresh() {
+      xrplStatusEl.innerHTML = '<div class="small">Loading...</div>';
+      balancesEl.innerHTML = '';
+      txsEl.innerHTML = '<div class="small">Loading...</div>';
+
+      const [status, metrics, txs] = await Promise.all([
+        apiGet('/api/admin/trading/status'),
+        apiGet('/api/admin/trading/metrics'),
+        apiGet('/api/admin/trading/txs?limit=8')
+      ]);
+
+      if(status.error) {
+        xrplStatusEl.innerHTML = '<div class="small">Error: ' + status.error + '</div>';
+      } else {
+        xrplStatusEl.innerHTML = `<div><strong>${status.account || '—'}</strong></div><div class="small">connected: ${status.connected} • ledger: ${status.ledger_index || '—'}</div>`;
+        const b = status.balances || {};
+        balancesEl.innerHTML = '';
+        Object.keys(b).forEach(k => {
+          const el = document.createElement('div'); el.className='metric'; el.innerHTML = `<div>${k}</div><div>${b[k]}</div>`; balancesEl.appendChild(el);
+        });
+      }
+
+      if(metrics.error) {
+        ecosystemMetrics.xrp.innerText = 'err';
+      } else {
+        ecosystemMetrics.xrp.innerText = metrics.xrpl_liquidity || '—';
+        ecosystemMetrics.xah.innerText = metrics.xah_flow || '—';
+        ecosystemMetrics.flare.innerText = metrics.flare_activity || '—';
+        ecosystemMetrics.evm.innerText = metrics.evm_tps || '—';
+      }
+
+      if(txs.error) {
+        txsEl.innerHTML = '<div class="small">Error: ' + txs.error + '</div>';
+      } else {
+        txsEl.innerHTML = '';
+        const list = txs.txs || [];
+        if(list.length === 0) txsEl.innerHTML = '<div class="small">No recent transactions or XRPL not configured.</div>';
+        list.forEach(tx => {
+          const row = document.createElement('div'); row.className='small'; row.style.marginBottom='8px';
+          row.innerHTML = `<div><strong>${tx.type || tx.TransactionType || 'tx'}</strong> • ${tx.hash || tx.tx?.hash || ''}</div><div class="small">${tx.date || tx.tx?.date || ''}</div>`;
+          txsEl.appendChild(row);
+        });
+      }
+
+      // Agent brain example note
+      brainEl.innerHTML = '<div class="small">Last analysis: ' + (metrics && metrics.analysis_note ? metrics.analysis_note : 'No signals') + '</div>';
+    }
+
+    connectBtn.addEventListener('click', () => {
+      setHeader();
+      refresh();
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', refresh);
+    document.getElementById('clearBtn').addEventListener('click', () => { localStorage.removeItem('xrpl_owner_wallet'); ownerInput.value=''; ownerWallet=''; alert('Local owner wallet cleared.'); });
+    document.getElementById('simBtn').addEventListener('click', () => { alert('Simulation run (client-side). Check Agent Brain notes when server-side signals exist.'); });
+
+    // auto refresh every 10s when connected
+    setInterval(() => { if(localStorage.getItem('xrpl_owner_wallet')) refresh(); }, 10000);
+
+    // initial auto-refresh if owner present
+    if(ownerWallet) refresh();
+  </script>
+</body>
+</html>

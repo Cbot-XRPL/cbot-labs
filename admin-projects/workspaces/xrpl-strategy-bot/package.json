@@ -1,0 +1,17 @@
+{
+  "name": "xrpl-strategy-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Owner-only XRPL strategy runner workspace (simulated by default).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

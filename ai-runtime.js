@@ -1,9 +1,9 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { execFile } = require("child_process");
+const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
-const { applyAutonomousTaskResult, getAiWorkspace, runAiTask } = require("./ai-service");
+const { applyAutonomousTaskResult, defaultProjectWorkspaceBase, getAiWorkspace, runAiTask } = require("./ai-service");
 
 const execFileAsync = promisify(execFile);
 
@@ -37,6 +37,7 @@ const requiredProtectedPaths = [
   "favicon.ico",
   "ll.png"
 ];
+const projectProcessMetaFile = ".cbot-process.json";
 
 let timer = null;
 
@@ -50,6 +51,8 @@ function defaultDb() {
       allowCommandExecution: false,
       allowPackageInstall: false,
       allowProcessRestart: false,
+      allowProjectCommands: false,
+      allowProjectGit: false,
       pauseWhenQueueEmpty: true,
       idleDelaySeconds: 45,
       postTaskDelaySeconds: 15,
@@ -57,6 +60,8 @@ function defaultDb() {
       maxTaskRuntimeMinutes: 20,
       maxRetries: 2,
       recurringTaskIntervalMinutes: 60,
+      projectWorkspaceBase: defaultProjectWorkspaceBase,
+      projectGitRemoteBase: "",
       writableRoots: [...defaultWritableRoots],
       protectedPaths: [...requiredProtectedPaths]
     },
@@ -266,6 +271,8 @@ function normalizeTaskOrder(tasks) {
       locked: Boolean(task.locked),
       allowRerun: Boolean(task.allowRerun),
       recurring: Boolean(task.recurring),
+      projectWorkspaceSlug: String(task.projectWorkspaceSlug || "").trim() || null,
+      projectWorkspaceRoot: String(task.projectWorkspaceRoot || "").trim() || null,
       recurringIntervalMinutes: Math.max(5, Number(task.recurringIntervalMinutes) || 60),
       nextRecurringAt: task.nextRecurringAt || null,
       runs: Array.isArray(task.runs) ? task.runs : [],
@@ -299,6 +306,11 @@ function normalizeConfigPolicy(config) {
     ...requiredProtectedPaths,
     ...protectedPaths
   ]));
+  config.projectWorkspaceBase = String(config.projectWorkspaceBase || defaultProjectWorkspaceBase)
+    .trim()
+    .replaceAll("\\", "/")
+    .replace(/\/+$/, "") || defaultProjectWorkspaceBase;
+  config.projectGitRemoteBase = String(config.projectGitRemoteBase || "").trim();
 }
 
 function addActivity(type, message, meta = {}) {
@@ -361,6 +373,24 @@ function getNpmExecutable() {
   return process.platform === "win32" ? "npm.cmd" : "npm";
 }
 
+function shouldAutoInstallForTask(projectCommandCwd, config, requestedCommands = []) {
+  if (!config.allowPackageInstall) {
+    return false;
+  }
+
+  if (requestedCommands.some((command) => command?.name === "install_dependencies" || command === "install_dependencies")) {
+    return true;
+  }
+
+  // Local Windows testing is preview-first for project workspaces.
+  // Avoid auto-installing generated app dependencies there unless explicitly requested.
+  if (process.platform === "win32" && projectCommandCwd) {
+    return false;
+  }
+
+  return true;
+}
+
 function truncateCommandOutput(value) {
   const text = String(value || "").trim();
   if (!text) {
@@ -419,18 +449,346 @@ async function executeAllowedCommand(commandName) {
   return commandResult;
 }
 
-async function runAllowedCommand(commandName) {
+function normalizeRepoPath(value) {
+  return String(value || "")
+    .trim()
+    .replaceAll("\\", "/")
+    .replace(/^\/+/, "")
+    .replace(/\/+/g, "/");
+}
+
+function isProjectScopedPath(relativePath, config) {
+  const normalizedPath = normalizeRepoPath(relativePath);
+  const workspaceBase = normalizeRepoPath(config.projectWorkspaceBase || defaultProjectWorkspaceBase);
+  return normalizedPath.startsWith(`${workspaceBase}/`);
+}
+
+function assertProjectCommandCwd(cwd, config) {
+  const normalized = normalizeRepoPath(cwd);
+  if (!normalized || normalized.includes("..") || !isProjectScopedPath(normalized, config)) {
+    throw new Error(`Project command cwd is outside the project workspace base: ${cwd}`);
+  }
+  return normalized;
+}
+
+function buildProjectRemoteUrl(relativeCwd, config) {
+  const base = String(config.projectGitRemoteBase || "").trim().replace(/\/+$/, "");
+  if (!base) {
+    return "";
+  }
+
+  const slug = normalizeRepoPath(relativeCwd).split("/").filter(Boolean).pop();
+  if (!slug) {
+    return "";
+  }
+
+  if (base.endsWith(".git")) {
+    return base;
+  }
+
+  return `${base}/${slug}.git`;
+}
+
+function getProjectProcessMetaPath(relativeCwd) {
+  return path.join(__dirname, normalizeRepoPath(relativeCwd), projectProcessMetaFile);
+}
+
+function writeProjectProcessMeta(relativeCwd, value) {
+  const filePath = getProjectProcessMetaPath(relativeCwd);
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function readProjectProcessMeta(relativeCwd) {
+  const filePath = getProjectProcessMetaPath(relativeCwd);
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function launchDetachedProjectScript(relativeCwd, scriptName) {
+  if (process.platform === "win32") {
+    return {
+      command: `npm_run_${scriptName}`,
+      cwd: normalizeRepoPath(relativeCwd),
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      stdout: `Windows-safe mode: skipped detached npm run ${scriptName}. Preview this workspace through the main app at /admin/projects/${normalizeRepoPath(relativeCwd).replace(/^admin-projects\//, "")}/ or run it manually if you need its private server.`,
+      stderr: ""
+    };
+  }
+
+  const npmExecutable = getNpmExecutable();
+  const absoluteCwd = path.join(__dirname, normalizeRepoPath(relativeCwd));
+  const child = spawn(npmExecutable, ["run", scriptName], {
+    cwd: absoluteCwd,
+    windowsHide: true,
+    detached: true,
+    stdio: "ignore"
+  });
+
+  child.unref();
+
+  const result = {
+    command: `npm_run_${scriptName}`,
+    cwd: normalizeRepoPath(relativeCwd),
+    pid: child.pid,
+    startedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+    stdout: `Started detached npm run ${scriptName} in ${normalizeRepoPath(relativeCwd)} (pid ${child.pid}).`,
+    stderr: ""
+  };
+
+  writeProjectProcessMeta(relativeCwd, {
+    pid: child.pid,
+    script: scriptName,
+    cwd: normalizeRepoPath(relativeCwd),
+    startedAt: result.startedAt
+  });
+
+  return result;
+}
+
+function stopDetachedProjectScript(relativeCwd) {
+  const meta = readProjectProcessMeta(relativeCwd);
+  if (!meta?.pid) {
+    throw new Error(`No tracked project process found in ${relativeCwd}`);
+  }
+
+  try {
+    process.kill(meta.pid);
+  } catch (error) {
+    throw new Error(`Unable to stop project process ${meta.pid}: ${error.message}`);
+  }
+
+  const result = {
+    command: "stop_project_process",
+    cwd: normalizeRepoPath(relativeCwd),
+    startedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+    stdout: `Stopped tracked project process ${meta.pid} in ${normalizeRepoPath(relativeCwd)}.`,
+    stderr: ""
+  };
+
+  try {
+    fs.unlinkSync(getProjectProcessMetaPath(relativeCwd));
+  } catch (_error) {
+    // Ignore cleanup failure.
+  }
+
+  return result;
+}
+
+async function executeProjectCommand(commandRequest, config) {
+  const name = String(commandRequest?.name || "").trim();
+  const cwd = assertProjectCommandCwd(commandRequest?.cwd || "", config);
+  const absoluteCwd = path.join(__dirname, cwd);
+  const npmExecutable = getNpmExecutable();
+  const startedAt = new Date().toISOString();
+
+  const simpleExec = async (command, args, timeout = 10 * 60 * 1000) => {
+    let result;
+    try {
+      result = await execFileAsync(command, args, {
+        cwd: absoluteCwd,
+        windowsHide: true,
+        timeout
+      });
+    } catch (error) {
+      if (
+        process.platform === "win32"
+        && error?.code === "EINVAL"
+        && String(command || "").toLowerCase().includes("npm")
+      ) {
+        // Windows local testing is preview-first. Fall back to cmd.exe for npm-based workspace commands.
+        result = await execFileAsync(process.env.COMSPEC || "cmd.exe", ["/d", "/s", "/c", command, ...args], {
+          cwd: absoluteCwd,
+          windowsHide: true,
+          timeout
+        });
+      } else {
+        throw error;
+      }
+    }
+
+    return {
+      command: name,
+      cwd,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      stdout: truncateCommandOutput(result.stdout),
+      stderr: truncateCommandOutput(result.stderr)
+    };
+  };
+
+  if (name === "install_dependencies") {
+    if (!config.allowPackageInstall) {
+      throw new Error("Package install is disabled");
+    }
+    if (process.platform === "win32") {
+      return {
+        command: name,
+        cwd,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        stdout: `Windows-safe mode: skipped install in ${cwd}. Preview through the main app route and install manually only when needed.`,
+        stderr: ""
+      };
+    }
+    return simpleExec(npmExecutable, ["install", "--no-fund", "--no-audit"]);
+  }
+
+  if (name === "npm_run_dev") {
+    return launchDetachedProjectScript(cwd, "dev");
+  }
+
+  if (name === "npm_run_start") {
+    return launchDetachedProjectScript(cwd, "start");
+  }
+
+  if (name === "stop_project_process") {
+    return stopDetachedProjectScript(cwd);
+  }
+
+  if (!config.allowProjectGit && name.startsWith("git_")) {
+    throw new Error("Project git commands are disabled");
+  }
+
+  if (name === "git_init") {
+    return simpleExec("git", ["init"]);
+  }
+
+  if (name === "git_set_remote") {
+    const remoteUrl = String(commandRequest?.url || "").trim() || buildProjectRemoteUrl(cwd, config);
+    if (!remoteUrl) {
+      throw new Error("git_set_remote requires a url");
+    }
+
+    try {
+      await execFileAsync("git", ["remote", "set-url", "origin", remoteUrl], {
+        cwd: absoluteCwd,
+        windowsHide: true,
+        timeout: 15000
+      });
+    } catch (_error) {
+      await execFileAsync("git", ["remote", "add", "origin", remoteUrl], {
+        cwd: absoluteCwd,
+        windowsHide: true,
+        timeout: 15000
+      });
+    }
+
+    return {
+      command: name,
+      cwd,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      stdout: `Configured origin remote for ${cwd}.`,
+      stderr: ""
+    };
+  }
+
+  if (name === "git_add_commit") {
+    const message = String(commandRequest?.message || "bot: project update").trim();
+    await execFileAsync("git", ["add", "-A"], {
+      cwd: absoluteCwd,
+      windowsHide: true,
+      timeout: 30000
+    });
+    await execFileAsync("git", ["commit", "-m", message], {
+      cwd: absoluteCwd,
+      windowsHide: true,
+      timeout: 30000
+    });
+    return {
+      command: name,
+      cwd,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      stdout: `Committed project workspace changes with message: ${message}`,
+      stderr: ""
+    };
+  }
+
+  if (name === "git_push") {
+    return simpleExec("git", ["push", "-u", "origin", "HEAD"], 2 * 60 * 1000);
+  }
+
+  throw new Error(`Unsupported project command: ${name}`);
+}
+
+async function runAllowedCommand(commandRequest) {
   const db = loadDb();
   if (!db.config.allowCommandExecution) {
     throw new Error("Command execution is disabled");
   }
 
-  if (commandName === "install_dependencies" && !db.config.allowPackageInstall) {
+  const commandName = typeof commandRequest === "string"
+    ? commandRequest
+    : String(commandRequest?.name || "").trim();
+
+  if (
+    process.platform === "win32"
+    && commandName === "install_dependencies"
+    && typeof commandRequest === "object"
+    && commandRequest?.cwd
+  ) {
+    const cwd = assertProjectCommandCwd(commandRequest.cwd, db.config);
+    const commandResult = {
+      command: "install_dependencies",
+      cwd,
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      stdout: `Windows-safe mode: ignored AI-requested install in ${cwd}. Workspace remains previewable through the main app route.`,
+      stderr: ""
+    };
+    updateDb((current) => {
+      current.state.lastCommandResult = commandResult;
+      return current;
+    });
+    addConsoleLine("project command skipped in windows-safe mode", {
+      command: commandResult.command,
+      cwd: commandResult.cwd
+    });
+    addActivity("command", "Project command skipped in windows-safe mode", {
+      command: commandResult.command,
+      cwd: commandResult.cwd
+    });
+    return commandResult;
+  }
+
+  if (commandName === "install_dependencies" && typeof commandRequest === "string" && !db.config.allowPackageInstall) {
     throw new Error("Package install is disabled");
   }
 
   if (commandName === "restart_app" && !db.config.allowProcessRestart) {
     throw new Error("Process restart is disabled");
+  }
+
+  if (typeof commandRequest === "object" && commandRequest?.cwd) {
+    if (!db.config.allowProjectCommands) {
+      throw new Error("Project commands are disabled");
+    }
+
+    const commandResult = await executeProjectCommand(commandRequest, db.config);
+    updateDb((current) => {
+      current.state.lastCommandResult = commandResult;
+      return current;
+    });
+    addConsoleLine("project command completed", {
+      command: commandResult.command,
+      cwd: commandResult.cwd
+    });
+    addActivity("command", "Project command completed", {
+      command: commandResult.command,
+      cwd: commandResult.cwd
+    });
+    return commandResult;
   }
 
   if (commandName === "restart_app") {
@@ -468,7 +826,7 @@ function shouldInstallDependencies(changedFiles, config) {
     return false;
   }
 
-  return changedFiles.some((filePath) => filePath === "package.json" || filePath === "package-lock.json");
+  return changedFiles.some((filePath) => filePath.endsWith("/package.json") || filePath.endsWith("/package-lock.json") || filePath === "package.json" || filePath === "package-lock.json");
 }
 
 function shouldRestartProcess(changedFiles, config) {
@@ -747,6 +1105,18 @@ async function getGitSnapshot() {
 }
 
 async function maybeRunGitActions(task, config) {
+  if (process.platform === "win32" && task?.projectWorkspaceRoot) {
+    return {
+      snapshot: {
+        available: false,
+        branch: null,
+        dirty: false,
+        status: "skipped"
+      },
+      actions: ["git follow-up skipped in windows-safe project mode"]
+    };
+  }
+
   const gitSnapshot = await getGitSnapshot();
 
   if (!gitSnapshot.available) {
@@ -858,6 +1228,9 @@ function buildLoopPrompt(task, db, workspace) {
     writableRoots,
     "Protected paths:",
     protectedPaths,
+    `Project workspace base: ${db.config.projectWorkspaceBase || defaultProjectWorkspaceBase}`,
+    `Project git remote base: ${db.config.projectGitRemoteBase || "(not configured)"}`,
+    "For project/app tasks, build a self-contained app inside the project workspace base with its own package.json, .env.example, index.html, server.js, README, and support files.",
     `Manifest: ${workspace.manifest.name} v${workspace.manifest.version}`,
     `Primary knowledge file: ${workspace.files.library}`
   ].join("\n");
@@ -889,6 +1262,7 @@ async function runLoopCycle() {
   const task = getPendingTask(db);
   const workspace = getAiWorkspace();
   let heartbeatTimer = null;
+  let appliedResult = null;
 
   if (!task) {
     addActivity("loop", "Queue check complete: no runnable task found");
@@ -1065,6 +1439,7 @@ async function runLoopCycle() {
       runAiTask(prompt, {
         mode: taskMode,
         timeoutMs: maxRuntimeMs,
+        projectWorkspaceBase: db.config.projectWorkspaceBase,
         taskTitle: task.title,
         taskGoal: task.goal,
         assignedTaskBlock: task.assignedTaskBlock
@@ -1076,7 +1451,9 @@ async function runLoopCycle() {
       taskId: task.id,
       title: task.title
     });
-    const appliedResult = applyAutonomousTaskResult(task, aiResult, db.config);
+    appliedResult = applyAutonomousTaskResult(task, aiResult, db.config, {
+      projectWorkspaceBase: db.config.projectWorkspaceBase
+    });
     addConsoleLine("autonomous result applied", {
       taskId: task.id,
       title: task.title,
@@ -1084,19 +1461,32 @@ async function runLoopCycle() {
     });
 
     const requestedCommands = Array.isArray(appliedResult.commands) ? appliedResult.commands : [];
-    const shouldRunInstall = shouldInstallDependencies(appliedResult.changedFiles, db.config)
-      || requestedCommands.includes("install_dependencies");
+    const commandQueue = [...requestedCommands];
+    const projectCommandCwd = appliedResult.project?.workspaceRoot || null;
+    const shouldRunInstall = shouldAutoInstallForTask(projectCommandCwd, db.config, requestedCommands)
+      && shouldInstallDependencies(appliedResult.changedFiles, db.config);
 
-    if (shouldRunInstall) {
+    if (!requestedCommands.some((command) => command.name === "install_dependencies") && shouldRunInstall) {
+      commandQueue.unshift(projectCommandCwd
+        ? {
+          name: "install_dependencies",
+          cwd: projectCommandCwd
+        }
+        : "install_dependencies");
+    }
+
+    for (const command of commandQueue) {
+      const commandName = typeof command === "string" ? command : command.name;
       addConsoleLine("running allowed command", {
-        command: "install_dependencies",
+        command: commandName,
+        cwd: typeof command === "string" ? null : (command.cwd || null),
         taskId: task.id,
         title: task.title
       });
       await withTimeout(
-        runAllowedCommand("install_dependencies"),
+        runAllowedCommand(command),
         maxRuntimeMs,
-        "Dependency install"
+        `Command ${commandName}`
       );
     }
 
@@ -1132,6 +1522,8 @@ async function runLoopCycle() {
         currentTask.git = gitResult;
         currentTask.allowRerun = false;
         currentTask.runId = null;
+        currentTask.projectWorkspaceSlug = appliedResult.project?.slug || currentTask.projectWorkspaceSlug || null;
+        currentTask.projectWorkspaceRoot = appliedResult.project?.workspaceRoot || currentTask.projectWorkspaceRoot || null;
         currentTask.nextRecurringAt = currentTask.recurring
           ? new Date(Date.parse(completedAt) + (currentTask.recurringIntervalMinutes * 60 * 1000)).toISOString()
           : null;
@@ -1176,7 +1568,7 @@ async function runLoopCycle() {
     });
 
     const shouldRunRestart = shouldRestartProcess(appliedResult.changedFiles, db.config)
-      || requestedCommands.includes("restart_app");
+      || requestedCommands.some((command) => command.name === "restart_app" || command === "restart_app");
 
     if (shouldRunRestart) {
       addConsoleLine("running allowed command", {
@@ -1203,6 +1595,10 @@ async function runLoopCycle() {
         currentTask.lastError = error.message;
         currentTask.allowRerun = false;
         currentTask.runId = null;
+        if (appliedResult?.project?.slug) {
+          currentTask.projectWorkspaceSlug = appliedResult.project.slug;
+          currentTask.projectWorkspaceRoot = appliedResult.project.workspaceRoot || null;
+        }
       }
       current.state.isRunning = false;
       current.state.activeRunId = null;
@@ -1302,7 +1698,7 @@ function stopLoop() {
 }
 
 function setConfig(patch) {
-  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "allowCommandExecution", "allowPackageInstall", "allowProcessRestart", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "recurringTaskIntervalMinutes", "enabled", "writableRoots", "protectedPaths"];
+  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "allowCommandExecution", "allowPackageInstall", "allowProcessRestart", "allowProjectCommands", "allowProjectGit", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "recurringTaskIntervalMinutes", "projectWorkspaceBase", "projectGitRemoteBase", "enabled", "writableRoots", "protectedPaths"];
 
   const db = updateDb((current) => {
     for (const key of allowed) {

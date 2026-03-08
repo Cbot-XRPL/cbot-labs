@@ -175,6 +175,14 @@
                         <span class="key-label">Recurring task minutes</span>
                         <input id="bot-recurring-interval" class="admin-ai-input admin-short-input" type="number" min="5" step="5">
                     </label>
+                    <label class="admin-ai-form" for="bot-project-workspace-base">
+                        <span class="key-label">Project workspace base</span>
+                        <input id="bot-project-workspace-base" class="admin-ai-input admin-short-input" type="text" placeholder="admin-projects/workspaces">
+                    </label>
+                    <label class="admin-ai-form" for="bot-project-git-remote-base">
+                        <span class="key-label">Project git remote base</span>
+                        <input id="bot-project-git-remote-base" class="admin-ai-input admin-short-input" type="text" placeholder="Optional Git remote base">
+                    </label>
                 </div>
                 <div class="admin-bot-columns">
                     <div class="key-box admin-ai-box">
@@ -199,6 +207,8 @@
                     <label class="toggle-chip"><input id="bot-allow-commands" type="checkbox"> Allow commands</label>
                     <label class="toggle-chip"><input id="bot-allow-install" type="checkbox"> Allow package install</label>
                     <label class="toggle-chip"><input id="bot-allow-restart" type="checkbox"> Allow app restart</label>
+                    <label class="toggle-chip"><input id="bot-allow-project-commands" type="checkbox"> Allow project commands</label>
+                    <label class="toggle-chip"><input id="bot-allow-project-git" type="checkbox"> Allow project git</label>
                 </div>
                 <label class="admin-ai-form" for="ai-prompt">
                     <span class="key-label">Manual AI prompt</span>
@@ -231,7 +241,7 @@
                     </div>
                 </div>
                 <div class="admin-bot-columns console-row">
-                    <div class="key-box admin-ai-box">
+                    <div class="key-box admin-ai-box goals-pane">
                         <span class="key-label">Goals</span>
                         <div class="admin-ai-form">
                             <input id="goal-text" class="admin-ai-input admin-short-input" type="text" placeholder="Add persistent goal">
@@ -244,8 +254,8 @@
                         <div id="bot-console-list" class="bot-console">Console output will appear here.</div>
                     </div>
                 </div>
-                <div class="admin-bot-columns">
-                    <div class="key-box admin-ai-box">
+                <div class="admin-bot-columns notes-row">
+                    <div class="key-box admin-ai-box notes-pane">
                         <span class="key-label">Notes for me</span>
                         <div class="admin-ai-form">
                             <input id="note-title" class="admin-ai-input admin-short-input" type="text" placeholder="Note title">

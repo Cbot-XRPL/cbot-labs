@@ -1,0 +1,7 @@
+{
+  "slug": "xrpl-strategy-bot",
+  "name": "XRPL Strategy Bot (owner-only)",
+  "description": "Owner-only XRPL strategy runner and observability UI. Simulated trades by default; will use XRPL node + seed when XRPL_WALLET_SEED and RIPPLED_URL are provided at runtime. Provides polling, a simple SMA-based strategy example, persistent local trade logs, metrics and owner auth.",
+  "routePath": "/admin/projects/workspaces/xrpl-strategy-bot/",
+  "updatedAt": "2026-03-08T02:57:22.013Z"
+}

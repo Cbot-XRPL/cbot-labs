@@ -13,6 +13,8 @@ const files = {
   exec: path.join(aiDir, "exec.json")
 };
 
+const defaultProjectWorkspaceBase = "admin-projects/workspaces";
+
 function readText(filePath) {
   return fs.readFileSync(filePath, "utf8");
 }
@@ -92,9 +94,30 @@ function slugify(value) {
 function normalizeRepoPath(value) {
   return String(value || "")
     .trim()
+    .replace(/[\u0000-\u001f\u007f]/g, "")
     .replaceAll("\\", "/")
     .replace(/^\/+/, "")
-    .replace(/\/+/g, "/");
+    .replace(/\/+/g, "/")
+    .replace(/\/\.+(?=\/|$)/g, "")
+    .replace(/^\.\/+/, "");
+}
+
+function sanitizePathSegments(value) {
+  const normalized = normalizeRepoPath(value);
+  if (!normalized) {
+    return "";
+  }
+
+  const cleaned = normalized
+    .split("/")
+    .map((segment) => String(segment || "")
+      .replace(/[<>:"|?*\u0000-\u001f]/g, "")
+      .trim()
+      .replace(/\s+/g, " "))
+    .filter(Boolean)
+    .join("/");
+
+  return cleaned;
 }
 
 function pathMatchesRule(targetPath, rule) {
@@ -112,7 +135,7 @@ function pathMatchesRule(targetPath, rule) {
 }
 
 function assertRepoWriteAllowed(relativePath, policy = {}) {
-  const normalizedPath = normalizeRepoPath(relativePath);
+  const normalizedPath = sanitizePathSegments(relativePath);
   const writableRoots = Array.isArray(policy.writableRoots) ? policy.writableRoots : [];
   const protectedPaths = Array.isArray(policy.protectedPaths) ? policy.protectedPaths : [];
 
@@ -130,7 +153,276 @@ function assertRepoWriteAllowed(relativePath, policy = {}) {
 }
 
 function getAbsoluteRepoPath(relativePath) {
-  return path.join(__dirname, normalizeRepoPath(relativePath));
+  return path.join(__dirname, sanitizePathSegments(relativePath));
+}
+
+function getProjectWorkspaceContext(task, parsed = {}, context = {}) {
+  const requestedSlug = String(
+    parsed?.project?.slug
+    || parsed?.projectSlug
+    || task?.projectWorkspaceSlug
+    || context?.projectWorkspaceSlug
+    || task?.title
+    || "project"
+  ).trim();
+  const slug = slugify(requestedSlug) || "project";
+  const workspaceBase = normalizeRepoPath(context?.projectWorkspaceBase || defaultProjectWorkspaceBase);
+  const workspaceRoot = `${workspaceBase}/${slug}`;
+  const routePath = `/admin/projects/workspaces/${slug}/`;
+
+  return {
+    slug,
+    workspaceBase,
+    workspaceRoot,
+    routePath,
+    name: String(parsed?.project?.name || task?.title || slug).trim() || slug,
+    description: String(parsed?.project?.description || task?.goal || "").trim()
+  };
+}
+
+function scopeWorkspaceFilePath(relativePath, workspaceRoot) {
+  const normalizedPath = sanitizePathSegments(relativePath);
+  if (!normalizedPath) {
+    return "";
+  }
+
+  if (
+    normalizedPath.startsWith("admin-projects/")
+    || normalizedPath.startsWith("ai/")
+    || normalizedPath.startsWith("lib/")
+    || normalizedPath.startsWith("routes/")
+    || normalizedPath.startsWith("services/")
+    || normalizedPath.startsWith("db/")
+    || normalizedPath === "server.js"
+    || normalizedPath === "package.json"
+    || normalizedPath === "package-lock.json"
+  ) {
+    return normalizedPath;
+  }
+
+  return `${sanitizePathSegments(workspaceRoot)}/${normalizedPath}`;
+}
+
+function ensureProjectWorkspaceMetadata(projectContext) {
+  const metadataPath = `${projectContext.workspaceRoot}/cbot-project.json`;
+  const absolutePath = getAbsoluteRepoPath(metadataPath);
+  let current = {};
+  if (fs.existsSync(absolutePath)) {
+    try {
+      current = JSON.parse(readText(absolutePath));
+    } catch (_error) {
+      current = {};
+    }
+  }
+  const next = {
+    slug: projectContext.slug,
+    name: projectContext.name,
+    description: projectContext.description,
+    routePath: projectContext.routePath,
+    updatedAt: new Date().toISOString(),
+    ...current
+  };
+  const beforeText = fs.existsSync(absolutePath) ? readText(absolutePath) : null;
+  const afterText = `${JSON.stringify(next, null, 2)}\n`;
+
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  if (beforeText !== afterText) {
+    writeJson(absolutePath, next);
+    return {
+      path: metadataPath,
+      changed: true
+    };
+  }
+
+  return {
+    path: metadataPath,
+    changed: false
+  };
+}
+
+function buildProjectWorkspaceScaffold(projectContext) {
+  const projectTitle = projectContext.name || projectContext.slug;
+  const projectDescription = projectContext.description || "Owner-only bot-built project workspace.";
+
+  return {
+    "README.md": `# ${projectTitle}
+
+${projectDescription}
+
+## Purpose
+
+This workspace is reserved for an owner-only admin project built by the Cbot Labs autonomous agent.
+
+## Local commands
+
+- \`npm install\`
+- \`npm run dev\`
+- \`npm start\`
+
+## Notes
+
+- Keep this workspace isolated from the public root app.
+- Read runtime config from environment variables only.
+- Do not place secrets in committed files.
+`,
+    ".env.example": `PORT=3100
+NODE_ENV=development
+`,
+    "package.json": `${JSON.stringify({
+      name: projectContext.slug,
+      version: "0.1.0",
+      private: true,
+      main: "server.js",
+      scripts: {
+        start: "node server.js",
+        dev: "node server.js"
+      },
+      dependencies: {
+        express: "^4.21.2"
+      }
+    }, null, 2)}
+`,
+    "server.js": `const express = require("express");
+const path = require("path");
+
+const app = express();
+const port = Number(process.env.PORT || 3100);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.static(__dirname));
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    ok: true,
+    name: ${JSON.stringify(projectTitle)},
+    slug: ${JSON.stringify(projectContext.slug)},
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.listen(port, () => {
+  console.log(\`${projectContext.slug} listening on http://localhost:\${port}\`);
+});
+`,
+    "index.html": `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>${projectTitle}</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <p class="eyebrow">Owner Project</p>
+      <h1>${projectTitle}</h1>
+      <p class="summary">${projectDescription}</p>
+      <div id="app" class="app-card">Workspace scaffold ready.</div>
+    </section>
+  </main>
+  <script src="./client.js"></script>
+</body>
+</html>
+`,
+    "style.css": `:root {
+  --bg: #08111d;
+  --panel: #122033;
+  --border: rgba(121, 247, 200, 0.18);
+  --text: #eef6ff;
+  --muted: #9cb3c9;
+  --accent: #79f7c8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #07111f 0%, #09192d 100%);
+}
+
+.shell {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 48px;
+}
+
+.panel {
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-size: 0.76rem;
+}
+
+.summary {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.app-card {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+`,
+    "client.js": `async function bootstrap() {
+  const mount = document.getElementById("app");
+  if (!mount) {
+    return;
+  }
+
+  try {
+    const response = await fetch("./api/health");
+    const data = await response.json();
+    mount.textContent = data.ok
+      ? \`Workspace online at \${data.timestamp}\`
+      : "Workspace health check failed.";
+  } catch (error) {
+    mount.textContent = \`Workspace ready. Health check unavailable: \${error.message}\`;
+  }
+}
+
+bootstrap();
+`
+  };
+}
+
+function ensureProjectWorkspaceScaffold(projectContext) {
+  const scaffold = buildProjectWorkspaceScaffold(projectContext);
+  const changedFiles = [];
+
+  for (const [relativeFile, content] of Object.entries(scaffold)) {
+    const relativePath = `${projectContext.workspaceRoot}/${relativeFile}`;
+    const absolutePath = getAbsoluteRepoPath(relativePath);
+    if (fs.existsSync(absolutePath)) {
+      continue;
+    }
+
+    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+    writeText(absolutePath, content);
+    changedFiles.push(relativePath);
+  }
+
+  return changedFiles;
 }
 
 function assertCriticalFileIntegrity(relativePath, content) {
@@ -338,13 +630,19 @@ function buildAutonomousTaskInstructions(mode) {
   if (mode === "workspace-update") {
     base.push(
       "Your job is to make durable repo changes, not just describe them.",
-      "Return an object with keys: action, summary, fileWrites, libraryEntries, notes, commands.",
+      "For app or page tasks, build a self-contained project workspace under the provided admin-projects workspace root.",
+      "The workspace should own its own app files like index.html, server.js, package.json, .env.example, README, and supporting assets.",
+      "Assume a starter scaffold may already exist in the workspace and refine it instead of replacing everything blindly.",
+      "Return an object with keys: action, summary, project, fileWrites, libraryEntries, notes, commands.",
       "Set action to workspace_update.",
+      "project must be an object with: slug, name, description.",
       "fileWrites must be an array of objects with: path, content.",
-      "Each path must be repo-relative and only target intended implementation files.",
+      "Paths may be repo-relative or project-relative. Project-relative paths will be scoped into the provided project workspace root.",
       "Create new files when needed.",
-      "Do not replace the whole existing server bootstrap or public app; prefer adding focused modules and small integrations.",
-      "commands may only contain guarded values from this set: install_dependencies, restart_app.",
+      "Do not replace the whole existing root server bootstrap or public app; project apps should live in their own workspace.",
+      "commands may only contain guarded values from this set: install_dependencies, restart_app, npm_run_dev, npm_run_start, stop_project_process, git_init, git_set_remote, git_add_commit, git_push.",
+      "commands should be objects with keys: name, cwd, and optional message.",
+      "Use cwd relative to the project workspace root unless an explicit repo-relative admin-projects workspace path is required.",
       "Use libraryEntries only if the task should also update ai/library.json.",
       "Do not include markdown fences or commentary outside the JSON object."
     );
@@ -474,7 +772,7 @@ async function runAiTask(prompt, options = {}) {
   });
 }
 
-function applyAutonomousTaskResult(task, aiResult, policy = {}) {
+function applyAutonomousTaskResult(task, aiResult, policy = {}, context = {}) {
   const parsed = aiResult?.parsed;
   if (!parsed || typeof parsed !== "object") {
     throw new Error("AI task did not return a structured result");
@@ -493,13 +791,64 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
   }
 
   const fileWrites = Array.isArray(parsed.fileWrites) ? parsed.fileWrites : [];
+  const projectContext = action === "workspace_update"
+    ? getProjectWorkspaceContext(task, parsed, context)
+    : null;
   const commands = Array.isArray(parsed.commands)
-    ? parsed.commands.map((value) => String(value || "").trim()).filter(Boolean)
+    ? parsed.commands
+      .map((command) => {
+        if (typeof command === "string") {
+          if (command === "restart_app") {
+            return {
+              name: String(command || "").trim()
+            };
+          }
+
+          if (command === "install_dependencies") {
+            return projectContext
+              ? {
+                name: "install_dependencies",
+                cwd: projectContext.workspaceRoot
+              }
+              : {
+                name: "install_dependencies"
+              };
+          }
+
+          return {
+            name: String(command || "").trim(),
+            cwd: projectContext?.workspaceRoot || ""
+          };
+        }
+
+        if (String(command?.name || "").trim() === "restart_app") {
+          return {
+            name: "restart_app"
+          };
+        }
+
+        return {
+          name: String(command?.name || "").trim(),
+          cwd: command?.cwd
+            ? scopeWorkspaceFilePath(command.cwd, projectContext?.workspaceRoot || "")
+            : (projectContext?.workspaceRoot || ""),
+          message: String(command?.message || "").trim()
+        };
+      })
+      .filter((command) => command.name)
     : [];
   let nonLibraryFileWriteCount = 0;
   if (action === "workspace_update") {
+    const scaffoldChanges = ensureProjectWorkspaceScaffold(projectContext);
+    for (const scaffoldFile of scaffoldChanges) {
+      if (!changedFiles.includes(scaffoldFile)) {
+        changedFiles.push(scaffoldFile);
+        nonLibraryFileWriteCount += 1;
+      }
+    }
+
     for (const fileWrite of fileWrites) {
-      const relativePath = normalizeRepoPath(fileWrite?.path);
+      const relativePath = scopeWorkspaceFilePath(fileWrite?.path, projectContext.workspaceRoot);
       const content = typeof fileWrite?.content === "string" ? fileWrite.content : "";
       if (!relativePath) {
         continue;
@@ -520,6 +869,12 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
       if (relativePath !== "ai/library.json") {
         nonLibraryFileWriteCount += 1;
       }
+    }
+
+    const metadataResult = ensureProjectWorkspaceMetadata(projectContext);
+    if (metadataResult.changed && !changedFiles.includes(metadataResult.path)) {
+      changedFiles.push(metadataResult.path);
+      nonLibraryFileWriteCount += 1;
     }
   }
 
@@ -562,6 +917,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
     summary,
     notes,
     changedFiles,
+    project: projectContext,
     libraryEntryCount: libraryEntries.length,
     entryTitles,
     commands,
@@ -575,6 +931,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
 
 module.exports = {
   applyAutonomousTaskResult,
+  defaultProjectWorkspaceBase,
   getAiWorkspace,
   getAiSummary,
   runAiTask

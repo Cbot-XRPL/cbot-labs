@@ -1,0 +1,16 @@
+{
+  "name": "personal-xrpl-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Owner-only Personal XRPL Trading Bot workspace (red/black themed dashboard + XRPL adapter skeleton)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "xrpl": "^5.0.0"
+  }
+}

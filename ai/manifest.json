@@ -1,14 +1,18 @@
 {
   "name": "cbot-labs-admin-ai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "visibility": "owner-only",
   "provider": "openai",
-  "status": "scaffold",
-  "description": "Admin-only AI workspace for Cbot Labs operator tooling.",
+  "status": "active-development",
+  "description": "Admin-only AI workspace for Cbot Labs operator tooling, autonomous task execution, and owner-only project workspace builds.",
   "capabilities": [
     "chat",
     "playbook-execution",
     "tool-routing",
-    "content-generation"
+    "content-generation",
+    "workspace-update",
+    "project-workspace-builds",
+    "guarded-command-execution",
+    "owner-only-project-routing"
   ]
 }

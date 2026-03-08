@@ -546,7 +546,17 @@ code,
   grid-template-rows: minmax(0, 1fr);
 }
 
+.admin-bot-columns.notes-row {
+  height: min(54vh, 700px);
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .admin-bot-columns.console-row > .admin-ai-box {
+  min-height: 0;
+  height: 100%;
+}
+
+.admin-bot-columns.notes-row > .admin-ai-box {
   min-height: 0;
   height: 100%;
 }
@@ -566,6 +576,14 @@ code,
 }
 
 .console-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.goals-pane,
+.notes-pane {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -725,6 +743,15 @@ code,
 }
 
 #bot-task-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+#bot-goal-list,
+#bot-note-list {
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
@@ -1102,6 +1129,11 @@ code,
   }
 
   .admin-bot-primary-row {
+    height: auto;
+  }
+
+  .admin-bot-columns.console-row,
+  .admin-bot-columns.notes-row {
     height: auto;
   }
 

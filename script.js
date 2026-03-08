@@ -547,6 +547,8 @@ function renderBot(botData) {
   const maxRuntime = document.getElementById("bot-max-runtime");
   const maxRetries = document.getElementById("bot-max-retries");
   const recurringInterval = document.getElementById("bot-recurring-interval");
+  const projectWorkspaceBase = document.getElementById("bot-project-workspace-base");
+  const projectGitRemoteBase = document.getElementById("bot-project-git-remote-base");
   const enabled = document.getElementById("bot-enabled");
   const pauseWhenEmpty = document.getElementById("bot-pause-empty");
   const autoCall = document.getElementById("bot-auto-call");
@@ -555,6 +557,8 @@ function renderBot(botData) {
   const allowCommands = document.getElementById("bot-allow-commands");
   const allowInstall = document.getElementById("bot-allow-install");
   const allowRestart = document.getElementById("bot-allow-restart");
+  const allowProjectCommands = document.getElementById("bot-allow-project-commands");
+  const allowProjectGit = document.getElementById("bot-allow-project-git");
   const writableRoots = document.getElementById("bot-writable-roots");
   const protectedPaths = document.getElementById("bot-protected-paths");
 
@@ -575,6 +579,12 @@ function renderBot(botData) {
   }
   if (recurringInterval) {
     recurringInterval.value = botData.config.recurringTaskIntervalMinutes ?? 60;
+  }
+  if (projectWorkspaceBase) {
+    projectWorkspaceBase.value = botData.config.projectWorkspaceBase || "admin-projects/workspaces";
+  }
+  if (projectGitRemoteBase) {
+    projectGitRemoteBase.value = botData.config.projectGitRemoteBase || "";
   }
   if (enabled) {
     enabled.checked = Boolean(botData.config.enabled);
@@ -599,6 +609,12 @@ function renderBot(botData) {
   }
   if (allowRestart) {
     allowRestart.checked = Boolean(botData.config.allowProcessRestart);
+  }
+  if (allowProjectCommands) {
+    allowProjectCommands.checked = Boolean(botData.config.allowProjectCommands);
+  }
+  if (allowProjectGit) {
+    allowProjectGit.checked = Boolean(botData.config.allowProjectGit);
   }
   if (writableRoots) {
     writableRoots.value = joinPolicyLines(botData.config.writableRoots);
@@ -811,12 +827,16 @@ async function saveBotConfig() {
     allowCommandExecution: document.getElementById("bot-allow-commands")?.checked,
     allowPackageInstall: document.getElementById("bot-allow-install")?.checked,
     allowProcessRestart: document.getElementById("bot-allow-restart")?.checked,
+    allowProjectCommands: document.getElementById("bot-allow-project-commands")?.checked,
+    allowProjectGit: document.getElementById("bot-allow-project-git")?.checked,
     idleDelaySeconds: Number(document.getElementById("bot-idle-delay")?.value || 45),
     postTaskDelaySeconds: Number(document.getElementById("bot-post-task-delay")?.value || 15),
     retryDelaySeconds: Number(document.getElementById("bot-retry-delay")?.value || 90),
     maxTaskRuntimeMinutes: Number(document.getElementById("bot-max-runtime")?.value || 20),
     maxRetries: Number(document.getElementById("bot-max-retries")?.value || 2),
     recurringTaskIntervalMinutes: Number(document.getElementById("bot-recurring-interval")?.value || 60),
+    projectWorkspaceBase: document.getElementById("bot-project-workspace-base")?.value || "admin-projects/workspaces",
+    projectGitRemoteBase: document.getElementById("bot-project-git-remote-base")?.value || "",
     writableRoots: parsePolicyLines(document.getElementById("bot-writable-roots")?.value),
     protectedPaths: parsePolicyLines(document.getElementById("bot-protected-paths")?.value)
   };

@@ -1,8 +1,37 @@
 {
-  "mode": "stub",
-  "lastUpdated": "2026-03-08T02:24:50.288Z",
-  "notes": "Execution engine placeholder. Replace with provider-backed logic later.",
-  "lastRunAt": "2026-03-08T02:24:50.288Z",
-  "lastTaskId": "5ed6ffaa-7674-4acb-95e2-946a7242807d",
-  "lastTaskStatus": "completed"
+  "mode": "provider-backed",
+  "lastUpdated": "2026-03-08T04:22:07.547Z",
+  "notes": "Execution engine is live with owner-only task routing, guarded workspace updates, project workspace scaffolding, guarded command actions, and stricter Windows-safe local preview behavior. In local Windows mode, project tasks build and refine their workspace, skip project installs, skip detached project starts, and skip project git follow-up.",
+  "lastRunAt": "2026-03-08T04:22:07.547Z",
+  "lastTaskId": "906a7c53-2132-4bae-a3ec-cb84baf0a805",
+  "lastTaskStatus": "completed",
+  "memory": {
+    "currentArchitecture": [
+      "Owner-only admin bot is integrated into the main site and persists state in .data/bot-db.json",
+      "Autonomous research tasks can update ai/library.json",
+      "Autonomous project tasks should build inside admin-projects/workspaces/<project-slug>/",
+      "Generated project workspaces are surfaced through the owner-only /admin/projects route",
+      "Guarded commands exist for installs, restart, and project-scoped git/process operations",
+      "Task XRPL Trading Interface currently builds into admin-projects/workspaces/personal-xrpl-bot"
+    ],
+    "knownGuardrails": [
+      "Protect root public files: index.html, script.js, style.css, .well-known/, sessions/public assets",
+      "Protect secrets/storage: .env and .data/",
+      "Do not replace the root app bootstrap or strip required root package scripts/dependencies",
+      "Project app previews on Windows should use the main app route instead of detached workspace launch",
+      "Project installs are skipped in Windows-safe local mode",
+      "Project git follow-up is skipped in Windows-safe local mode",
+      "Malformed or control-character paths should be rejected or sanitized before writing"
+    ],
+    "currentWeakPoints": [
+      "The model can still ask for commands that are not useful in Windows-safe local mode",
+      "Project tasks previously drifted into library-only completions and must be treated as incomplete unless non-library files change",
+      "Root-file edits still need careful validation when server.js or package.json are touched"
+    ],
+    "workspaceState": [
+      "Current main project workspace: admin-projects/workspaces/personal-xrpl-bot",
+      "Legacy duplicate workspace clutter was cleaned from admin-projects/xrpl-trading-bot",
+      "Malformed duplicate README file in personal-xrpl-bot was removed"
+    ]
+  }
 }

@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Personal XRPL Bot — Cbot Labs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Personal XRPL Trading Bot</h1>
+        <p class="sub">Owner-only dashboard: XRPL, Xahau, Flare, EVM — red & black theme</p>
+      </header>
+
+      <section class="controls">
+        <label>Owner Header: <input id="ownerHeader" placeholder="Paste x-owner-wallet header value (owner address)"/></label>
+        <button id="pollBtn" class="btn">Poll Now</button>
+        <button id="simulateBtn" class="btn alt">Simulate Trade</button>
+        <button id="statusBtn" class="btn">Check Status</button>
+      </section>
+
+      <section class="grid">
+        <div class="card" id="statusCard"><h3>Status</h3><pre id="statusPre">(unknown)</pre></div>
+        <div class="card" id="metricsCard"><h3>Metrics</h3><div id="metricsList">No samples yet</div></div>
+        <div class="card" id="tradesCard"><h3>Simulated Trades</h3><div id="tradesList">No trades yet</div></div>
+        <div class="card" id="ecosystemCard"><h3>Ecosystem Tokens</h3>
+          <ul id="ecosys">
+            <li>Xahau: <span class="val" id="xahauVal">--</span></li>
+            <li>XRPL (native + issued): <span class="val" id="xrplVal">--</span></li>
+            <li>Flare: <span class="val" id="flareVal">--</span></li>
+            <li>EVM sidechain: <span class="val" id="evmVal">--</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <footer>
+        <p>This workspace is owner-only. Do not add seeds to the repo. Provide XRPL_WALLET_SEED and RIPPLED_URL at runtime if you need signing or private operations.</p>
+      </footer>
+    </div>
+
+    <script src="client.js"></script>
+  </body>
+</html>
