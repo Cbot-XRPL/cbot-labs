@@ -25,6 +25,10 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function writeText(filePath, value) {
+  fs.writeFileSync(filePath, String(value));
+}
+
 function getAiWorkspace() {
   const manifest = readJson(files.manifest);
   const library = readJson(files.library);
@@ -123,6 +127,10 @@ function assertRepoWriteAllowed(relativePath, policy = {}) {
   if (writableRoots.length && !writableRoots.some((rule) => pathMatchesRule(normalizedPath, rule))) {
     throw new Error(`Path is outside writable roots: ${normalizedPath}`);
   }
+}
+
+function getAbsoluteRepoPath(relativePath) {
+  return path.join(__dirname, normalizeRepoPath(relativePath));
 }
 
 function extractOutputText(response) {
@@ -278,6 +286,19 @@ function buildAutonomousTaskInstructions(mode) {
     );
   }
 
+  if (mode === "workspace-update") {
+    base.push(
+      "Your job is to make durable repo changes, not just describe them.",
+      "Return an object with keys: action, summary, fileWrites, libraryEntries, notes.",
+      "Set action to workspace_update.",
+      "fileWrites must be an array of objects with: path, content.",
+      "Each path must be repo-relative and only target intended implementation files.",
+      "Create new files when needed.",
+      "Use libraryEntries only if the task should also update ai/library.json.",
+      "Do not include markdown fences or commentary outside the JSON object."
+    );
+  }
+
   return base.join(" ");
 }
 
@@ -384,43 +405,81 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
     throw new Error("AI task did not return a structured result");
   }
 
-  if (parsed.action !== "update_library") {
-    throw new Error(`Unsupported AI action: ${parsed.action || "unknown"}`);
-  }
-
-  const libraryEntries = Array.isArray(parsed.libraryEntries) ? parsed.libraryEntries : [];
-  const nextLibrary = mergeLibraryEntries(readJson(files.library), libraryEntries);
-  const beforeText = readText(files.library);
-  const afterText = `${JSON.stringify(nextLibrary, null, 2)}\n`;
-  const libraryPath = path.relative(__dirname, files.library).replaceAll("\\", "/");
-
-  assertRepoWriteAllowed(libraryPath, policy);
-
-  if (beforeText === afterText) {
-    throw new Error("AI task produced no new library changes");
-  }
-
-  writeJson(files.library, nextLibrary);
-
+  const action = parsed.action || "unknown";
   const summary = String(parsed.summary || "").trim() || `Updated library for task ${task.title}`;
   const notes = Array.isArray(parsed.notes)
     ? parsed.notes.map((item) => String(item || "").trim()).filter(Boolean)
     : [];
+  const changedFiles = [];
+  const outputLines = [summary];
+
+  if (action !== "update_library" && action !== "workspace_update") {
+    throw new Error(`Unsupported AI action: ${action}`);
+  }
+
+  const fileWrites = Array.isArray(parsed.fileWrites) ? parsed.fileWrites : [];
+  if (action === "workspace_update") {
+    for (const fileWrite of fileWrites) {
+      const relativePath = normalizeRepoPath(fileWrite?.path);
+      const content = typeof fileWrite?.content === "string" ? fileWrite.content : "";
+      if (!relativePath) {
+        continue;
+      }
+
+      assertRepoWriteAllowed(relativePath, policy);
+
+      const absolutePath = getAbsoluteRepoPath(relativePath);
+      const beforeText = fs.existsSync(absolutePath) ? readText(absolutePath) : null;
+      if (beforeText === content) {
+        continue;
+      }
+
+      fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeText(absolutePath, content);
+      changedFiles.push(relativePath);
+    }
+  }
+
+  const libraryEntries = Array.isArray(parsed.libraryEntries) ? parsed.libraryEntries : [];
   const entryTitles = libraryEntries
     .map((entry) => String(entry?.title || "").trim())
     .filter(Boolean);
+  if (libraryEntries.length) {
+    const nextLibrary = mergeLibraryEntries(readJson(files.library), libraryEntries);
+    const beforeText = readText(files.library);
+    const afterText = `${JSON.stringify(nextLibrary, null, 2)}\n`;
+    const libraryPath = path.relative(__dirname, files.library).replaceAll("\\", "/");
+
+    assertRepoWriteAllowed(libraryPath, policy);
+
+    if (beforeText !== afterText) {
+      writeJson(files.library, nextLibrary);
+      changedFiles.push(libraryPath);
+    }
+  }
+
+  if (!changedFiles.length) {
+    throw new Error(action === "workspace_update"
+      ? "AI task produced no repo file changes"
+      : "AI task produced no new library changes");
+  }
+
+  if (libraryEntries.length) {
+    outputLines.push(`Library entries added or updated: ${libraryEntries.length}`);
+    if (entryTitles.length) {
+      outputLines.push("Entry titles:", ...entryTitles.map((title) => `- ${title}`));
+    }
+  }
 
   return {
     summary,
     notes,
-    changedFiles: [libraryPath],
+    changedFiles,
     libraryEntryCount: libraryEntries.length,
     entryTitles,
     output: [
-      summary,
-      `Library entries added or updated: ${libraryEntries.length}`,
-      ...(entryTitles.length ? ["Entry titles:", ...entryTitles.map((title) => `- ${title}`)] : []),
-      `Changed files: ${libraryPath}`,
+      ...outputLines,
+      `Changed files: ${changedFiles.join(", ")}`,
       ...(notes.length ? ["Notes:", ...notes.map((note) => `- ${note}`)] : [])
     ].join("\n")
   };

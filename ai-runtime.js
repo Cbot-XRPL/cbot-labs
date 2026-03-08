@@ -15,7 +15,17 @@ const activityLimit = 250;
 const botOutputLimit = 120;
 const consoleLimit = 400;
 const taskHeartbeatMs = 15000;
-const defaultWritableRoots = ["ai/", "admin-projects/", "server.js"];
+const defaultWritableRoots = [
+  "ai/",
+  "admin-projects/",
+  "server.js",
+  "package.json",
+  "package-lock.json",
+  "lib/",
+  "services/",
+  "routes/",
+  "db/"
+];
 const requiredProtectedPaths = [
   ".env",
   ".data/",
@@ -403,6 +413,21 @@ function inferTaskExecutionMode(task) {
   ].join(" ").toLowerCase();
 
   if (
+    combined.includes("build a page")
+    || combined.includes("build page")
+    || combined.includes("project")
+    || combined.includes("interface")
+    || combined.includes("dashboard")
+    || combined.includes("server")
+    || combined.includes("endpoint")
+    || combined.includes("admin-projects")
+    || combined.includes("sub page")
+    || combined.includes("subpage")
+  ) {
+    return "workspace-update";
+  }
+
+  if (
     combined.includes("library")
     || combined.includes("research")
     || combined.includes("resource")
@@ -412,7 +437,7 @@ function inferTaskExecutionMode(task) {
     return "library-update";
   }
 
-  return "library-update";
+  return "workspace-update";
 }
 
 function findCompletedTaskMatch(tasks, payload, excludeTaskId = null) {
