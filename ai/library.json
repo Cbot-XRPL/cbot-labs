@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.887Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.887Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.887Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.887Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "admin-project-xrpl-trading-bot",
@@ -198,7 +198,7 @@
           "url": "FILE:lib/xrpl/client.js"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "connected-xrpl-wallet-rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
@@ -217,7 +217,7 @@
         "If you want to operate the bot, set XRPL_WALLET_SEED in your secret manager and configure OWNER_WALLETS (comma-separated) to include the owner address(es)."
       ],
       "links": [],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "xrpl-trading-strategies",
@@ -246,7 +246,7 @@
           "url": "FILE:admin-projects/xrpl-trading-bot/strategies.json"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "agent-brain-xrpl",
@@ -270,7 +270,7 @@
           "url": "FILE:admin-projects/xrpl-trading-bot/strategies.html"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "xrpl-strategy-runner",
@@ -294,7 +294,7 @@
           "url": "FILE:admin-projects/workspaces/xrpl-strategy-bot/"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "personal-xrpl-bot",
@@ -325,12 +325,12 @@
           "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/lib/xrpl/client.js"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.962Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     },
     {
       "id": "xrpl-trading-interface",
       "title": "Project: Personal XRPL Trading Bot — Workspace Added",
-      "summary": "Added an owner-only Personal XRPL Trading Bot workspace under admin-projects/workspaces/personal-xrpl-bot. Includes a red/black themed UI, owner-guarded Express server, XRPL adapter skeleton using xrpl.js, and initial DB for metrics and simulated trades. No secrets are stored; use runtime environment variables for XRPL seed and node URL.",
+      "summary": "Added an owner-only Personal XRPL Trading Bot workspace under admin-projects/workspaces/personal-xrpl-bot. Includes UI, owner-guarded Express server, XRPL adapter skeleton using xrpl.js, and initial DB for metrics and simulated trades. A link to the workspace was added to the projects listing.",
       "tags": [
         "admin-projects",
         "xrpl",
@@ -344,7 +344,13 @@
         "APIs: GET /api/admin/personal-bot/status, GET /api/admin/personal-bot/metrics, POST /api/admin/personal-bot/poll, POST /api/admin/personal-bot/simulate-trade.",
         "UI: simple dashboard showing status, latest metrics, simulated trades and ecosystem token placeholders for Xahau, Flare and an EVM sidechain. Buttons are themed red & black.",
         "Security: DO NOT commit XRPL_WALLET_SEED or other secrets. Use .env or secret manager at runtime.",
-        "Preview: Project is accessible via the owner-only project hub route: /admin/projects/workspaces/personal-xrpl-bot/ when the workspace server is run for preview."
+        "Preview: Project is accessible via the owner-only project hub route: /admin/projects/workspaces/personal-xrpl-bot/ when the workspace server is run for preview.",
+        "Projects index updated: admin-projects/projects/index.html now includes a card & link to the personal-xrpl-bot workspace for owner preview.",
+        "XRPL adapter: lib/xrpl/client.js provides init(), getStatus() and pollSample() using xrpl.js. It operates in simulated mode if RIPPLED_URL is not set at runtime.",
+        "Owner auth: server enforces x-owner-wallet header against OWNER_WALLETS environment variable. If OWNER_WALLETS is not set, the server logs a warning and allows access (owners should set OWNER_WALLETS in runtime configuration).",
+        "APIs: GET /api/admin/personal-bot/status, GET /api/admin/personal-bot/metrics, GET /api/admin/personal-bot/trades, POST /api/admin/personal-bot/poll, POST /api/admin/personal-bot/simulate-trade.",
+        "UI: red & black themed dashboard showing status, metrics and simulated trades. Client includes an owner wallet input to set the x-owner-wallet header for previewing owner-only endpoints.",
+        "Security: DO NOT commit XRPL_WALLET_SEED or other secrets. Use .env or a secret manager at runtime."
       ],
       "links": [
         {
@@ -354,9 +360,13 @@
         {
           "label": "XRPL Adapter",
           "url": "FILE:admin-projects/workspaces/personal-xrpl-bot/lib/xrpl/client.js"
+        },
+        {
+          "label": "Projects Listing",
+          "url": "FILE:admin-projects/projects/index.html"
         }
       ],
-      "updatedAt": "2026-03-08T03:53:03.963Z"
+      "updatedAt": "2026-03-08T06:38:35.888Z"
     }
   ]
 }

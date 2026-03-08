@@ -1,16 +1,19 @@
 {
   "name": "personal-xrpl-bot",
   "version": "0.1.0",
-  "private": true,
-  "description": "Owner-only Personal XRPL Trading Bot workspace (red/black themed dashboard + XRPL adapter skeleton)",
+  "description": "Owner-only Personal XRPL Trading Bot workspace — UI, API skeleton and XRPL adapter (no secrets in-repo)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "NODE_ENV=development node server.js"
   },
+  "author": "Cbot Labs Admin",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "xrpl": "^5.0.0"
-  }
+    "xrpl": "^4.6.0"
+  },
+  "devDependencies": {}
 }

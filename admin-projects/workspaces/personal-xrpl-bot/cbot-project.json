@@ -1,9 +1,10 @@
 {
   "slug": "personal-xrpl-bot",
   "name": "Personal XRPL Trading Bot",
-  "description": "Owner-only dashboard and XRPL adapter skeleton for monitoring Xahau, XRPL, Flare and an EVM sidechain",
+  "description": "Owner-only monitoring dashboard and XRPL adapter skeleton. Red/black themed UI for Xahau, XRPL, Flare and EVM sidechain metrics.",
   "routePath": "/admin/projects/workspaces/personal-xrpl-bot/",
-  "updatedAt": "2026-03-08T04:22:07.430Z",
+  "updatedAt": "2026-03-08T06:38:35.884Z",
   "title": "Personal XRPL Trading Bot",
+  "route": "/admin-projects/workspaces/personal-xrpl-bot/",
   "ownerOnly": true
 }
