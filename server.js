@@ -193,19 +193,19 @@ function getAppPayload() {
     },
     modules: [
       {
-        name: "Validator status",
-        description: "Live identity and validator metadata sourced from the local app.",
+        name: "Admin Services",
+        description: "Put backups in place, added coded error messages, and hardened restart systems.",
         status: "Online"
       },
       {
-        name: "Admin bot",
-        description: "Owner-only task runner, console, notes, and autonomous workspace controls.",
-        status: "Private"
+        name: "Xahau NFT Marketplace",
+        description: "Build a one-of-a-kind NFT marketplace on Xahau.",
+        status: "Building"
       },
       {
-        name: "Project hub",
-        description: "Owner-only project area for bot-built interfaces and backend experiments.",
-        status: "Active"
+        name: "AI Engine",
+        description: "Build an AI service to increase productivity and functionality.",
+        status: "Building"
       }
     ],
     links: [
