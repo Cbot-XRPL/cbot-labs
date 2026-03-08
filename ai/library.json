@@ -7,7 +7,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T01:41:08.598Z"
+      "updatedAt": "2026-03-08T02:24:48.736Z"
     },
     {
       "id": "xahau-buildout",
@@ -16,7 +16,7 @@
       "tags": [],
       "details": [],
       "links": [],
-      "updatedAt": "2026-03-08T01:41:08.598Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "trading-overview",
@@ -50,7 +50,7 @@
           "url": "https://www.investopedia.com/terms/o/ordertype.asp"
         }
       ],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "technical-indicators",
@@ -96,7 +96,7 @@
           "url": "https://www.tradingview.com/pine-script-docs/en/v5/"
         }
       ],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "liquidity-market-structure",
@@ -129,7 +129,7 @@
           "url": "https://www.tradingview.com/"
         }
       ],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "market-makers-whales",
@@ -166,7 +166,7 @@
           "url": "https://arkhamintelligence.com/"
         }
       ],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "admin-project-xrpl-trading-bot",
@@ -198,7 +198,7 @@
           "url": "FILE:lib/xrpl/client.js"
         }
       ],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     },
     {
       "id": "connected-xrpl-wallet-rVeHp61gJ9MxoqMkAMmEbow8KYWk3AH1X",
@@ -217,7 +217,60 @@
         "If you want to operate the bot, set XRPL_WALLET_SEED in your secret manager and configure OWNER_WALLETS (comma-separated) to include the owner address(es)."
       ],
       "links": [],
-      "updatedAt": "2026-03-08T01:41:08.599Z"
+      "updatedAt": "2026-03-08T02:24:48.737Z"
+    },
+    {
+      "id": "xrpl-trading-strategies",
+      "title": "XRPL Trading Strategies Catalog",
+      "summary": "A curated, owner-only catalog of XRPL-native trading ideas (RSI mean-reversion, spread capture, LP, whale-flow hedges, periodic rebalance) including triggers, sizing, prerequisites and operational notes.",
+      "tags": [
+        "xrpl",
+        "strategies",
+        "trading",
+        "admin-projects"
+      ],
+      "details": [
+        "RSI mean-reversion strategy between XRP and issued rUSD with trustline prerequisite and conservative sizing.",
+        "Spread capture for Xahau tokens and small arbitrage windows; emphasizes small order size and depth checks.",
+        "Liquidity provision primitives with inventory skew management and hourly rebalance.",
+        "Whale flow reactive hedging to reduce downside risk on large inbound/outbound flows to gateways/exchanges.",
+        "Scheduled periodic rebalance for baskets of tokens to capture drift while limiting churn."
+      ],
+      "links": [
+        {
+          "label": "XRPL Trading Strategies (repo watch UI)",
+          "url": "FILE:admin-projects/xrpl-trading-bot/strategies.html"
+        },
+        {
+          "label": "XRPL Strategy Catalog (json)",
+          "url": "FILE:admin-projects/xrpl-trading-bot/strategies.json"
+        }
+      ],
+      "updatedAt": "2026-03-08T02:24:48.737Z"
+    },
+    {
+      "id": "agent-brain-xrpl",
+      "title": "Agent Brain: XRPL Trading Operations",
+      "summary": "Notes and decision heuristics for an owner-only automated agent that watches XRPL state and suggests or (with owner permission) executes trades. Focus on observability, safe sizing, trustlines and avoidance of on-repo secrets.",
+      "tags": [
+        "agent",
+        "brain",
+        "xrpl",
+        "guardrails"
+      ],
+      "details": [
+        "Operate in two modes: observe-only (alerts + simulation) and gated execution (server-side with secret-managed seed and owner whitelist).",
+        "Require explicit trustline checks before any issued-token exposure. UI must never request seeds; server-side adapter does signing only when secrets are present at runtime.",
+        "Maintain conservative sizing defaults and per-strategy stop-loss / inventory caps. Prioritize auditable logs for every decision and action.",
+        "Prefer server-side order books, gateway liquidity checks and on-chain tx confirmation steps for actual execution. Client UI remains for watch/sim only."
+      ],
+      "links": [
+        {
+          "label": "Agent Brain: XRPL Strategies UI",
+          "url": "FILE:admin-projects/xrpl-trading-bot/strategies.html"
+        }
+      ],
+      "updatedAt": "2026-03-08T02:24:48.737Z"
     }
   ]
 }

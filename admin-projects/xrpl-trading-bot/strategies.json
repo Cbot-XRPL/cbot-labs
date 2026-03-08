@@ -1,0 +1,65 @@
+[
+  {
+    "id": "rsi-mean-reversion-xrp-rusd",
+    "title": "RSI Mean-Reversion: XRP <-> rUSD",
+    "summary": "Small tactical sells into rUSD on overbought XRP (high RSI), buy back when RSI falls. Aims to capture mean-reversion and short-term volatility.",
+    "trigger": "RSI(14) >= 72 => partial SELL to rUSD; RSI(14) <= 28 => BUY back to XRP",
+    "action": "Split sell: 2-5% of XRP balance when RSI high; buy back increments on RSI low until target exposure restored.",
+    "sizing": "Position sizing: max 5% of nominal XRP holdings per signal; scale in/out using 3-step ladder. Stop-loss: if price moves >6% adverse during open leg, cancel further sells/buys.",
+    "prereqs": "Trustline to rUSD issuer required. Sufficient XRP and rUSD gateway liquidity. Minimum XRP balance threshold to avoid dust.",
+    "notes": "Conservative approach: preserve base exposure. Consider order-book depth to avoid slippage. Suitable for day trading and small gas-free adjustments on XRPL.",
+    "eval": "rsi",
+    "rsiPeriod": 14,
+    "rsiHigh": 72,
+    "rsiLow": 28,
+    "defaultSignal": "HOLD"
+  },
+  {
+    "id": "xahau-token-spread-capture",
+    "title": "Xahau Token Spread Capture",
+    "summary": "Monitor the orderbook / gateways for Xahau token spreads and capture small instantaneous spreads between gateway offers and DEX offers.",
+    "trigger": "On visible spread > configured threshold and depth sufficient => place limit buy/sell to capture spread.",
+    "action": "Place limit orders layered by size. Cancel if not filled within short TTL (60s). Prioritize venues with low taker fees.",
+    "sizing": "Small sizes: 0.5%–2% of token holdings per order. Max exposure capped to prevent inventory imbalance.",
+    "prereqs": "Familiarity with Xahau token conventions, trustlines to token issuers, and gateway liquidity. Monitor fees and potential transfer delays.",
+    "notes": "Spread capture requires active monitoring of orderbook snapshots and order lifetimes. Can be extended to cross-gateway arbitrage if safe on settlement timing.",
+    "eval": "arbitrage",
+    "defaultSignal": "HOLD"
+  },
+  {
+    "id": "liquidity-provision-small-pool",
+    "title": "Small LP / Liquidity Provision (read-only watch)",
+    "summary": "Identify low-to-medium volatility pairs and provide liquidity by quoting tight two-sided offers; collect spreads and fees.",
+    "trigger": "Manual enable after verifying volume and depth. Monitor inventory skew and withdraw on adverse one-sided fills.",
+    "action": "Place paired offers on both sides within a spread band; rebalance hourly or when imbalance >10%.",
+    "sizing": "Keep exposure limited: at most 10% of deployable capital in LP at any time. Use automated rebalance thresholds.",
+    "prereqs": "Trustlines for both sides, careful fee accounting and on-chain settlement monitoring.",
+    "notes": "LP strategies on XRPL are sensitive to on-ledger offers/partial fills and gateway behavior. Start narrow and small.",
+    "eval": "passive",
+    "defaultSignal": "HOLD"
+  },
+  {
+    "id": "whale-flow-hedge",
+    "title": "Whale Flow Reactive Hedge",
+    "summary": "Watch large on-ledger transfers (inflows to gateways or exchange addresses). When detected, tighten risk or place protective orders.",
+    "trigger": "Large transfer to exchange/gateway OR sudden balance change in watched addresses => increase caution/hedge.",
+    "action": "Alert owner and optionally hedge by shifting a small portion of XRP to stable issued tokens (rUSD) or reduce exposure.",
+    "sizing": "Hedge size: configurable, default 3–7% of exposure for initial reaction. Escalate if follow-through confirmed.",
+    "prereqs": "On-chain monitoring infra (account_tx, gateway tracking). Owner must approve escalation policy for automated execution.",
+    "notes": "This strategy is more about defensive posture; it should be paired with strong alerting and optionally manual confirmation before larger hedges.",
+    "eval": "whale-flow",
+    "defaultSignal": "HOLD"
+  },
+  {
+    "id": "periodic-rebalance-basket",
+    "title": "Scheduled Rebalance: Basket Strategy",
+    "summary": "Periodic rebalancing of a small token basket (XRP, Xahau, selected issued tokens) to target allocations to capture rebalancing drift.",
+    "trigger": "Time-based (hourly/daily) or volatility-based when asset weights deviate more than X%.",
+    "action": "Execute small limit trades to restore target weights, prefer passive fills; fallback to taker only if unable to reach weights.",
+    "sizing": "Rebalance quotas: 1–3% of portfolio per run. Minimum trade size enforced.",
+    "prereqs": "Trustlines for all issued tokens; gateway liquidity checks. Scheduling and execution controlled on server side.",
+    "notes": "Designed for low-churn portfolio maintenance rather than aggressive trading.",
+    "eval": "periodic",
+    "defaultSignal": "HOLD"
+  }
+]

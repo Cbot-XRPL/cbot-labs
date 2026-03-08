@@ -47,6 +47,9 @@ function defaultDb() {
       autoCallLlm: false,
       autoCommit: false,
       autoPush: false,
+      allowCommandExecution: false,
+      allowPackageInstall: false,
+      allowProcessRestart: false,
       pauseWhenQueueEmpty: true,
       idleDelaySeconds: 45,
       postTaskDelaySeconds: 15,
@@ -70,6 +73,7 @@ function defaultDb() {
       nextRunAt: null,
       lastResult: null,
       lastError: null,
+      lastCommandResult: null,
       botOutput: null,
       botOutputEntries: [],
       consoleEntries: [],
@@ -351,6 +355,134 @@ function updateExecFile(patch) {
       error: error.message
     });
   }
+}
+
+function getNpmExecutable() {
+  return process.platform === "win32" ? "npm.cmd" : "npm";
+}
+
+function truncateCommandOutput(value) {
+  const text = String(value || "").trim();
+  if (!text) {
+    return "";
+  }
+
+  return text.length > 4000 ? `${text.slice(0, 4000)}\n...[truncated]` : text;
+}
+
+async function executeAllowedCommand(commandName) {
+  const npmExecutable = getNpmExecutable();
+  const commands = {
+    install_dependencies: {
+      command: npmExecutable,
+      args: ["install", "--no-fund", "--no-audit"]
+    }
+  };
+
+  const commandConfig = commands[commandName];
+  if (!commandConfig) {
+    throw new Error(`Unsupported command: ${commandName}`);
+  }
+
+  const startedAt = new Date().toISOString();
+  addConsoleLine("running allowed command", {
+    command: commandName,
+    args: commandConfig.args
+  });
+
+  const result = await execFileAsync(commandConfig.command, commandConfig.args, {
+    cwd: __dirname,
+    windowsHide: true,
+    timeout: 10 * 60 * 1000
+  });
+
+  const commandResult = {
+    command: commandName,
+    startedAt,
+    completedAt: new Date().toISOString(),
+    stdout: truncateCommandOutput(result.stdout),
+    stderr: truncateCommandOutput(result.stderr)
+  };
+
+  updateDb((db) => {
+    db.state.lastCommandResult = commandResult;
+    return db;
+  });
+
+  addConsoleLine("allowed command completed", {
+    command: commandName
+  });
+  addActivity("command", "Allowed command completed", {
+    command: commandName
+  });
+
+  return commandResult;
+}
+
+async function runAllowedCommand(commandName) {
+  const db = loadDb();
+  if (!db.config.allowCommandExecution) {
+    throw new Error("Command execution is disabled");
+  }
+
+  if (commandName === "install_dependencies" && !db.config.allowPackageInstall) {
+    throw new Error("Package install is disabled");
+  }
+
+  if (commandName === "restart_app" && !db.config.allowProcessRestart) {
+    throw new Error("Process restart is disabled");
+  }
+
+  if (commandName === "restart_app") {
+    const commandResult = {
+      command: "restart_app",
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      stdout: "Process restart requested. Exiting so the supervisor can restart the app.",
+      stderr: ""
+    };
+
+    updateDb((current) => {
+      current.state.lastCommandResult = commandResult;
+      return current;
+    });
+    addConsoleLine("allowed command completed", {
+      command: "restart_app"
+    });
+    addActivity("command", "Allowed command completed", {
+      command: "restart_app"
+    });
+
+    setTimeout(() => {
+      process.exit(0);
+    }, 250);
+
+    return commandResult;
+  }
+
+  return executeAllowedCommand(commandName);
+}
+
+function shouldInstallDependencies(changedFiles, config) {
+  if (!config.allowCommandExecution || !config.allowPackageInstall) {
+    return false;
+  }
+
+  return changedFiles.some((filePath) => filePath === "package.json" || filePath === "package-lock.json");
+}
+
+function shouldRestartProcess(changedFiles, config) {
+  if (!config.allowCommandExecution || !config.allowProcessRestart) {
+    return false;
+  }
+
+  return changedFiles.some((filePath) => (
+    filePath === "server.js"
+    || filePath.startsWith("routes/")
+    || filePath.startsWith("services/")
+    || filePath.startsWith("lib/")
+    || filePath.startsWith("db/")
+  ));
 }
 
 function appendBotOutput(text, source = "system", createdAt = new Date().toISOString()) {
@@ -951,6 +1083,23 @@ async function runLoopCycle() {
       changedFiles: appliedResult.changedFiles
     });
 
+    const requestedCommands = Array.isArray(appliedResult.commands) ? appliedResult.commands : [];
+    const shouldRunInstall = shouldInstallDependencies(appliedResult.changedFiles, db.config)
+      || requestedCommands.includes("install_dependencies");
+
+    if (shouldRunInstall) {
+      addConsoleLine("running allowed command", {
+        command: "install_dependencies",
+        taskId: task.id,
+        title: task.title
+      });
+      await withTimeout(
+        runAllowedCommand("install_dependencies"),
+        maxRuntimeMs,
+        "Dependency install"
+      );
+    }
+
     addConsoleLine("running git follow-up", {
       taskId: task.id,
       title: task.title
@@ -1025,6 +1174,18 @@ async function runLoopCycle() {
       status: "completed",
       changedFiles: appliedResult.changedFiles
     });
+
+    const shouldRunRestart = shouldRestartProcess(appliedResult.changedFiles, db.config)
+      || requestedCommands.includes("restart_app");
+
+    if (shouldRunRestart) {
+      addConsoleLine("running allowed command", {
+        command: "restart_app",
+        taskId: task.id,
+        title: task.title
+      });
+      await runAllowedCommand("restart_app");
+    }
   } catch (error) {
     updateDb((current) => {
       const currentTask = current.tasks.find((entry) => entry.id === task.id);
@@ -1141,7 +1302,7 @@ function stopLoop() {
 }
 
 function setConfig(patch) {
-  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "recurringTaskIntervalMinutes", "enabled", "writableRoots", "protectedPaths"];
+  const allowed = ["autoCallLlm", "autoCommit", "autoPush", "allowCommandExecution", "allowPackageInstall", "allowProcessRestart", "pauseWhenQueueEmpty", "idleDelaySeconds", "postTaskDelaySeconds", "retryDelaySeconds", "maxTaskRuntimeMinutes", "maxRetries", "recurringTaskIntervalMinutes", "enabled", "writableRoots", "protectedPaths"];
 
   const db = updateDb((current) => {
     for (const key of allowed) {
@@ -1560,6 +1721,7 @@ module.exports = {
   removeNote,
   removeTask,
   reorderTasks,
+  runAllowedCommand,
   runLoopCycle,
   setConfig,
   startLoop,

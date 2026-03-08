@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>XRPL Trading Strategies — Admin</title>
+  <style>
+    body { font-family: Inter, system-ui, Arial, sans-serif; background:#0b0b0b; color:#ddd; padding:20px; }
+    .container{ max-width:1100px; margin:0 auto }
+    h1{ color:#fff }
+    .strategy { background: #111; border: 1px solid #222; padding:16px; margin:12px 0; border-radius:8px }
+    .meta { font-size:13px; color:#9aa; }
+    .trigger { color:#8ce; font-weight:600 }
+    .prereqs { color:#f7c; }
+    .controls { margin-top:10px }
+    .sim { background:#060606; border:1px solid #203; padding:10px; display:inline-block; margin-right:8px; color:#afa }
+    button { background:#222; color:#fff; border:1px solid #444; padding:6px 10px; border-radius:6px }
+    .signal { font-weight:700; font-size:18px }
+    .note { color:#9a9; font-size:13px }
+    pre { background:#080808; padding:8px; border-radius:6px; overflow:auto }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>XRPL Trading Strategies — Watch & Simulate</h1>
+    <p class="meta">Owner-only monitoring page. No seeds or signing performed. This is a read-only strategy dashboard that (a) enumerates live strategy definitions, (b) simulates indicator signals locally for demo/observability, and (c) shows prerequisites for real execution (trustlines, min balances, risk controls).</p>
+
+    <div class="controls">
+      <button id="reload">Reload strategies</button>
+      <button id="startSim">Start Simulation</button>
+      <button id="stopSim">Stop Simulation</button>
+      <span class="note">Simulation uses a local RSI oscillator demo to produce signal flashes for each strategy. To actually run strategies, wire server-side XRPL adapter and add owner-only execution endpoints (seeds must be stored in secrets manager).</span>
+    </div>
+
+    <div id="list"></div>
+
+    <h2>Operational checklist</h2>
+    <pre>
+- Ensure OWNER_WALLETS includes your XRPL address(es).
+- Add required trustlines (example: rUSD gateway) from the owner wallet before attempting to hold issued tokens.
+- Keep signing/seeds out of repo: set XRPL_WALLET_SEED in your runtime secrets manager only.
+- Use server-side adapters in lib/xrpl/ to perform sensitive actions; the frontend is read-only.
+    </pre>
+
+    <p class="meta">Files added: admin-projects/xrpl-trading-bot/strategies.json, strategies.html, strategies-client.js (simulation UI). Small server helper at lib/xrpl/strategies.js reads the catalog for server endpoints.</p>
+  </div>
+
+  <script src="./strategies-client.js"></script>
+</body>
+</html>

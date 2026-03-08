@@ -552,6 +552,9 @@ function renderBot(botData) {
   const autoCall = document.getElementById("bot-auto-call");
   const autoCommit = document.getElementById("bot-auto-commit");
   const autoPush = document.getElementById("bot-auto-push");
+  const allowCommands = document.getElementById("bot-allow-commands");
+  const allowInstall = document.getElementById("bot-allow-install");
+  const allowRestart = document.getElementById("bot-allow-restart");
   const writableRoots = document.getElementById("bot-writable-roots");
   const protectedPaths = document.getElementById("bot-protected-paths");
 
@@ -587,6 +590,15 @@ function renderBot(botData) {
   }
   if (autoPush) {
     autoPush.checked = Boolean(botData.config.autoPush);
+  }
+  if (allowCommands) {
+    allowCommands.checked = Boolean(botData.config.allowCommandExecution);
+  }
+  if (allowInstall) {
+    allowInstall.checked = Boolean(botData.config.allowPackageInstall);
+  }
+  if (allowRestart) {
+    allowRestart.checked = Boolean(botData.config.allowProcessRestart);
   }
   if (writableRoots) {
     writableRoots.value = joinPolicyLines(botData.config.writableRoots);
@@ -796,6 +808,9 @@ async function saveBotConfig() {
     autoCallLlm: document.getElementById("bot-auto-call")?.checked,
     autoCommit: document.getElementById("bot-auto-commit")?.checked,
     autoPush: document.getElementById("bot-auto-push")?.checked,
+    allowCommandExecution: document.getElementById("bot-allow-commands")?.checked,
+    allowPackageInstall: document.getElementById("bot-allow-install")?.checked,
+    allowProcessRestart: document.getElementById("bot-allow-restart")?.checked,
     idleDelaySeconds: Number(document.getElementById("bot-idle-delay")?.value || 45),
     postTaskDelaySeconds: Number(document.getElementById("bot-post-task-delay")?.value || 15),
     retryDelaySeconds: Number(document.getElementById("bot-retry-delay")?.value || 90),
@@ -834,6 +849,15 @@ async function runBotNow() {
   setText("ai-output", "Running bot cycle...");
   const result = await fetchJson("/api/admin/bot/run", { method: "POST" });
   setText("ai-output", result.state?.lastResult || result.state?.lastError || "Bot cycle finished.");
+  await refreshOwnerData();
+}
+
+async function runBotCommand(commandName, message) {
+  setText("ai-output", message);
+  const result = await fetchJson(`/api/admin/bot/commands/${commandName}`, {
+    method: "POST"
+  });
+  setText("ai-output", result.result?.stdout || result.result?.stderr || `${commandName} completed.`);
   await refreshOwnerData();
 }
 
@@ -1152,6 +1176,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const botStartButton = document.getElementById("bot-start-button");
   const botStopButton = document.getElementById("bot-stop-button");
   const botRunNowButton = document.getElementById("bot-run-now");
+  const botInstallDepsButton = document.getElementById("bot-install-deps");
+  const botRestartAppButton = document.getElementById("bot-restart-app");
   const taskAddButton = document.getElementById("task-add-button");
   const goalAddButton = document.getElementById("goal-add-button");
   const noteAddButton = document.getElementById("note-add-button");
@@ -1202,6 +1228,16 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   if (botRunNowButton) {
     botRunNowButton.addEventListener("click", runBotNow);
+  }
+  if (botInstallDepsButton) {
+    botInstallDepsButton.addEventListener("click", async () => {
+      await runBotCommand("install_dependencies", "Installing dependencies...");
+    });
+  }
+  if (botRestartAppButton) {
+    botRestartAppButton.addEventListener("click", async () => {
+      await runBotCommand("restart_app", "Restarting app process...");
+    });
   }
   if (taskAddButton) {
     taskAddButton.addEventListener("click", addTask);

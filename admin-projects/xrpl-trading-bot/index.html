@@ -1,19 +1,38 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>XRPL Trading Bot (Owner Only)</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>XRPL Trading Bot — Owner Dashboard</h1>
-      <p class="note">Owner-only dashboard. Authenticate requests using the x-owner-wallet header (must be listed in OWNER_WALLETS on the server).</p>
-      <div id="status">
-        <button id="refresh">Refresh Status</button>
-        <pre id="output">Loading...</pre>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <title>XRPL Trading Bot — Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/admin-projects/xrpl-trading-bot/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>XRPL Trading Bot — Owner Dashboard</h1>
+    <div id="owner-setup" class="panel">
+      <label>Owner Wallet (used for authenticated requests):</label>
+      <input id="owner-wallet-input" placeholder="Enter your owner wallet address" />
+      <button id="save-owner">Save</button>
+      <small class="hint">This sets the x-owner-wallet header for API requests only; it is not stored in the server repository.</small>
     </div>
-    <script src="client.js"></script>
-  </body>
+
+    <div id="status" class="panel">
+      <h2>Connection</h2>
+      <div id="conn-output">Not connected</div>
+    </div>
+
+    <div id="balance" class="panel">
+      <h2>Balance</h2>
+      <div id="balance-output">—</div>
+    </div>
+
+    <div id="txs" class="panel">
+      <h2>Recent Transactions</h2>
+      <button id="refresh-txs">Refresh</button>
+      <ul id="tx-list"></ul>
+    </div>
+  </div>
+
+  <script src="/admin-projects/xrpl-trading-bot/client.js"></script>
+</body>
 </html>

@@ -1,6 +1,11 @@
 {
   "watch": [
     "server.js",
+    "routes",
+    "lib",
+    "admin-projects",
+    "ai-runtime.js",
+    "ai-service.js",
     "index.html",
     "script.js",
     "style.css",

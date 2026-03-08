@@ -133,6 +133,55 @@ function getAbsoluteRepoPath(relativePath) {
   return path.join(__dirname, normalizeRepoPath(relativePath));
 }
 
+function assertCriticalFileIntegrity(relativePath, content) {
+  const normalizedPath = normalizeRepoPath(relativePath);
+
+  if (normalizedPath === "server.js") {
+    const requiredMarkers = [
+      "/api/status",
+      "/api/app",
+      "/api/auth/session",
+      "/api/admin/bot",
+      "/api/toml/xahau"
+    ];
+
+    for (const marker of requiredMarkers) {
+      if (!String(content || "").includes(marker)) {
+        throw new Error(`Rejected server.js write missing required app route marker: ${marker}`);
+      }
+    }
+  }
+
+  if (normalizedPath === "package.json") {
+    let parsed;
+    try {
+      parsed = JSON.parse(String(content || ""));
+    } catch (_error) {
+      throw new Error("Rejected package.json write because it is not valid JSON");
+    }
+
+    const startScript = parsed?.scripts?.start;
+    const devScript = parsed?.scripts?.dev;
+    if (!startScript || !devScript) {
+      throw new Error("Rejected package.json write missing required start/dev scripts");
+    }
+
+    const dependencies = parsed?.dependencies || {};
+    const devDependencies = parsed?.devDependencies || {};
+    const requiredDependencies = ["express", "dotenv", "xumm"];
+
+    for (const dependencyName of requiredDependencies) {
+      if (!dependencies[dependencyName]) {
+        throw new Error(`Rejected package.json write missing required dependency: ${dependencyName}`);
+      }
+    }
+
+    if (!devDependencies.nodemon) {
+      throw new Error("Rejected package.json write missing required devDependency: nodemon");
+    }
+  }
+}
+
 function extractOutputText(response) {
   if (typeof response.output_text === "string" && response.output_text.trim()) {
     return response.output_text.trim();
@@ -289,12 +338,13 @@ function buildAutonomousTaskInstructions(mode) {
   if (mode === "workspace-update") {
     base.push(
       "Your job is to make durable repo changes, not just describe them.",
-      "Return an object with keys: action, summary, fileWrites, libraryEntries, notes.",
+      "Return an object with keys: action, summary, fileWrites, libraryEntries, notes, commands.",
       "Set action to workspace_update.",
       "fileWrites must be an array of objects with: path, content.",
       "Each path must be repo-relative and only target intended implementation files.",
       "Create new files when needed.",
       "Do not replace the whole existing server bootstrap or public app; prefer adding focused modules and small integrations.",
+      "commands may only contain guarded values from this set: install_dependencies, restart_app.",
       "Use libraryEntries only if the task should also update ai/library.json.",
       "Do not include markdown fences or commentary outside the JSON object."
     );
@@ -443,6 +493,9 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
   }
 
   const fileWrites = Array.isArray(parsed.fileWrites) ? parsed.fileWrites : [];
+  const commands = Array.isArray(parsed.commands)
+    ? parsed.commands.map((value) => String(value || "").trim()).filter(Boolean)
+    : [];
   let nonLibraryFileWriteCount = 0;
   if (action === "workspace_update") {
     for (const fileWrite of fileWrites) {
@@ -453,6 +506,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
       }
 
       assertRepoWriteAllowed(relativePath, policy);
+      assertCriticalFileIntegrity(relativePath, content);
 
       const absolutePath = getAbsoluteRepoPath(relativePath);
       const beforeText = fs.existsSync(absolutePath) ? readText(absolutePath) : null;
@@ -510,6 +564,7 @@ function applyAutonomousTaskResult(task, aiResult, policy = {}) {
     changedFiles,
     libraryEntryCount: libraryEntries.length,
     entryTitles,
+    commands,
     output: [
       ...outputLines,
       `Changed files: ${changedFiles.join(", ")}`,

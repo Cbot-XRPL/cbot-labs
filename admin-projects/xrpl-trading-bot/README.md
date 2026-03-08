@@ -1,17 +1,17 @@
-# XRPL Trading Bot — Owner Dashboard
+XRPL Trading Bot — Strategies Watch UI
 
-This mini-project provides an owner-only dashboard to show the configured XRPL wallet connection and balance. Per workspace guardrails, no secrets (wallet seeds) are stored in the repository.
+This subproject provides an owner-only, read-only observability UI for XRPL trading strategies.
 
-Runtime requirements (set these in your secrets manager or environment variables):
+What is included:
+- strategies.html — web UI that lists strategies and runs a local simulation to produce demo signals.
+- strategies-client.js — client side code (simulation / rendering).
+- strategies.json — canonical list of strategies with triggers, sizing, and prerequisites.
 
-- XRPL_WALLET_SEED - the wallet seed for the XRPL account (KEEP THIS SECRET; do NOT store in repo)
-- RIPPLED_URL - optional WebSocket URL for rippled (defaults to wss://s1.ripple.com)
-- OWNER_WALLETS - comma-separated list of owner wallet addresses allowed to access the admin endpoints (server auth middleware uses this)
+Important guardrails:
+- This UI is read-only and performs no signing or on-ledger transactions.
+- Do not store seeds in the repo. To run strategies in automation, wire a server-side adapter in lib/xrpl/ and provide seeds via secret manager (XRPL_WALLET_SEED) only.
+- Add OWNER_WALLETS and mount routes under owner-only APIs before enabling any automated execution.
 
-How it works:
+Server integration hints:
+- A small helper module is provided at lib/xrpl/strategies.js to read the strategies catalog from the repo. Use that module to expose endpoints such as /api/admin/trading/strategies and /api/admin/trading/sim.
 
-- lib/xrpl/client.js reads XRPL_WALLET_SEED and RIPPLED_URL at runtime and exposes getStatus() and getBalance().
-- The dashboard (index.html + client.js) calls an owner-only endpoint at GET /api/admin/trading/status to fetch online/balance info.
-- The server must expose the endpoints under /api/admin/trading/* behind owner authentication. A sample server.js is included in the repo to bootstrap this.
-
-IMPORTANT: Do not put seeds or other secrets into the repo. Manage them via environment variables or your secret manager when running the server.

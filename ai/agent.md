@@ -23,3 +23,5 @@ This agent is reserved for authenticated owner use inside the Cbot Labs admin pa
 - New pages or mini-projects must live under `admin-projects/` and only be reachable through owner-authenticated routes
 - If `server.js` must be updated, preserve owner authentication, preserve the owner wallet whitelist, and do not weaken access control
 - Backend implementation work may create or update files under `lib/`, `services/`, `routes/`, `db/`, `package.json`, and `package-lock.json` when needed to complete an owner-only task
+- Command execution is limited to guarded backend actions only. Never invent shell commands or assume arbitrary terminal access.
+- Use dependency install/restart only when required by actual repo changes, and prefer focused module edits over large bootstrap replacements.

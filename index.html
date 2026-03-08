@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260307-task-editor-recurring">
+    <link rel="stylesheet" href="style.css?v=20260308-bot-commands">
 </head>
 
 <body>
@@ -196,6 +196,9 @@
                     <label class="toggle-chip"><input id="bot-auto-call" type="checkbox"> Auto call LLM</label>
                     <label class="toggle-chip"><input id="bot-auto-commit" type="checkbox"> Auto commit</label>
                     <label class="toggle-chip"><input id="bot-auto-push" type="checkbox"> Auto push</label>
+                    <label class="toggle-chip"><input id="bot-allow-commands" type="checkbox"> Allow commands</label>
+                    <label class="toggle-chip"><input id="bot-allow-install" type="checkbox"> Allow package install</label>
+                    <label class="toggle-chip"><input id="bot-allow-restart" type="checkbox"> Allow app restart</label>
                 </div>
                 <label class="admin-ai-form" for="ai-prompt">
                     <span class="key-label">Manual AI prompt</span>
@@ -207,6 +210,8 @@
                     <button id="bot-stop-button" class="secondary-button" type="button">Stop Loop</button>
                     <button id="bot-run-now" class="primary-button" type="button">Run Now</button>
                     <button id="ai-run-button" class="secondary-button" type="button">Manual AI Call</button>
+                    <button id="bot-install-deps" class="secondary-button" type="button">Install Deps</button>
+                    <button id="bot-restart-app" class="secondary-button" type="button">Restart App</button>
                     <a class="secondary-button" href="/admin/projects/" target="_blank" rel="noreferrer">Open Project Hub</a>
                 </div>
                 <div class="admin-bot-columns admin-bot-primary-row">
@@ -370,7 +375,7 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260307-task-editor-recurring"></script>
+    <script src="script.js?v=20260308-bot-commands"></script>
 </body>
 
 </html>
