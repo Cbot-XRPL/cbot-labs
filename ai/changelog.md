@@ -72,6 +72,11 @@
 - Added install-time recovery for workspace dependency installs: if `npm install` fails with `ETARGET` for a known package such as `xrpl`, the bot repairs the workspace `package.json` to the approved version and retries once automatically.
 - Added `xrpl` to the root app dependencies because the mounted owner-only personal bot route uses the shared root XRPL client, not the workspace-local package tree.
 
+### Git follow-up guardrails added
+
+- Bot auto-commit now excludes runtime-only state like `ai/exec.json` by default so routine loop metadata does not silently pollute repo commits.
+- Bot git follow-up now classifies common failures such as missing git identity, auth errors, push rejection, and lock files, and records bounded recovery notes instead of blindly retrying.
+
 ### Current workspace checkpoint
 
 - `XRPL Trading Interface` is now building into `admin-projects/workspaces/personal-xrpl-bot`.

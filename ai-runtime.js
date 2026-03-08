@@ -15,6 +15,9 @@ const activityLimit = 250;
 const botOutputLimit = 120;
 const consoleLimit = 400;
 const taskHeartbeatMs = 15000;
+const runtimeGitExcludedPaths = [
+  "ai/exec.json"
+];
 const defaultWritableRoots = [
   "ai/",
   "admin-projects/",
@@ -1210,6 +1213,59 @@ async function git(args) {
   });
 }
 
+function classifyGitError(error) {
+  const message = String(error?.stderr || error?.stdout || error?.message || "");
+  const lowered = message.toLowerCase();
+
+  if (lowered.includes("nothing to commit") || lowered.includes("no changes added to commit")) {
+    return { code: "nothing_to_commit", message };
+  }
+  if (lowered.includes("please tell me who you are") || lowered.includes("unable to auto-detect email address")) {
+    return { code: "identity_missing", message };
+  }
+  if (
+    lowered.includes("permission denied (publickey)")
+    || lowered.includes("could not read from remote repository")
+    || lowered.includes("authentication failed")
+  ) {
+    return { code: "auth_failed", message };
+  }
+  if (
+    lowered.includes("non-fast-forward")
+    || lowered.includes("fetch first")
+    || lowered.includes("[rejected]")
+    || lowered.includes("failed to push some refs")
+  ) {
+    return { code: "push_rejected", message };
+  }
+  if (lowered.includes("index.lock") || lowered.includes("another git process seems to be running")) {
+    return { code: "lock_file", message };
+  }
+
+  return { code: "unknown", message };
+}
+
+async function stageBotChangesForCommit() {
+  await git(["add", "-A"]);
+  for (const relativePath of runtimeGitExcludedPaths) {
+    try {
+      await git(["restore", "--staged", "--", relativePath]);
+    } catch (_error) {
+      // Ignore when file is not staged or absent.
+    }
+  }
+}
+
+async function getGitDivergence() {
+  try {
+    const { stdout } = await git(["rev-list", "--left-right", "--count", "HEAD...@{upstream}"]);
+    const [ahead, behind] = stdout.trim().split(/\s+/).map((item) => Number(item) || 0);
+    return { ahead, behind };
+  } catch (_error) {
+    return null;
+  }
+}
+
 async function getGitSnapshot() {
   try {
     const [{ stdout: branchRaw }, { stdout: statusRaw }] = await Promise.all([
@@ -1259,7 +1315,7 @@ async function maybeRunGitActions(task, config) {
     const commitMessage = `bot: ${task.title}`;
 
     try {
-      await git(["add", "-A"]);
+      await stageBotChangesForCommit();
       await git(["commit", "-m", commitMessage]);
       actions.push(`committed: ${commitMessage}`);
       addActivity("git", "Created bot commit", {
@@ -1267,11 +1323,28 @@ async function maybeRunGitActions(task, config) {
         commitMessage
       });
     } catch (error) {
-      actions.push(`commit failed: ${error.message}`);
-      addActivity("error", "Bot git commit failed", {
-        taskId: task.id,
-        error: error.message
-      });
+      const classified = classifyGitError(error);
+      if (classified.code === "nothing_to_commit") {
+        actions.push("commit skipped: no non-runtime changes to commit");
+      } else if (classified.code === "identity_missing") {
+        actions.push("commit blocked: git user.name/user.email not configured");
+        addActivity("error", "Bot git commit blocked by missing git identity", {
+          taskId: task.id,
+          error: classified.message
+        });
+      } else if (classified.code === "lock_file") {
+        actions.push("commit blocked: git lock file or another git process is active");
+        addActivity("error", "Bot git commit blocked by git lock", {
+          taskId: task.id,
+          error: classified.message
+        });
+      } else {
+        actions.push(`commit failed: ${error.message}`);
+        addActivity("error", "Bot git commit failed", {
+          taskId: task.id,
+          error: error.message
+        });
+      }
     }
   }
 
@@ -1283,10 +1356,25 @@ async function maybeRunGitActions(task, config) {
         taskId: task.id
       });
     } catch (error) {
-      actions.push(`push failed: ${error.message}`);
+      const classified = classifyGitError(error);
+      if (classified.code === "auth_failed") {
+        actions.push("push blocked: git remote authentication failed");
+      } else if (classified.code === "push_rejected") {
+        await git(["fetch"]).catch(() => null);
+        const divergence = await getGitDivergence();
+        if (divergence) {
+          actions.push(`push rejected: remote divergence detected (ahead ${divergence.ahead}, behind ${divergence.behind})`);
+        } else {
+          actions.push("push rejected: remote divergence detected");
+        }
+      } else if (classified.code === "lock_file") {
+        actions.push("push blocked: git lock file or another git process is active");
+      } else {
+        actions.push(`push failed: ${error.message}`);
+      }
       addActivity("error", "Bot git push failed", {
         taskId: task.id,
-        error: error.message
+        error: classified.message || error.message
       });
     }
   }
