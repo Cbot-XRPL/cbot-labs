@@ -509,6 +509,28 @@ function assertCriticalFileIntegrity(relativePath, content) {
       throw new Error("Rejected package.json write missing required devDependency: nodemon");
     }
   }
+
+  const personalBotClientPaths = [
+    "admin-projects/workspaces/personal-xrpl-bot/client.js",
+    "admin-projects/workspaces/personal-xrpl-bot/public/client.js"
+  ];
+  if (personalBotClientPaths.includes(normalizedPath)) {
+    const requiredMarkers = [
+      "/api/admin/personal-bot/status",
+      "/api/admin/personal-bot/metrics",
+      "/api/admin/personal-bot/poll"
+    ];
+
+    for (const marker of requiredMarkers) {
+      if (!String(content || "").includes(marker)) {
+        throw new Error(`Rejected personal-xrpl-bot client write missing required API contract marker: ${marker}`);
+      }
+    }
+
+    if (String(content || "").includes("/admin-projects/workspaces/personal-xrpl-bot/api/admin/personal-bot/")) {
+      throw new Error("Rejected personal-xrpl-bot client write using nested workspace API paths");
+    }
+  }
 }
 
 function extractOutputText(response) {
