@@ -93,33 +93,6 @@ function normalizeContactHref(label, value) {
   return raw;
 }
 
-function renderProjects(projects) {
-  const container = document.getElementById("projects-list");
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML = (projects || []).map((project) => {
-    const href = project.url || "#";
-    const statusClass = String(project.status || "").toLowerCase() === "live" ? "pill-live" : "pill-neutral";
-    return `
-      <article class="card card-project">
-        <div class="card-head">
-          <div>
-            <p class="card-kicker">Product</p>
-            <h3>${escapeHtml(project.name)}</h3>
-          </div>
-          <span class="pill ${statusClass}"><span class="pill-dot"></span>${escapeHtml(project.status || "")}</span>
-        </div>
-        <p class="card-copy">${escapeHtml(project.description || "")}</p>
-        <div class="card-actions">
-          <a class="btn btn-primary" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">Launch app</a>
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
 function renderLinks(links) {
   const container = document.getElementById("links-list");
   if (!container) {
@@ -161,7 +134,6 @@ function renderApp(appData, statusData) {
     navLogo.src = appData.brand.logo;
   }
 
-  renderProjects(appData.projects);
   renderLinks(appData.links);
 }
 
@@ -305,6 +277,235 @@ async function showToml() {
   }
 }
 
+/* ---------- oneXah live protocol metrics ---------- */
+
+const ONEXAH_API = "https://onexah.io/api/public/v1";
+const ONEXAH_REFRESH_MS = 45000;
+let onexahTimer = null;
+
+async function oxGet(path) {
+  const response = await fetch(`${ONEXAH_API}${path}`, {
+    headers: { Accept: "application/json" }
+  });
+  const json = await response.json().catch(() => null);
+  if (!json?.ok) {
+    throw new Error(json?.error || `oneXah ${path} returned ${response.status}`);
+  }
+  return json.data;
+}
+
+function fmtUsd(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+  if (n > 0 && n < 1) {
+    return `$${n.toPrecision(4)}`;
+  }
+  return `$${n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : 2 })}`;
+}
+
+function fmtNum(value, { compact = false, dp = 2 } = {}) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+  if (compact && Math.abs(n) >= 1000) {
+    return n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 });
+  }
+  return n.toLocaleString("en-US", { maximumFractionDigits: dp });
+}
+
+function fmtPct(fraction, dp = 2) {
+  const n = Number(fraction);
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+  return `${(n * 100).toFixed(dp)}%`;
+}
+
+function rowsHtml(rows) {
+  return rows.map(([label, value]) => `
+    <div class="proto-row">
+      <span class="k">${escapeHtml(label)}</span>
+      <span class="v">${escapeHtml(value)}</span>
+    </div>
+  `).join("");
+}
+
+function protoCardHtml(title, tag, rows) {
+  return `
+    <article class="proto-card">
+      <header class="proto-head">
+        <h3>${escapeHtml(title)}</h3>
+        <span class="proto-tag">${escapeHtml(tag)}</span>
+      </header>
+      <div class="proto-rows">${rowsHtml(rows)}</div>
+    </article>
+  `;
+}
+
+function setOnexahLive(state) {
+  const pill = document.getElementById("ox-live-pill");
+  const text = document.getElementById("ox-live-text");
+  if (!pill || !text) {
+    return;
+  }
+
+  pill.classList.remove("pill-live", "pill-warn", "pill-neutral");
+  if (state === "ok") {
+    pill.classList.add("pill-live");
+    text.textContent = `Live · ${new Date().toLocaleTimeString()}`;
+  } else if (state === "stale") {
+    pill.classList.add("pill-warn");
+    text.textContent = "Partial data · retrying";
+  } else {
+    pill.classList.add("pill-warn");
+    text.textContent = "Offline · retrying";
+  }
+}
+
+function renderOnexahSummary(summary) {
+  const tvlUsd = fmtUsd(summary?.tvl?.totalUsd);
+  const xahUsd = fmtUsd(summary?.xahUsd);
+
+  setText("ox-card-tvl", tvlUsd);
+  setText("ox-card-xahusd", xahUsd);
+  setText("ox-tvl-usd", tvlUsd);
+  setText("ox-tvl-xah", `${fmtNum(summary?.tvl?.totalXah, { compact: true })} XAH`);
+  setText("ox-xahusd", xahUsd);
+  setText("ox-xahevr", fmtNum(summary?.rates?.xahPerEvr, { dp: 3 }));
+  setText("ox-ammfee", summary?.rates?.ammFeeBps != null ? `${(summary.rates.ammFeeBps / 100).toFixed(2)}% AMM fee` : "");
+  setText("ox-dao-treasury", fmtNum(summary?.dao?.treasuryXah, { dp: 0 }));
+}
+
+function renderOnexahProtocols({ amm, lending, perps, dao, summary }) {
+  const grid = document.getElementById("ox-proto-grid");
+  if (!grid) {
+    return;
+  }
+
+  const cards = [];
+
+  if (amm) {
+    cards.push(protoCardHtml("AMM", "XAH ⇄ EVR", [
+      ["XAH reserve", `${fmtNum(amm.reserves?.xah, { compact: true })} XAH`],
+      ["EVR reserve", `${fmtNum(amm.reserves?.evr, { compact: true })} EVR`],
+      ["Mid rate", `${fmtNum(amm.reserves?.xahPerEvr, { dp: 3 })} XAH/EVR`],
+      ["Swap fee", `${(Number(amm.feeBps) / 100).toFixed(2)}%`],
+      ["TVL", fmtUsd(amm.tvl?.usd)]
+    ]));
+  }
+
+  if (lending) {
+    cards.push(protoCardHtml("Lending", "Supply & borrow", [
+      ["XAH supplied", `${fmtNum(lending.xah?.supplied, { compact: true })} XAH`],
+      ["XAH utilization", fmtPct(lending.xah?.utilization)],
+      ["EVR supplied", `${fmtNum(lending.evr?.supplied, { compact: true })} EVR`],
+      ["EVR utilization", fmtPct(lending.evr?.utilization)]
+    ]));
+  }
+
+  if (perps) {
+    cards.push(protoCardHtml("Perps", "EVR / XAH", [
+      ["Open interest", `${fmtNum(perps.openInterest?.total, { compact: true })} EVR`],
+      ["Long", `${fmtNum(perps.openInterest?.long, { compact: true })} EVR`],
+      ["Short", `${fmtNum(perps.openInterest?.short, { compact: true })} EVR`],
+      ["Long skew", fmtPct(perps.openInterest?.skew, 1)],
+      ["LP pool", `${fmtNum(perps.lpPool?.reserveXah, { compact: true })} XAH`]
+    ]));
+  }
+
+  const daoData = dao || (summary?.dao ? {
+    treasuryXah: summary.dao.treasuryXah,
+    totalStakedXxx: summary.dao.totalStakedXxx,
+    emission: { currentEpoch: summary.dao.currentEpoch, ratePerEpochXxx: summary.dao.ratePerEpochXxx }
+  } : null);
+
+  if (daoData) {
+    cards.push(protoCardHtml("DAO · Protocol X", "XXX", [
+      ["Treasury", `${fmtNum(daoData.treasuryXah, { dp: 0 })} XAH`],
+      ["Total staked", `${fmtNum(daoData.totalStakedXxx, { compact: true })} XXX`],
+      ["Current epoch", `#${fmtNum(daoData.emission?.currentEpoch, { dp: 0 })}`],
+      ["Rate / epoch", `${fmtNum(daoData.emission?.ratePerEpochXxx, { compact: true })} XXX`],
+      ["Annual emission", daoData.emission?.annualEmissionXxx != null ? `${fmtNum(daoData.emission.annualEmissionXxx, { compact: true })} XXX` : "—"]
+    ]));
+  }
+
+  grid.innerHTML = cards.join("") || `<p class="onexah-empty">Protocol data is warming up — retrying…</p>`;
+}
+
+function renderOnexahBearer(bearer) {
+  const container = document.getElementById("ox-bearer");
+  if (!container) {
+    return;
+  }
+
+  const tokens = bearer?.bearer || {};
+  const entries = Object.entries(tokens);
+  if (!entries.length) {
+    container.innerHTML = `<p class="onexah-empty">No bearer tokens reported.</p>`;
+    return;
+  }
+
+  container.innerHTML = entries.map(([symbol, token]) => {
+    const per1 = Object.values(token.redemption || {}).find((value) => value && typeof value === "object") || {};
+    const formula = Object.entries(per1)
+      .map(([asset, amount]) => `${fmtNum(amount, { dp: 4 })} ${asset.toUpperCase()}`)
+      .join(" + ") || "—";
+    const kind = String(token.kind || "").replace(/-/g, " ");
+    return `
+      <div class="bearer-item">
+        <div class="bearer-item-head">
+          <strong>${escapeHtml(symbol)}</strong>
+          <span class="bearer-kind">${escapeHtml(kind)}</span>
+        </div>
+        <span class="bearer-formula">1 ${escapeHtml(symbol)} = ${escapeHtml(formula)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+async function refreshOnexah() {
+  const results = await Promise.allSettled([
+    oxGet("/summary"),
+    oxGet("/amm"),
+    oxGet("/lending"),
+    oxGet("/perps"),
+    oxGet("/dao"),
+    oxGet("/bearer-tokens")
+  ]);
+
+  const [summary, amm, lending, perps, dao, bearer] = results.map((result) =>
+    result.status === "fulfilled" ? result.value : null
+  );
+
+  if (summary) {
+    renderOnexahSummary(summary);
+  }
+  renderOnexahProtocols({ amm, lending, perps, dao, summary });
+  if (bearer) {
+    renderOnexahBearer(bearer);
+  }
+
+  const okCount = results.filter((result) => result.status === "fulfilled").length;
+  setOnexahLive(okCount === results.length ? "ok" : okCount > 0 ? "stale" : "offline");
+}
+
+function startOnexah() {
+  refreshOnexah();
+  if (!onexahTimer) {
+    onexahTimer = window.setInterval(refreshOnexah, ONEXAH_REFRESH_MS);
+  }
+}
+
+function stopOnexah() {
+  if (onexahTimer) {
+    window.clearInterval(onexahTimer);
+    onexahTimer = null;
+  }
+}
+
 /* ---------- Bootstrap ---------- */
 
 async function bootstrapApp() {
@@ -333,5 +534,14 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("close-login-dialog")?.addEventListener("click", closeLoginDialog);
   document.getElementById("close-toml-dialog")?.addEventListener("click", closeTomlDialog);
 
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopOnexah();
+    } else {
+      startOnexah();
+    }
+  });
+
   bootstrapApp();
+  startOnexah();
 });

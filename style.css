@@ -355,6 +355,11 @@ main {
   color: var(--muted);
 }
 
+.pill-warn {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -420,6 +425,206 @@ main {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* ---------- oneXah live metrics ---------- */
+
+.onexah {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 32px;
+  margin-bottom: 56px;
+}
+
+.onexah-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.onexah-head .section-title {
+  margin: 0;
+}
+
+.onexah-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.onexah-meta .pill {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+}
+
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+}
+
+.stat-label {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.proto-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.proto-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px 22px;
+}
+
+.proto-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.proto-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.proto-tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.proto-rows {
+  display: grid;
+  gap: 0;
+}
+
+.proto-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 0.92rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.proto-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.proto-row .k {
+  color: var(--muted);
+}
+
+.proto-row .v {
+  font-weight: 600;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.86rem;
+  text-align: right;
+}
+
+.bearer-card {
+  margin-bottom: 0;
+}
+
+.bearer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.bearer-item {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+.bearer-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bearer-item-head strong {
+  font-size: 1rem;
+}
+
+.bearer-kind {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.bearer-formula {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.onexah-empty {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.onexah-foot {
+  margin: 18px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.onexah-foot a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Footer ---------- */
@@ -628,6 +833,18 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .proto-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bearer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .footer-inner {
     grid-template-columns: 1fr 1fr;
   }
@@ -651,6 +868,15 @@ main {
   }
 
   .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onexah {
+    padding: 22px;
+  }
+
+  .stat-strip,
+  .bearer-grid {
     grid-template-columns: 1fr;
   }
 
