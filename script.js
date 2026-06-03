@@ -365,7 +365,7 @@ function setOnexahLive(state) {
   }
 }
 
-function renderOnexahSummary(summary, dao) {
+function renderOnexahSummary(summary, dao, lending, perps) {
   const tvlUsd = fmtUsd(summary?.tvl?.totalUsd);
   const xahUsd = fmtUsd(summary?.xahUsd);
 
@@ -383,6 +383,8 @@ function renderOnexahSummary(summary, dao) {
   setText("ox-card-evr", evrLocked != null ? `${fmtNum(evrLocked, { compact: true })} EVR` : "—");
   setText("ox-card-dao-xah", treasuryXah != null ? `${fmtNum(treasuryXah, { dp: 0 })} XAH` : "—");
   setText("ox-card-dao-evr", treasuryEvr != null ? `${fmtNum(treasuryEvr, { dp: 0 })} EVR` : "n/a");
+  setText("ox-card-lend-util", lending?.xah?.utilization != null ? fmtPct(lending.xah.utilization) : "—");
+  setText("ox-card-oi", perps?.openInterest?.total != null ? `${fmtNum(perps.openInterest.total, { compact: true })} EVR` : "—");
 
   // Stat strip (unchanged headline numbers).
   setText("ox-tvl-usd", tvlUsd);
@@ -495,7 +497,7 @@ async function refreshOnexah() {
   );
 
   if (summary) {
-    renderOnexahSummary(summary, dao);
+    renderOnexahSummary(summary, dao, lending, perps);
   }
   renderOnexahProtocols({ amm, lending, perps, dao, summary });
   if (bearer) {
