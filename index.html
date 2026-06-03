@@ -5,387 +5,163 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cbot Labs</title>
+    <title>Cbot Labs — XRPL & Xahau builders</title>
+    <meta name="description" content="Cbot Labs builds on the XRP Ledger and Xahau — a mainnet UNL validator and oneXah, our DeFi app.">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260308-bot-commands">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260602-clean-white">
 </head>
 
 <body>
-    <div class="page-shell">
-        <div class="bg-orb bg-orb-a"></div>
-        <div class="bg-orb bg-orb-b"></div>
-
-        <nav class="topbar">
-            <div class="brand-lockup">
+    <!-- Topbar -->
+    <nav class="topbar">
+        <div class="topbar-inner">
+            <a class="brand-lockup" href="#top">
                 <img id="nav-logo" class="nav-logo" src="/ll.png" alt="Cbot Labs logo">
-                <div>
-                    <p class="eyebrow">CBOT LABS</p>
-                    <strong id="nav-brand">Local operator console</strong>
-                </div>
+                <span class="brand-word">Cbot Labs</span>
+            </a>
+            <div class="nav-links">
+                <a href="#validator">Validator</a>
+                <a href="#defi">DeFi</a>
+                <a href="#contact">Contact</a>
+                <a class="nav-cta" href="https://onexah.io/defi/" target="_blank" rel="noreferrer">Launch oneXah</a>
             </div>
+        </div>
+    </nav>
 
-            <div class="topbar-right">
-                <div class="nav-tabs">
-                    <button id="nav-home-button" class="nav-tab nav-tab-active" type="button">Home</button>
-                    <button id="nav-admin-button" class="nav-tab hidden" type="button">Admin</button>
-                </div>
-                <div class="nav-actions">
-                    <div id="auth-chip" class="auth-chip">Signed out</div>
-                    <button id="login-button" class="primary-button" type="button">Login with Xaman</button>
-                    <button id="logout-button" class="secondary-button hidden" type="button">Logout</button>
-                </div>
-            </div>
-        </nav>
-
-        <section id="home-page">
+    <main id="top">
+        <!-- Hero -->
         <header class="hero">
-            <div class="hero-copy">
-                <p class="eyebrow">CBOT LABS / LOCAL APP</p>
-                <h1 id="brand-name">Loading app...</h1>
-                <p class="hero-tagline" id="brand-tagline"></p>
-                <p class="hero-summary" id="brand-summary"></p>
-
-                <div class="hero-actions">
-                    <button class="primary-button" id="toml-link" type="button">View Xahau TOML</button>
-                    <a class="secondary-button" id="unl-link" href="#" target="_blank" rel="noreferrer">View UNL Listing</a>
-                    <div class="hero-socials-list">
-                        <a id="hero-email-link" class="hero-social-link" href="#" target="_blank" rel="noreferrer" aria-label="Email" title="Email">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 2v.5l9 6 9-6V7H3Zm18 11V9.8l-8.43 5.62a1 1 0 0 1-1.14 0L3 9.8V18h18Z" />
-                            </svg>
-                        </a>
-                        <a id="hero-twitter-link" class="hero-social-link" href="#" target="_blank" rel="noreferrer" aria-label="Twitter" title="Twitter">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M18.9 2H22l-6.77 7.74L23.2 22h-6.25l-4.9-7.43L5.55 22H2.44l7.24-8.28L2 2h6.4l4.43 6.72L18.9 2Zm-1.1 18h1.73L7.46 3.9H5.6L17.8 20Z" />
-                            </svg>
-                        </a>
-                        <a id="hero-github-link" class="hero-social-link" href="#" target="_blank" rel="noreferrer" aria-label="GitHub" title="GitHub">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.42-4.04-1.42-.55-1.37-1.33-1.73-1.33-1.73-1.09-.73.08-.72.08-.72 1.2.09 1.84 1.22 1.84 1.22 1.08 1.82 2.82 1.3 3.5 1 .11-.77.42-1.29.76-1.58-2.66-.3-5.47-1.31-5.47-5.86 0-1.3.47-2.36 1.24-3.19-.13-.3-.54-1.5.12-3.13 0 0 1.01-.32 3.3 1.22a11.57 11.57 0 0 1 6 0c2.28-1.54 3.29-1.22 3.29-1.22.66 1.63.25 2.83.12 3.13.77.83 1.24 1.89 1.24 3.19 0 4.56-2.82 5.55-5.5 5.84.43.37.82 1.08.82 2.19v3.24c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
+            <div class="status-chip">
+                <span class="status-dot"></span>
+                <span id="status-pill">Xahau Mainnet · checking…</span>
             </div>
+            <h1 id="brand-name">Loading…</h1>
+            <p class="hero-tagline" id="brand-tagline"></p>
+            <p class="hero-summary" id="brand-summary"></p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="https://onexah.io/defi/" target="_blank" rel="noreferrer">Launch oneXah DeFi</a>
+                <a class="btn btn-ghost" href="#validator">View validator</a>
+            </div>
+        </header>
 
-            <div class="hero-side">
-                <div class="hero-card">
-                    <img id="brand-logo" class="hero-logo" src="/ll.png" alt="Cbot Labs logo">
-                    <div class="hero-status-row">
-                        <span class="status-dot"></span>
-                        <span id="status-pill">Waiting for API</span>
+        <!-- Showcase -->
+        <section class="showcase">
+            <p class="section-kicker">What we run</p>
+            <h2 class="section-title">Things we're proud of</h2>
+
+            <div class="showcase-grid">
+                <!-- Validator card (prominent) -->
+                <article id="validator" class="card card-feature">
+                    <div class="card-head">
+                        <div>
+                            <p class="card-kicker">Infrastructure</p>
+                            <h3>Xahau UNL Validator</h3>
+                        </div>
+                        <span class="pill pill-live"><span class="pill-dot"></span><span id="validator-status">Online</span></span>
                     </div>
-                    <dl class="hero-metrics">
+                    <p class="card-copy">A mainnet validator on the Xahau network, published to the UNL and verifiable on-chain via our domain TOML.</p>
+
+                    <dl class="metric-grid">
                         <div>
                             <dt>Network</dt>
-                            <dd id="validator-network"></dd>
+                            <dd id="validator-network">—</dd>
                         </div>
                         <div>
                             <dt>Account</dt>
-                            <dd id="validator-account"></dd>
+                            <dd id="validator-account" class="mono">—</dd>
                         </div>
                         <div>
                             <dt>Location</dt>
-                            <dd id="validator-location"></dd>
+                            <dd id="validator-location">—</dd>
+                        </div>
+                        <div>
+                            <dt>API status</dt>
+                            <dd id="api-status">—</dd>
                         </div>
                     </dl>
-                </div>
-            </div>
-        </header>
-        </section>
 
-        <section id="admin-panel" class="panel panel-wide hidden">
-            <div class="panel-header">
-                <p class="panel-kicker">Admin</p>
-                <h2>Owner-only panel</h2>
-            </div>
-            <div class="admin-grid">
-                <article class="admin-card">
-                    <span class="api-label">Authenticated wallet</span>
-                    <strong id="admin-account">-</strong>
+                    <div class="key-box">
+                        <span class="key-label">Validator public key</span>
+                        <code id="validator-key">Loading…</code>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="toml-link" type="button">View Xahau TOML</button>
+                        <a class="btn btn-ghost" id="unl-link" href="#" target="_blank" rel="noreferrer">UNL listing</a>
+                    </div>
                 </article>
-                <article class="admin-card">
-                    <span class="api-label">Access</span>
-                    <strong>Private operator view</strong>
-                </article>
-            </div>
-            <div class="admin-box">
-                <div class="panel-header admin-ai-header">
-                    <div>
-                        <span class="key-label">Admin Bot</span>
-                        <h3>Loop controller</h3>
-                    </div>
-                    <strong id="bot-runtime-status" class="admin-ai-status">Checking...</strong>
-                </div>
-                <div class="admin-ai-grid admin-bot-grid">
-                    <article class="admin-card">
-                        <span class="api-label">Provider</span>
-                        <strong id="ai-config-status">Checking...</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Manifest</span>
-                        <strong id="ai-manifest-name">-</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Exec mode</span>
-                        <strong id="ai-exec-mode">-</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Git branch</span>
-                        <strong id="bot-git-branch">-</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Next run</span>
-                        <strong id="bot-next-run">-</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Last result</span>
-                        <strong id="bot-last-result">-</strong>
-                    </article>
-                    <article class="admin-card">
-                        <span class="api-label">Last error</span>
-                        <strong id="bot-last-error">-</strong>
-                    </article>
-                </div>
-                <div class="admin-bot-config-grid">
-                    <label class="admin-ai-form" for="bot-idle-delay">
-                        <span class="key-label">Idle delay seconds</span>
-                        <input id="bot-idle-delay" class="admin-ai-input admin-short-input" type="number" min="10" step="5">
-                    </label>
-                    <label class="admin-ai-form" for="bot-post-task-delay">
-                        <span class="key-label">Post-task delay seconds</span>
-                        <input id="bot-post-task-delay" class="admin-ai-input admin-short-input" type="number" min="5" step="5">
-                    </label>
-                    <label class="admin-ai-form" for="bot-retry-delay">
-                        <span class="key-label">Retry delay seconds</span>
-                        <input id="bot-retry-delay" class="admin-ai-input admin-short-input" type="number" min="15" step="5">
-                    </label>
-                    <label class="admin-ai-form" for="bot-max-runtime">
-                        <span class="key-label">Max task minutes</span>
-                        <input id="bot-max-runtime" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
-                    </label>
-                    <label class="admin-ai-form" for="bot-max-retries">
-                        <span class="key-label">Max retries</span>
-                        <input id="bot-max-retries" class="admin-ai-input admin-short-input" type="number" min="1" step="1">
-                    </label>
-                    <label class="admin-ai-form" for="bot-recurring-interval">
-                        <span class="key-label">Recurring task minutes</span>
-                        <input id="bot-recurring-interval" class="admin-ai-input admin-short-input" type="number" min="5" step="5">
-                    </label>
-                    <label class="admin-ai-form" for="bot-project-workspace-base">
-                        <span class="key-label">Project workspace base</span>
-                        <input id="bot-project-workspace-base" class="admin-ai-input admin-short-input" type="text" placeholder="admin-projects/workspaces">
-                    </label>
-                    <label class="admin-ai-form" for="bot-project-git-remote-base">
-                        <span class="key-label">Project git remote base</span>
-                        <input id="bot-project-git-remote-base" class="admin-ai-input admin-short-input" type="text" placeholder="Optional Git remote base">
-                    </label>
-                </div>
-                <div class="admin-bot-columns">
-                    <div class="key-box admin-ai-box">
-                        <span class="key-label">Writable roots</span>
-                        <label class="admin-ai-form" for="bot-writable-roots">
-                            <textarea id="bot-writable-roots" class="admin-ai-input" rows="4" placeholder="One repo-relative path per line, example: ai/"></textarea>
-                        </label>
-                    </div>
-                    <div class="key-box admin-ai-box">
-                        <span class="key-label">Protected paths</span>
-                        <label class="admin-ai-form" for="bot-protected-paths">
-                            <textarea id="bot-protected-paths" class="admin-ai-input" rows="4" placeholder="One repo-relative file or folder per line, example: .env"></textarea>
-                        </label>
-                    </div>
-                </div>
-                <div class="admin-toggle-row">
-                    <label class="toggle-chip"><input id="bot-enabled" type="checkbox"> Loop enabled</label>
-                    <label class="toggle-chip"><input id="bot-pause-empty" type="checkbox"> Pause when queue empty</label>
-                    <label class="toggle-chip"><input id="bot-auto-call" type="checkbox"> Auto call LLM</label>
-                    <label class="toggle-chip"><input id="bot-auto-commit" type="checkbox"> Auto commit</label>
-                    <label class="toggle-chip"><input id="bot-auto-push" type="checkbox"> Auto push</label>
-                    <label class="toggle-chip"><input id="bot-allow-commands" type="checkbox"> Allow commands</label>
-                    <label class="toggle-chip"><input id="bot-allow-install" type="checkbox"> Allow package install</label>
-                    <label class="toggle-chip"><input id="bot-allow-restart" type="checkbox"> Allow app restart</label>
-                    <label class="toggle-chip"><input id="bot-allow-project-commands" type="checkbox"> Allow project commands</label>
-                    <label class="toggle-chip"><input id="bot-allow-project-git" type="checkbox"> Allow project git</label>
-                </div>
-                <label class="admin-ai-form" for="ai-prompt">
-                    <span class="key-label">Manual AI prompt</span>
-                    <textarea id="ai-prompt" class="admin-ai-input" rows="4" placeholder="Direct admin-only AI prompt"></textarea>
-                </label>
-                <div class="dialog-actions admin-ai-actions">
-                    <button id="bot-save-config" class="secondary-button" type="button">Save Config</button>
-                    <button id="bot-start-button" class="primary-button" type="button">Start Loop</button>
-                    <button id="bot-stop-button" class="secondary-button" type="button">Stop Loop</button>
-                    <button id="bot-run-now" class="primary-button" type="button">Run Now</button>
-                    <button id="ai-run-button" class="secondary-button" type="button">Manual AI Call</button>
-                    <button id="bot-install-deps" class="secondary-button" type="button">Install Deps</button>
-                    <button id="bot-restart-app" class="secondary-button" type="button">Restart App</button>
-                    <a class="secondary-button" href="/admin/projects/" target="_blank" rel="noreferrer">Open Project Hub</a>
-                </div>
-                <div class="admin-bot-columns admin-bot-primary-row">
-                    <div class="key-box admin-ai-box task-queue-pane">
-                        <span class="key-label">Assigned task queue</span>
-                        <div class="admin-ai-form">
-                            <input id="task-title" class="admin-ai-input admin-short-input" type="text" placeholder="Task title">
-                            <input id="task-goal" class="admin-ai-input admin-short-input" type="text" placeholder="Goal">
-                            <textarea id="task-block" class="admin-ai-input" rows="5" placeholder="Assigned task block"></textarea>
-                            <button id="task-add-button" class="primary-button" type="button">Add Task</button>
-                        </div>
-                        <div id="bot-task-list" class="bot-list"></div>
-                    </div>
-                    <div class="key-box admin-ai-box bot-output-pane">
-                        <span class="key-label">Bot output</span>
-                        <div id="ai-output" class="toml-content admin-ai-output">Bot output will appear here.</div>
-                    </div>
-                </div>
-                <div class="admin-bot-columns console-row">
-                    <div class="key-box admin-ai-box goals-pane">
-                        <span class="key-label">Goals</span>
-                        <div class="admin-ai-form">
-                            <input id="goal-text" class="admin-ai-input admin-short-input" type="text" placeholder="Add persistent goal">
-                            <button id="goal-add-button" class="primary-button" type="button">Add Goal</button>
-                        </div>
-                        <div id="bot-goal-list" class="bot-list"></div>
-                    </div>
-                    <div class="key-box admin-ai-box console-pane">
-                        <span class="key-label">Bot console</span>
-                        <div id="bot-console-list" class="bot-console">Console output will appear here.</div>
-                    </div>
-                </div>
-                <div class="admin-bot-columns notes-row">
-                    <div class="key-box admin-ai-box notes-pane">
-                        <span class="key-label">Notes for me</span>
-                        <div class="admin-ai-form">
-                            <input id="note-title" class="admin-ai-input admin-short-input" type="text" placeholder="Note title">
-                            <textarea id="note-body" class="admin-ai-input" rows="4" placeholder="Leave yourself a note or operator comment"></textarea>
-                            <button id="note-add-button" class="primary-button" type="button">Save Note</button>
-                        </div>
-                        <div id="bot-note-list" class="bot-list"></div>
-                    </div>
-                </div>
+
+                <!-- Projects (oneXah DeFi etc.) rendered here -->
+                <div id="projects-list" class="projects-list"></div>
             </div>
         </section>
+    </main>
 
-        <main id="home-content" class="content-grid">
-            <section class="panel panel-wide">
-                <div class="panel-header">
-                    <p class="panel-kicker">Validator</p>
-                    <h2>Backend-fed identity</h2>
+    <!-- Footer -->
+    <footer id="contact" class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img class="footer-logo" src="/ll.png" alt="Cbot Labs logo">
+                <div>
+                    <strong>Cbot Labs</strong>
+                    <span class="footer-tag">Builders on the XRP Ledger &amp; Xahau</span>
                 </div>
-                <div class="key-box">
-                    <span class="key-label">Public Key</span>
-                    <code id="validator-key">Loading...</code>
-                </div>
-                <div class="api-strip">
-                    <div>
-                        <span class="api-label">API status</span>
-                        <strong id="api-status">Checking...</strong>
-                    </div>
-                    <div>
-                        <span class="api-label">Updated</span>
-                        <strong id="api-updated">-</strong>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-header">
-                    <p class="panel-kicker">Modules</p>
-                    <h2>Project Hub</h2>
-                </div>
-                <div id="modules-list" class="module-list"></div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-header">
-                    <p class="panel-kicker">Links</p>
-                    <h2>Contact</h2>
-                </div>
-                <div id="links-list" class="link-list"></div>
-            </section>
-        </main>
-    </div>
-
-    <dialog id="login-dialog" class="login-dialog">
-        <div class="login-dialog-inner">
-            <div class="panel-header">
-                <p class="panel-kicker">Xaman</p>
-                <h2>Sign in</h2>
             </div>
-            <p id="login-message" class="dialog-copy">Starting login...</p>
+
+            <div class="footer-col">
+                <span class="footer-col-title">Contact</span>
+                <div id="links-list" class="footer-links"></div>
+            </div>
+
+            <div class="footer-col">
+                <span class="footer-col-title">Owner</span>
+                <div class="footer-auth">
+                    <span id="auth-chip" class="auth-chip">Signed out</span>
+                    <div class="footer-auth-buttons">
+                        <button id="login-button" class="btn btn-small" type="button">Owner sign-in</button>
+                        <button id="logout-button" class="btn btn-small btn-ghost hidden" type="button">Logout</button>
+                    </div>
+                    <a id="toml-source-link" class="footer-mini-link" href="#" target="_blank" rel="noreferrer">Validator TOML source</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© <span id="footer-year"></span> Cbot Labs</span>
+            <span id="api-updated" class="footer-updated">—</span>
+        </div>
+    </footer>
+
+    <!-- Xaman login dialog -->
+    <dialog id="login-dialog" class="modal">
+        <div class="modal-inner">
+            <p class="card-kicker">Xaman</p>
+            <h2>Sign in</h2>
+            <p id="login-message" class="modal-copy">Starting login…</p>
             <img id="login-qr" class="login-qr hidden" alt="Xaman login QR code">
-            <div class="dialog-actions">
-                <a id="login-open-link" class="primary-button hidden" href="#" target="_blank" rel="noreferrer">Open in Xaman</a>
-                <button id="close-login-dialog" class="secondary-button" type="button">Close</button>
+            <div class="modal-actions">
+                <a id="login-open-link" class="btn btn-primary hidden" href="#" target="_blank" rel="noreferrer">Open in Xaman</a>
+                <button id="close-login-dialog" class="btn btn-ghost" type="button">Close</button>
             </div>
         </div>
     </dialog>
 
-    <dialog id="toml-dialog" class="login-dialog">
-        <div class="login-dialog-inner toml-dialog-inner">
-            <div class="panel-header">
-                <p class="panel-kicker">Validator</p>
-                <h2>Xahau TOML</h2>
-            </div>
-            <p id="toml-message" class="dialog-copy">Loading TOML...</p>
+    <!-- Validator TOML dialog -->
+    <dialog id="toml-dialog" class="modal">
+        <div class="modal-inner modal-wide">
+            <p class="card-kicker">Validator</p>
+            <h2>Xahau TOML</h2>
+            <p id="toml-message" class="modal-copy">Loading TOML…</p>
             <pre id="toml-content" class="toml-content hidden"></pre>
-            <div class="dialog-actions">
-                <a id="toml-source-link" class="secondary-button" href="#" target="_blank" rel="noreferrer">Open Source File</a>
-                <button id="close-toml-dialog" class="primary-button" type="button">Close</button>
+            <div class="modal-actions">
+                <button id="close-toml-dialog" class="btn btn-primary" type="button">Close</button>
             </div>
         </div>
     </dialog>
 
-    <dialog id="bot-output-dialog" class="login-dialog bot-output-dialog">
-        <div class="login-dialog-inner bot-output-dialog-inner">
-            <div class="panel-header">
-                <p class="panel-kicker">Bot Output</p>
-                <h2 id="bot-output-dialog-title">Output entry</h2>
-            </div>
-            <p id="bot-output-dialog-time" class="dialog-copy">-</p>
-            <pre id="bot-output-dialog-body" class="toml-content bot-output-dialog-body"></pre>
-            <div class="dialog-actions">
-                <button id="toggle-bot-output-dialog-size" class="secondary-button" type="button">Maximize</button>
-                <button id="close-bot-output-dialog" class="primary-button" type="button">Close</button>
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="admin-editor-dialog" class="login-dialog admin-editor-dialog">
-        <div class="login-dialog-inner admin-editor-dialog-inner">
-            <div class="panel-header">
-                <p id="admin-editor-kicker" class="panel-kicker">Admin Edit</p>
-                <h2 id="admin-editor-title">Edit item</h2>
-            </div>
-            <label id="admin-editor-name-wrap" class="admin-ai-form" for="admin-editor-name">
-                <span id="admin-editor-name-label" class="key-label">Title</span>
-                <input id="admin-editor-name" class="admin-ai-input admin-short-input" type="text" placeholder="Enter title">
-            </label>
-            <label id="admin-editor-goal-wrap" class="admin-ai-form" for="admin-editor-goal">
-                <span class="key-label">Goal</span>
-                <textarea id="admin-editor-goal" class="admin-ai-input" rows="3" placeholder="Describe the goal"></textarea>
-            </label>
-            <div id="admin-editor-recurring-wrap" class="admin-ai-form hidden">
-                <label class="toggle-chip"><input id="admin-editor-recurring" type="checkbox"> Recurring task</label>
-                <label class="admin-ai-form" for="admin-editor-recurring-interval">
-                    <span class="key-label">Recurring minutes</span>
-                    <input id="admin-editor-recurring-interval" class="admin-ai-input admin-short-input" type="number" min="5" step="5" placeholder="60">
-                </label>
-            </div>
-            <label class="admin-ai-form" for="admin-editor-body">
-                <span id="admin-editor-body-label" class="key-label">Body</span>
-                <textarea id="admin-editor-body" class="admin-ai-input" rows="8" placeholder="Enter details"></textarea>
-            </label>
-            <div class="dialog-actions">
-                <button id="admin-editor-cancel" class="secondary-button" type="button">Cancel</button>
-                <button id="admin-editor-save" class="primary-button" type="button">Save</button>
-            </div>
-        </div>
-    </dialog>
-
-    <script src="script.js?v=20260308-bot-commands"></script>
+    <script src="script.js?v=20260602-clean-white"></script>
 </body>
 
 </html>

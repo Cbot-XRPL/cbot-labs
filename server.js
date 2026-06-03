@@ -4,15 +4,11 @@ const path = require("path");
 const express = require("express");
 require("dotenv").config();
 
-const aiRuntime = require("./ai-runtime");
-const { getAiSummary, runAiTask } = require("./ai-service");
-
 const app = express();
 const rootDir = __dirname;
 const dataDir = path.join(rootDir, ".data");
 const sessionsFile = path.join(dataDir, "sessions.json");
 const xahauTomlPath = path.join(rootDir, ".well-known", "xahau.toml");
-const projectRoot = path.join(rootDir, "admin-projects");
 const sessionCookieName = "cbot_session";
 
 app.use(express.json({ limit: "2mb" }));
@@ -153,29 +149,13 @@ function clearSessionCookie(res) {
   res.setHeader("Set-Cookie", `${sessionCookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
 }
 
-function requireOwner(req, res, next) {
-  const session = getSession(req);
-  if (session?.account && isOwnerAccount(session.account)) {
-    req.ownerAccount = session.account;
-    return next();
-  }
-
-  const headerAccount = String(req.header("x-owner-wallet") || req.query["x-owner-wallet"] || "").trim();
-  if (isOwnerAccount(headerAccount)) {
-    req.ownerAccount = headerAccount;
-    return next();
-  }
-
-  return res.status(403).json({ error: "Owner access required" });
-}
-
 function getAppPayload() {
   const validator = getValidatorConfig();
   return {
     brand: {
       name: "Cbot Labs",
-      tagline: "Xahau UNL Validator",
-      summary: "Local-first interface for validator identity, Xaman auth, and private operator controls.",
+      tagline: "Builders on the XRP Ledger & Xahau",
+      summary: "We run infrastructure and ship products for the XRPL ecosystem — from a mainnet Xahau UNL validator to oneXah, our DeFi app.",
       logo: "/ll.png"
     },
     validator: {
@@ -188,26 +168,17 @@ function getAppPayload() {
       unlUrl: validator.unlUrl,
       tomlUrl: validator.tomlUrl
     },
+    projects: [
+      {
+        name: "oneXah DeFi",
+        description: "Our DeFi app on Xahau — swap, manage and put your XRPL assets to work in a clean, fast interface.",
+        url: "https://onexah.io/defi/",
+        status: "Live"
+      }
+    ],
     auth: {
       ownerAccount: getOwnerAccounts()[0]
     },
-    modules: [
-      {
-        name: "Admin Services",
-        description: "Put backups in place, added coded error messages, and hardened restart systems.",
-        status: "Online"
-      },
-      {
-        name: "Xahau NFT Marketplace",
-        description: "Build a one-of-a-kind NFT marketplace on Xahau.",
-        status: "Building"
-      },
-      {
-        name: "AI Engine",
-        description: "Build an AI service to increase productivity and functionality.",
-        status: "Building"
-      }
-    ],
     links: [
       {
         label: "Email",
@@ -223,50 +194,6 @@ function getAppPayload() {
       }
     ]
   };
-}
-
-function getProjectEntries() {
-  const entries = [];
-  const workspaceRoot = path.join(projectRoot, "workspaces");
-
-  if (fs.existsSync(workspaceRoot)) {
-    for (const dirent of fs.readdirSync(workspaceRoot, { withFileTypes: true })) {
-      if (!dirent.isDirectory()) {
-        continue;
-      }
-
-      const slug = dirent.name;
-      const metadataPath = path.join(workspaceRoot, slug, "cbot-project.json");
-      let metadata = {};
-      if (fs.existsSync(metadataPath)) {
-        try {
-          metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
-        } catch (_error) {
-          metadata = {};
-        }
-      }
-
-      entries.push({
-        slug,
-        name: metadata.name || slug,
-        description: metadata.description || "Bot-built project workspace",
-        routePath: metadata.routePath || `/admin/projects/workspaces/${slug}/`,
-        updatedAt: metadata.updatedAt || null,
-        type: "workspace"
-      });
-    }
-  }
-
-  entries.unshift({
-    slug: "xrpl-trading-bot",
-    name: "XRPL Trading Bot",
-    description: "Owner-only trading bot dashboard and observation interface.",
-    routePath: "/admin/projects/xrpl-trading-bot/",
-    updatedAt: null,
-    type: "built-in"
-  });
-
-  return entries;
 }
 
 function getXamanSdk() {
@@ -393,179 +320,6 @@ app.get("/api/toml/xahau", (_req, res) => {
   }
 });
 
-app.get("/api/admin", requireOwner, (_req, res) => {
-  res.json({
-    ownerAccount: getOwnerAccounts()[0],
-    controls: [
-      "owner session",
-      "ai runtime",
-      "task queue",
-      "project hub",
-      "guarded commands"
-    ],
-    ai: getAiSummary()
-  });
-});
-
-app.get("/api/admin/projects", requireOwner, (_req, res) => {
-  res.json({
-    projects: getProjectEntries()
-  });
-});
-
-app.post("/api/admin/ai/run", requireOwner, async (req, res) => {
-  try {
-    const result = await runAiTask(req.body?.prompt, { mode: "text" });
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message || "Manual AI run failed" });
-  }
-});
-
-app.get("/api/admin/bot", requireOwner, async (_req, res) => {
-  try {
-    const snapshot = aiRuntime.getSnapshot();
-    const git = await aiRuntime.getGitSnapshot();
-    res.json({
-      ...snapshot,
-      git
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message || "Unable to load bot snapshot" });
-  }
-});
-
-app.post("/api/admin/bot/config", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.setConfig(req.body || {}));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to save bot config" });
-  }
-});
-
-app.post("/api/admin/bot/start", requireOwner, (_req, res) => {
-  try {
-    res.json(aiRuntime.startLoop());
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to start bot loop" });
-  }
-});
-
-app.post("/api/admin/bot/stop", requireOwner, (_req, res) => {
-  try {
-    res.json(aiRuntime.stopLoop());
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to stop bot loop" });
-  }
-});
-
-app.post("/api/admin/bot/run", requireOwner, async (_req, res) => {
-  try {
-    await aiRuntime.runLoopCycle();
-    res.json(aiRuntime.getSnapshot());
-  } catch (error) {
-    res.status(500).json({ error: error.message || "Bot run failed" });
-  }
-});
-
-app.post("/api/admin/bot/commands/:name", requireOwner, async (req, res) => {
-  try {
-    const result = await aiRuntime.runAllowedCommand(req.params.name);
-    res.json({ ok: true, result });
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Command failed" });
-  }
-});
-
-app.post("/api/admin/bot/tasks", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.addTask(req.body || {}));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to add task" });
-  }
-});
-
-app.patch("/api/admin/bot/tasks/:taskId", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.updateTask(req.params.taskId, req.body || {}));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to update task" });
-  }
-});
-
-app.delete("/api/admin/bot/tasks/:taskId", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.removeTask(req.params.taskId));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to delete task" });
-  }
-});
-
-app.post("/api/admin/bot/tasks/reorder", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.reorderTasks(req.body?.taskIds || []));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to reorder tasks" });
-  }
-});
-
-app.post("/api/admin/bot/goals", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.addGoal(req.body?.text));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to add goal" });
-  }
-});
-
-app.patch("/api/admin/bot/goals/:goalId", requireOwner, (req, res) => {
-  try {
-    res.json(aiRuntime.updateGoal(req.params.goalId, req.body?.text));
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to update goal" });
-  }
-});
-
-app.delete("/api/admin/bot/goals/:goalId", requireOwner, (req, res) => {
-  try {
-    aiRuntime.removeGoal(req.params.goalId);
-    res.json({ ok: true });
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to remove goal" });
-  }
-});
-
-app.post("/api/admin/bot/notes", requireOwner, (req, res) => {
-  try {
-    aiRuntime.addManualNote(req.body?.title, req.body?.body);
-    res.json({ ok: true });
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to save note" });
-  }
-});
-
-app.delete("/api/admin/bot/notes/:noteId", requireOwner, (req, res) => {
-  try {
-    aiRuntime.removeNote(req.params.noteId);
-    res.json({ ok: true });
-  } catch (error) {
-    res.status(400).json({ error: error.message || "Unable to delete note" });
-  }
-});
-
-try {
-  const adminTradingRouter = require("./routes/admin-trading");
-  app.use("/api/admin/trading", requireOwner, adminTradingRouter);
-} catch (error) {
-  console.error("Failed to mount admin trading routes:", error.message);
-}
-
-try {
-  const adminPersonalBotRouter = require("./routes/admin-personal-bot");
-  app.use("/api/admin/personal-bot", requireOwner, adminPersonalBotRouter);
-} catch (error) {
-  console.error("Failed to mount personal bot routes:", error.message);
-}
-
 app.get("/", (_req, res) => {
   res.sendFile(path.join(rootDir, "index.html"));
 });
@@ -592,18 +346,10 @@ app.get("/ll.png", (_req, res) => {
 
 app.use("/media", express.static(path.join(rootDir, "media")));
 app.use("/.well-known", express.static(path.join(rootDir, ".well-known")));
-app.use("/admin/projects", requireOwner, express.static(projectRoot, { index: "index.html" }));
-app.use("/admin-projects", requireOwner, express.static(projectRoot, { index: "index.html" }));
-
-app.get("/admin/trading", requireOwner, (_req, res) => {
-  res.redirect("/admin/projects/xrpl-trading-bot/");
-});
 
 app.use((req, res) => {
   res.status(404).json({ error: `Not found: ${req.method} ${req.originalUrl}` });
 });
-
-aiRuntime.bootstrapLoop();
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
