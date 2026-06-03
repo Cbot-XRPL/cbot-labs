@@ -365,18 +365,32 @@ function setOnexahLive(state) {
   }
 }
 
-function renderOnexahSummary(summary) {
+function renderOnexahSummary(summary, dao) {
   const tvlUsd = fmtUsd(summary?.tvl?.totalUsd);
   const xahUsd = fmtUsd(summary?.xahUsd);
 
-  setText("ox-card-tvl", tvlUsd);
-  setText("ox-card-xahusd", xahUsd);
+  // Card: total XAH + EVR locked across all protocols, and DAO treasury (XAH/EVR).
+  const breakdown = summary?.tvl?.breakdown || {};
+  const rate = Number(summary?.rates?.xahPerEvr);
+  const xahLocked = (breakdown.ammXah || 0) + (breakdown.lendingXah || 0)
+    + (breakdown.perpsMargin || 0) + (breakdown.perpsLpPool || 0);
+  const evrInXah = (breakdown.ammEvrInXah || 0) + (breakdown.lendingEvrInXah || 0);
+  const evrLocked = Number.isFinite(rate) && rate > 0 ? evrInXah / rate : null;
+  const treasuryXah = dao?.treasuryXah ?? summary?.dao?.treasuryXah;
+  const treasuryEvr = dao?.treasuryEvr ?? summary?.dao?.treasuryEvr;
+
+  setText("ox-card-xah", xahLocked > 0 ? `${fmtNum(xahLocked, { compact: true })} XAH` : "—");
+  setText("ox-card-evr", evrLocked != null ? `${fmtNum(evrLocked, { compact: true })} EVR` : "—");
+  setText("ox-card-dao-xah", treasuryXah != null ? `${fmtNum(treasuryXah, { dp: 0 })} XAH` : "—");
+  setText("ox-card-dao-evr", treasuryEvr != null ? `${fmtNum(treasuryEvr, { dp: 0 })} EVR` : "n/a");
+
+  // Stat strip (unchanged headline numbers).
   setText("ox-tvl-usd", tvlUsd);
   setText("ox-tvl-xah", `${fmtNum(summary?.tvl?.totalXah, { compact: true })} XAH`);
   setText("ox-xahusd", xahUsd);
   setText("ox-xahevr", fmtNum(summary?.rates?.xahPerEvr, { dp: 3 }));
   setText("ox-ammfee", summary?.rates?.ammFeeBps != null ? `${(summary.rates.ammFeeBps / 100).toFixed(2)}% AMM fee` : "");
-  setText("ox-dao-treasury", fmtNum(summary?.dao?.treasuryXah, { dp: 0 }));
+  setText("ox-dao-treasury", fmtNum(treasuryXah, { dp: 0 }));
 }
 
 function renderOnexahProtocols({ amm, lending, perps, dao, summary }) {
@@ -481,7 +495,7 @@ async function refreshOnexah() {
   );
 
   if (summary) {
-    renderOnexahSummary(summary);
+    renderOnexahSummary(summary, dao);
   }
   renderOnexahProtocols({ amm, lending, perps, dao, summary });
   if (bearer) {

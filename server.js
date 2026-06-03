@@ -50,7 +50,7 @@ function getValidatorConfig() {
     })(),
     location: extractTomlValue(toml, "server_location").replace(/\s*-\s*/g, ", ") || "Atlanta, US",
     tomlUrl: "https://cbotlabs.xyz/.well-known/xahau.toml",
-    unlUrl: "https://xahau.network/unl",
+    unlUrl: "https://xahau.xrplwin.com/validators",
     status: "active",
     network: "Xahau Mainnet"
   };
