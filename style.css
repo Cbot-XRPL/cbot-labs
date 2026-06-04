@@ -114,7 +114,8 @@ code,
 
 .support-link {
   border-radius: 10px;
-  padding: 5px 14px;
+  padding: 4px 14px;
+  align-items: center;
 }
 
 .support-link span {
@@ -122,9 +123,10 @@ code,
 }
 
 .support-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
+  display: block;
 }
 
 .btn:disabled {

@@ -176,6 +176,7 @@ async function refreshAuthState() {
       : "Xaman keys missing";
 
   setText("auth-chip", authChipText);
+  showElement("auth-chip", auth.loggedIn);
   showElement("logout-button", auth.loggedIn);
 
   const loginButton = document.getElementById("login-button");
