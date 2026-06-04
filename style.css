@@ -103,6 +103,21 @@ code,
   font-size: 0.85rem;
 }
 
+.btn-dark {
+  background: var(--text);
+  color: #ffffff;
+}
+
+.btn-dark:hover {
+  background: #1e293b;
+}
+
+.support-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -644,6 +659,12 @@ main {
   gap: 32px;
 }
 
+.footer-brand-wrap {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
 .footer-brand {
   display: flex;
   align-items: center;
@@ -849,7 +870,7 @@ main {
     grid-template-columns: 1fr 1fr;
   }
 
-  .footer-brand {
+  .footer-brand-wrap {
     grid-column: 1 / -1;
   }
 }
