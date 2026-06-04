@@ -114,6 +114,11 @@ code,
 
 .support-link {
   border-radius: 10px;
+  padding: 5px 14px;
+}
+
+.support-link span {
+  line-height: 1;
 }
 
 .support-icon {
