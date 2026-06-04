@@ -155,7 +155,7 @@ function getAppPayload() {
     brand: {
       name: "Cbot Labs",
       tagline: "Builders on the XRP Ledger & Xahau",
-      summary: "We run infrastructure and ship products for the XRPL ecosystem — from a mainnet Xahau UNL validator to oneXah, our DeFi app.",
+      summary: "We run infrastructure and ship products for the XRPL ecosystem — from a mainnet Xahau UNL validator to oneXah, native DeFi app.",
       logo: "/ll.png"
     },
     validator: {
@@ -342,6 +342,14 @@ app.get("/favicon.ico", (_req, res) => {
 
 app.get("/ll.png", (_req, res) => {
   res.sendFile(path.join(rootDir, "ll.png"));
+});
+
+app.get("/onexah.png", (_req, res) => {
+  res.sendFile(path.join(rootDir, "onexah.png"));
+});
+
+app.get("/xahau-logo.png", (_req, res) => {
+  res.sendFile(path.join(rootDir, "xahau-logo.png"));
 });
 
 app.use("/media", express.static(path.join(rootDir, "media")));

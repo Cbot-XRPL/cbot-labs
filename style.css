@@ -112,6 +112,10 @@ code,
   background: #1e293b;
 }
 
+.support-link {
+  border-radius: 10px;
+}
+
 .support-icon {
   width: 18px;
   height: 18px;
@@ -334,6 +338,15 @@ main {
   margin: 0;
   font-size: 1.35rem;
   letter-spacing: -0.015em;
+}
+
+.pane-logo {
+  height: 34px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
 }
 
 .card-copy {
