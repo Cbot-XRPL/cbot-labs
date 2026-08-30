@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260603-support-pad2">
+    <link rel="stylesheet" href="style.css?v=20260830-no-live-pane">
 </head>
 
 <body>
@@ -89,7 +89,7 @@
                     </div>
                 </article>
 
-                <!-- oneXah DeFi product card with live headline stats -->
+                <!-- oneXah DeFi product card -->
                 <article id="defi" class="card card-project">
                     <div class="card-head">
                         <div>
@@ -99,91 +99,11 @@
                         <img class="pane-logo" src="/onexah.png" alt="One Xahau">
                     </div>
                     <p class="card-copy">Native smart contracts (hooks) powering an on-chain DeFi suite for Xahau and the XRPL.</p>
-                    <dl class="metric-grid">
-                        <div>
-                            <dt>XAH locked</dt>
-                            <dd id="ox-card-xah">—</dd>
-                        </div>
-                        <div>
-                            <dt>EVR locked</dt>
-                            <dd id="ox-card-evr">—</dd>
-                        </div>
-                        <div>
-                            <dt>DAO treasury · XAH</dt>
-                            <dd id="ox-card-dao-xah">—</dd>
-                        </div>
-                        <div>
-                            <dt>DAO treasury · EVR</dt>
-                            <dd id="ox-card-dao-evr">—</dd>
-                        </div>
-                        <div>
-                            <dt>Lending util · XAH</dt>
-                            <dd id="ox-card-lend-util">—</dd>
-                        </div>
-                        <div>
-                            <dt>Open interest</dt>
-                            <dd id="ox-card-oi">—</dd>
-                        </div>
-                    </dl>
                     <div class="card-actions">
                         <a class="btn btn-primary" href="https://onexah.io/defi/" target="_blank" rel="noreferrer">Launch app</a>
-                        <a class="btn btn-ghost" href="#onexah-live">Live metrics</a>
                     </div>
                 </article>
             </div>
-        </section>
-
-        <!-- oneXah live protocol metrics -->
-        <section id="onexah-live" class="onexah">
-            <div class="onexah-head">
-                <div>
-                    <p class="section-kicker">Live on Xahau</p>
-                    <h2 class="section-title">oneXah protocol metrics</h2>
-                </div>
-                <div class="onexah-meta">
-                    <span id="ox-live-pill" class="pill pill-neutral"><span class="pill-dot"></span><span id="ox-live-text">Connecting…</span></span>
-                    <a class="btn btn-small" href="https://onexah.io/defi/" target="_blank" rel="noreferrer">Open app</a>
-                </div>
-            </div>
-
-            <div class="stat-strip">
-                <div class="stat">
-                    <span class="stat-label">Total Value Locked</span>
-                    <strong id="ox-tvl-usd">—</strong>
-                    <span id="ox-tvl-xah" class="stat-sub">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">XAH / USD</span>
-                    <strong id="ox-xahusd">—</strong>
-                    <span class="stat-sub">spot</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">XAH per EVR</span>
-                    <strong id="ox-xahevr">—</strong>
-                    <span id="ox-ammfee" class="stat-sub">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">DAO treasury</span>
-                    <strong id="ox-dao-treasury">—</strong>
-                    <span class="stat-sub">XAH</span>
-                </div>
-            </div>
-
-            <div id="ox-proto-grid" class="proto-grid"></div>
-
-            <article class="proto-card bearer-card">
-                <header class="proto-head">
-                    <h3>Bearer tokens</h3>
-                    <span class="proto-tag">Redemption per 1 token</span>
-                </header>
-                <div id="ox-bearer" class="bearer-grid"></div>
-            </article>
-
-            <p class="onexah-foot">
-                Live, read-only data from the
-                <a href="https://onexah.io/api/public/v1/summary" target="_blank" rel="noreferrer">oneXah public API</a>.
-                Best-effort convenience layer — not for settlement.
-            </p>
         </section>
     </main>
 
@@ -253,7 +173,7 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260603-support-pad2"></script>
+    <script src="script.js?v=20260830-no-live-pane"></script>
 </body>
 
 </html>
