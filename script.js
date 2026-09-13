@@ -294,7 +294,50 @@ async function bootstrapApp() {
   }
 }
 
+/* ── home page cluster pane ───────────────────────────────────────────────
+ * Fails quietly on purpose: the pane is a nice-to-have on a page whose job is
+ * the brand. If the cluster is unreachable the section hides itself rather
+ * than showing a broken card on the front page. */
+function clusterTile(label, value, note, tone) {
+  return `<div class="cluster-tile" data-tone="${tone || ""}">
+    <span class="cluster-tile-label">${escapeHtml(label)}</span>
+    <span class="cluster-tile-value">${escapeHtml(value)}</span>
+    <span class="cluster-tile-note">${escapeHtml(note || "")}</span>
+  </div>`;
+}
+
+async function renderClusterPane() {
+  const section = document.getElementById("cluster-pane-section");
+  if (!section) return;
+  try {
+    const d = await fetchJson("/api/cluster");
+    const tone = d.health === "ok" ? "ok" : d.health === "degraded" ? "warn" : "bad";
+    const nfmt = (v) => (typeof v === "number" ? v.toLocaleString() : "—");
+
+    const badges = document.getElementById("home-cluster-badges");
+    if (badges) {
+      badges.innerHTML =
+        `<span class="pill ${tone}">${escapeHtml(d.health)}</span>` +
+        `<span class="pill">${escapeHtml(d.network)}</span>`;
+    }
+    const tiles = document.getElementById("home-cluster-tiles");
+    if (tiles) {
+      tiles.innerHTML = [
+        clusterTile("Nodes online", `${d.nodesUp}/${d.nodesTotal}`, "clustered", tone),
+        clusterTile("Validated ledger", nfmt(d.validatedSeq), "latest"),
+        clusterTile("History", nfmt(d.historyLedgers), "ledgers available"),
+        clusterTile("Peers", nfmt(d.peers), "network connections")
+      ].join("");
+    }
+    section.hidden = false;
+  } catch (_error) {
+    section.hidden = true;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
+  renderClusterPane();
+  setInterval(renderClusterPane, 30000);
   const yearEl = document.getElementById("footer-year");
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());

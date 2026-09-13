@@ -312,6 +312,145 @@ app.post("/api/auth/logout", (req, res) => {
   res.json({ ok: true });
 });
 
+/* ── Xahau cluster ─────────────────────────────────────────────────────────
+ * Two very different surfaces, and the difference is the point:
+ *
+ *   /api/cluster        PUBLIC. Built only from public RPC replies, so it can
+ *                       reveal nothing a visitor could not fetch themselves.
+ *   /api/cluster/admin  OWNER ONLY. Proxies the ops dashboard, which exposes
+ *                       internal addresses, VM ids and disk state. The gate is
+ *                       enforced HERE, server-side — the browser never gets the
+ *                       payload to hide. A client-side check would ship the
+ *                       data and politely ask the page not to render it.
+ */
+const CLUSTER = {
+  publicRpc: process.env.CLUSTER_RPC_PUBLIC || "https://cluster.cbotlabs.xyz",
+  publicWs: process.env.CLUSTER_WS_PUBLIC || "wss://ws-cluster.cbotlabs.xyz",
+  // label=url pairs; these are LAN addresses and never leave the server
+  nodes: (process.env.CLUSTER_NODES ||
+    "xah-node-1 (deep)=http://192.168.1.110:5007,xah-node-2 (api)=http://192.168.1.111:5007")
+    .split(",").map((spec) => {
+      const i = spec.indexOf("=");
+      return { label: spec.slice(0, i).trim(), url: spec.slice(i + 1).trim() };
+    }).filter((n) => n.label && n.url),
+  opsUrl: process.env.CLUSTER_OPS_URL || "http://192.168.1.110:8088",
+  ttlMs: Number(process.env.CLUSTER_TTL_MS || 15000)
+};
+
+const clusterCache = { at: 0, payload: null };
+
+async function fetchJson(url, { method = "GET", body, timeoutMs = 6000 } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      method,
+      signal: ctrl.signal,
+      headers: body ? { "content-type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function parseLedgerRange(complete) {
+  if (!complete || !complete.includes("-")) return {};
+  const last = String(complete).split(",").pop();
+  const [lowRaw, highRaw] = last.split("-");
+  const low = Number(lowRaw);
+  const high = Number(highRaw);
+  if (!Number.isFinite(low) || !Number.isFinite(high)) return {};
+  return { low, high, count: high - low + 1 };
+}
+
+async function collectCluster() {
+  const nodes = await Promise.all(CLUSTER.nodes.map(async (n) => {
+    try {
+      const reply = await fetchJson(n.url, { method: "POST", body: { method: "server_info", params: [{}] } });
+      const info = reply?.result?.info || {};
+      // Whitelist. Never spread `info` — a future xahaud could add a field we
+      // have not thought about and it would be public the moment it shipped.
+      return {
+        label: n.label,
+        reachable: true,
+        serverState: info.server_state || null,
+        completeLedgers: info.complete_ledgers || null,
+        ...parseLedgerRange(info.complete_ledgers),
+        validatedSeq: info.validated_ledger?.seq ?? null,
+        ledgerAgeS: info.validated_ledger?.age ?? null,
+        peers: info.peers ?? null,
+        build: info.build_version || null,
+        networkId: info.network_id ?? null,
+        uptimeS: info.uptime ?? null,
+        pubkeyNode: info.pubkey_node || null
+      };
+    } catch (error) {
+      return { label: n.label, reachable: false, error: error.name === "AbortError" ? "timeout" : "unreachable" };
+    }
+  }));
+
+  const up = nodes.filter((n) => n.reachable);
+  const synced = up.filter((n) => ["full", "proposing", "validating"].includes(n.serverState));
+  return {
+    ts: Date.now(),
+    network: "Xahau Mainnet",
+    networkId: up[0]?.networkId ?? 21337,
+    endpoints: { rpc: CLUSTER.publicRpc, ws: CLUSTER.publicWs },
+    health: synced.length === nodes.length ? "ok" : (synced.length ? "degraded" : "down"),
+    nodesUp: up.length,
+    nodesTotal: nodes.length,
+    validatedSeq: up.reduce((m, n) => Math.max(m, n.validatedSeq || 0), 0) || null,
+    historyLedgers: up.reduce((m, n) => Math.max(m, n.count || 0), 0) || null,
+    peers: up.reduce((m, n) => Math.max(m, n.peers || 0), 0) || null,
+    nodes
+  };
+}
+
+app.get("/api/cluster", async (_req, res) => {
+  const now = Date.now();
+  if (clusterCache.payload && now - clusterCache.at < CLUSTER.ttlMs) {
+    return res.json(clusterCache.payload);
+  }
+  try {
+    const payload = await collectCluster();
+    clusterCache.at = now;
+    clusterCache.payload = payload;
+    res.json(payload);
+  } catch (_error) {
+    // Serve stale rather than nothing — a momentary blip should not blank the
+    // pane on a page that is otherwise fine.
+    if (clusterCache.payload) return res.json({ ...clusterCache.payload, stale: true });
+    res.status(503).json({ error: "cluster unavailable" });
+  }
+});
+
+function requireOwner(req, res, next) {
+  const session = getSession(req);
+  if (!session?.account) {
+    return res.status(401).json({ error: "not signed in" });
+  }
+  if (!isOwnerAccount(session.account)) {
+    return res.status(403).json({ error: "not an owner account" });
+  }
+  return next();
+}
+
+app.get("/api/cluster/admin", requireOwner, async (_req, res) => {
+  try {
+    const state = await fetchJson(`${CLUSTER.opsUrl}/api/state`, { timeoutMs: 12000 });
+    res.json(state);
+  } catch (error) {
+    res.status(502).json({
+      error: "ops dashboard unreachable",
+      detail: error.name === "AbortError" ? "timeout" : String(error.message || error),
+      opsUrl: CLUSTER.opsUrl
+    });
+  }
+});
+
 app.get("/api/toml/xahau", (_req, res) => {
   try {
     res.type("text/plain; charset=utf-8").send(fs.readFileSync(xahauTomlPath, "utf8"));
@@ -350,6 +489,30 @@ app.get("/onexah.png", (_req, res) => {
 
 app.get("/xahau-logo.png", (_req, res) => {
   res.sendFile(path.join(rootDir, "xahau-logo.png"));
+});
+
+app.get("/cluster", (_req, res) => {
+  res.sendFile(path.join(rootDir, "cluster.html"));
+});
+
+app.get("/cluster.html", (_req, res) => {
+  res.sendFile(path.join(rootDir, "cluster.html"));
+});
+
+app.get("/cluster.js", (_req, res) => {
+  res.sendFile(path.join(rootDir, "cluster.js"));
+});
+
+app.get("/admin", (_req, res) => {
+  res.sendFile(path.join(rootDir, "admin.html"));
+});
+
+app.get("/admin.html", (_req, res) => {
+  res.sendFile(path.join(rootDir, "admin.html"));
+});
+
+app.get("/admin.js", (_req, res) => {
+  res.sendFile(path.join(rootDir, "admin.js"));
 });
 
 app.use("/media", express.static(path.join(rootDir, "media")));

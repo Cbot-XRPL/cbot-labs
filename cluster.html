@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Xahau Cluster & API — Cbot Labs</title>
+<meta name="description" content="Public Xahau mainnet JSON-RPC and WebSocket endpoint run by Cbot Labs. Live status and API documentation." />
+<link rel="icon" href="/favicon.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="brand-lockup" href="/">
+      <img class="nav-logo" src="/ll.png" alt="Cbot Labs logo" />
+      <span class="brand-word">Cbot Labs</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/cluster" aria-current="page">Cluster</a>
+      <a href="#api">API</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <header class="hero hero-compact">
+    <h1>Xahau public node</h1>
+    <p class="hero-sub">A community JSON-RPC and WebSocket endpoint on Xahau mainnet. Free to use, no key required.</p>
+    <div class="cluster-badges" id="cluster-badges"></div>
+  </header>
+
+  <section class="section">
+    <h2 class="section-title">Live status</h2>
+    <div class="cluster-tiles" id="cluster-tiles"></div>
+    <div class="cluster-nodes" id="cluster-nodes"></div>
+    <p class="cluster-stamp" id="cluster-stamp">Loading…</p>
+  </section>
+
+  <section class="section" id="api">
+    <h2 class="section-title">Endpoints</h2>
+    <div class="endpoint-table">
+      <div class="endpoint-row endpoint-head"><span>Protocol</span><span>URL</span><span>Use</span></div>
+      <div class="endpoint-row">
+        <span>JSON-RPC</span>
+        <span><code id="ep-rpc">…</code><button class="copy-btn" data-copy="ep-rpc" type="button">copy</button></span>
+        <span>Stateless queries. <strong>POST only.</strong></span>
+      </div>
+      <div class="endpoint-row">
+        <span>WebSocket</span>
+        <span><code id="ep-ws">…</code><button class="copy-btn" data-copy="ep-ws" type="button">copy</button></span>
+        <span>Subscriptions and streaming.</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>JSON-RPC is POST-only.</strong> Opening the RPC URL in a browser returns a
+      JSON parse error. That is the node telling you it expected a request body — not an outage.
+    </div>
+
+    <h2 class="section-title">Quick start</h2>
+    <pre class="code"><code id="snippet-curl">…</code></pre>
+    <pre class="code"><code id="snippet-account">…</code></pre>
+
+    <h2 class="section-title">WebSocket</h2>
+    <pre class="code"><code id="snippet-ws">…</code></pre>
+
+    <h2 class="section-title">Supported methods</h2>
+    <div class="method-table">
+      <div class="method-row method-head"><span>Method</span><span>Notes</span></div>
+      <div class="method-row"><span><code>server_info</code></span><span>Node state, history window, peer count.</span></div>
+      <div class="method-row"><span><code>fee</code></span><span>Current transaction cost.</span></div>
+      <div class="method-row"><span><code>ledger</code> <code>ledger_current</code> <code>ledger_closed</code></span><span>Ledger data and indexes.</span></div>
+      <div class="method-row"><span><code>account_info</code></span><span>Balance, sequence, flags.</span></div>
+      <div class="method-row"><span><code>account_tx</code></span><span>History — <strong>only within the window above</strong>.</span></div>
+      <div class="method-row"><span><code>account_lines</code> <code>account_objects</code> <code>book_offers</code></span><span>Standard read APIs.</span></div>
+      <div class="method-row"><span><code>submit</code></span><span>Signed transaction submission.</span></div>
+      <div class="method-row"><span><code>subscribe</code> <code>unsubscribe</code></span><span><strong>WebSocket only.</strong></span></div>
+    </div>
+
+    <h2 class="section-title">Limits</h2>
+    <div class="method-table">
+      <div class="method-row method-head"><span>Thing</span><span>Detail</span></div>
+      <div class="method-row"><span>History</span><span>A rolling window, not full history. Queries outside the range return no data.</span></div>
+      <div class="method-row"><span>Admin methods</span><span>Not exposed. <code>can_delete</code>, <code>stop</code>, <code>peers</code> return <strong>403</strong>.</span></div>
+      <div class="method-row"><span>Rate limiting</span><span>Applied at the edge, per client address.</span></div>
+      <div class="method-row"><span>Long queries</span><span>Cut off upstream at ~100s. Page deep <code>account_tx</code> with <code>limit</code> and <code>marker</code>.</span></div>
+      <div class="method-row"><span>Availability</span><span>Best effort, no SLA. Run your own node for anything you cannot afford to have fail.</span></div>
+    </div>
+
+    <p class="cluster-foot">
+      Stock <code>xahaud</code> nodes. They do not validate — trust comes from the published Xahau UNL.
+      Machine-readable status: <a href="/api/cluster">/api/cluster</a>
+    </p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-bottom"><span>© Cbot Labs</span></div>
+</footer>
+
+<script src="/cluster.js"></script>
+</body>
+</html>

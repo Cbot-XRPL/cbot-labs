@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cluster controller — Cbot Labs</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="brand-lockup" href="/">
+      <img class="nav-logo" src="/ll.png" alt="Cbot Labs logo" />
+      <span class="brand-word">Cbot Labs</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/cluster">Cluster</a>
+      <span class="admin-who" id="admin-who"></span>
+      <button class="btn btn-ghost" id="admin-signout" type="button" hidden>Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <header class="hero hero-compact">
+    <h1>Cluster controller</h1>
+    <p class="hero-sub">Operational detail — internal addresses, capacity and build state. Owner accounts only.</p>
+  </header>
+
+  <!-- gate -->
+  <section class="section" id="gate">
+    <div class="gate-card">
+      <h2 id="gate-title">Checking your session…</h2>
+      <p id="gate-msg" class="gate-msg"></p>
+      <div class="gate-actions" id="gate-actions" hidden>
+        <button class="btn btn-primary" id="gate-signin" type="button">Sign in with Xaman</button>
+      </div>
+      <!-- The <img> is created in JS once a QR actually exists. An <img> with no
+           src is a broken image, and browsers render it as one even inside a
+           hidden container. -->
+      <div class="gate-qr" id="gate-qr" hidden>
+        <div id="gate-qr-slot"></div>
+        <p class="gate-msg">Scan with Xaman, then approve the sign-in request.</p>
+        <a id="gate-qr-link" class="btn btn-ghost" target="_blank" rel="noopener">Open in Xaman</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- controller, revealed only when the server returns data -->
+  <section class="section" id="panel" hidden>
+    <h2 class="section-title">Nodes</h2>
+    <div class="cluster-nodes" id="admin-nodes"></div>
+
+    <h2 class="section-title">Cluster</h2>
+    <div class="cluster-tiles" id="admin-host"></div>
+
+    <p class="cluster-stamp" id="admin-stamp"></p>
+    <p class="cluster-foot">
+      Source: the ops dashboard, proxied through this server and gated on your Xaman account.
+      Read-only — this page cannot change anything.
+    </p>
+  </section>
+</main>
+
+<footer class="footer"><div class="footer-bottom"><span>© Cbot Labs</span></div></footer>
+<script src="/admin.js"></script>
+</body>
+</html>

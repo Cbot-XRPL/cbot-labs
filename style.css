@@ -78,13 +78,16 @@ code,
 }
 
 .btn-primary {
-  background: var(--accent);
+  /* --accent (#10b981) under white text is 2.54:1 — well under the 4.5:1 AA
+     floor. --accent-ink (#047857) is 5.48:1 and is already this button's hover
+     colour, so the fix stays inside the existing palette and the same hue. */
+  background: var(--accent-ink);
   color: #ffffff;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 20px rgba(4, 120, 87, 0.25);
 }
 
 .btn-primary:hover {
-  background: var(--accent-ink);
+  background: #065f46;
 }
 
 .btn-ghost {
@@ -709,4 +712,213 @@ main {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ── Cluster pages ────────────────────────────────────────────────────────
+   Reuses the site's tokens (--accent, --radius, --border) so /cluster and
+   /admin read as the same product rather than a bolted-on status page. */
+
+.hero-compact { padding-block: 48px 28px; }
+.hero-sub { color: var(--muted); max-width: 62ch; margin: 8px auto 0; }
+
+.section { max-width: 1040px; margin: 0 auto; padding: 8px 20px 40px; }
+
+.cluster-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; letter-spacing: .02em;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: var(--bg-soft); color: var(--muted);
+}
+.pill.ok   { color: var(--accent-ink); border-color: #a7f3d0; background: #ecfdf5; }
+.pill.warn { color: #92400e;           border-color: #fde68a; background: #fffbeb; }
+.pill.bad  { color: #991b1b;           border-color: #fecaca; background: #fef2f2; }
+
+.cluster-tiles {
+  display: grid; gap: 12px; margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.cluster-tile {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px 16px; box-shadow: var(--shadow-sm);
+}
+.cluster-tile[data-tone="warn"] { border-color: #fde68a; }
+.cluster-tile[data-tone="bad"]  { border-color: #fecaca; }
+.cluster-tile-label { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.cluster-tile-value { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.cluster-tile-note  { font-size: 12px; color: var(--muted); }
+
+.cluster-nodes {
+  display: grid; gap: 12px; margin-bottom: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+.cluster-node {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px; box-shadow: var(--shadow-sm);
+}
+.cluster-node[data-tone="warn"] { border-color: #fde68a; }
+.cluster-node[data-tone="bad"]  { border-color: #fecaca; }
+.cluster-node-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+.cluster-kv {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 5px 0; border-top: 1px solid var(--border); font-size: 13px;
+}
+.cluster-kv:first-of-type { border-top: 0; }
+.cluster-kv span:first-child { color: var(--muted); }
+.cluster-kv span:last-child { font-variant-numeric: tabular-nums; text-align: right; word-break: break-word; }
+
+.cluster-stamp { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+.cluster-foot  { color: var(--muted); font-size: 13px; margin-top: 22px; }
+
+.endpoint-table, .method-table {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden; background: #fff; margin-bottom: 18px;
+}
+.endpoint-row, .method-row {
+  display: grid; gap: 12px; padding: 11px 16px; border-top: 1px solid var(--border); font-size: 14px; align-items: start;
+}
+.endpoint-row { grid-template-columns: 110px 1fr 1fr; }
+.method-row   { grid-template-columns: minmax(180px, 1fr) 2fr; }
+.endpoint-row:first-child, .method-row:first-child { border-top: 0; }
+.endpoint-head, .method-head {
+  background: var(--bg-soft); color: var(--muted);
+  font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px;
+}
+pre.code {
+  background: #0f172a; color: #e2e8f0; border-radius: var(--radius-sm);
+  padding: 16px; overflow-x: auto; margin: 0 0 12px;
+}
+pre.code code {
+  background: none; border: 0; padding: 0; color: inherit;
+  font-size: 13px; line-height: 1.55; white-space: pre;
+}
+
+.copy-btn {
+  margin-left: 8px; font-size: 11px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--bg-soft); color: var(--muted);
+  border-radius: 6px; padding: 3px 8px;
+}
+.copy-btn:hover { color: var(--accent-ink); border-color: #a7f3d0; }
+
+.callout {
+  border-left: 3px solid var(--accent); background: #ecfdf5;
+  padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 18px; font-size: 14px;
+}
+
+/* ── home page pane ──────────────────────────────────────────────────── */
+.cluster-pane {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 22px; box-shadow: var(--shadow); margin-top: 18px;
+}
+.cluster-pane-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.cluster-pane-head h3 { margin: 0; font-size: 18px; }
+.cluster-pane-sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+/* ── admin gate ──────────────────────────────────────────────────────── */
+.gate-card {
+  max-width: 480px; margin: 0 auto; text-align: center;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 32px 26px; box-shadow: var(--shadow);
+}
+.gate-card h2 { margin: 0 0 8px; font-size: 20px; }
+.gate-msg { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+.gate-actions, .gate-qr { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.gate-qr img { width: 220px; height: 220px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.admin-who { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.admin-err {
+  margin-top: 8px; font-size: 12px; color: #991b1b;
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 7px 10px;
+}
+
+@media (max-width: 640px) {
+  .endpoint-row { grid-template-columns: 1fr; gap: 4px; }
+  .method-row   { grid-template-columns: 1fr; gap: 4px; }
+  .endpoint-head, .method-head { display: none; }
+  .cluster-tile-value { font-size: 20px; }
+}
+
+/* ── accessibility fixes for the cluster pages ──────────────────────────── */
+
+/* 44px minimum hit area. The copy button stays visually small; it is the
+   TARGET that grows, which is the thing a thumb actually needs. */
+.copy-btn {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#gate-signin,
+#admin-signout,
+#gate-qr-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cluster-foot code,
+.cluster-tile-label,
+.cluster-tile-note,
+.cluster-stamp,
+.section-kicker {
+  font-size: 12px;
+}
+
+/* The topbar was already at the edge of fitting 390px with three links;
+   adding "Cluster" pushed the whole page into horizontal overflow. Let the
+   links wrap at narrow widths rather than widen the page — a second nav row
+   is survivable, a horizontally scrolling page is not. */
+@media (max-width: 700px) {
+  .topbar-inner .nav-links {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 4px;
+  }
+}
+
+/* Nav links were ~30px tall — under the 44px a thumb needs. Grow the hit area
+   with padding and pull the row back with a negative margin so the visual
+   rhythm of the bar is unchanged. */
+.topbar-inner .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.topbar-inner .brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* Any author `display` rule beats the UA stylesheet's [hidden] { display:none },
+   so setting display on .gate-qr / #admin-signout above silently un-hid them.
+   Restore the attribute's meaning globally — it is load-bearing for the gate. */
+[hidden] {
+  display: none !important;
+}
+
+/* .btn was 39px tall — 5px under the 44px minimum, on every button on the
+   site including the new ones. Raising the floor here fixes all of them
+   without touching any individual button's padding or look. */
+.btn {
+  min-height: 44px;
+}
+
+/* Nav links were 23px WIDE once they were 44px tall; a tall, thin target is
+   still a miss. Horizontal padding, pulled back with a negative margin on the
+   row so the bar's spacing is unchanged. */
+.topbar-inner .nav-links a {
+  padding-inline: 11px;
 }
