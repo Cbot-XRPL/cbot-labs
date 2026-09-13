@@ -155,7 +155,7 @@ function getAppPayload() {
     brand: {
       name: "Cbot Labs",
       tagline: "Builders on the XRP Ledger & Xahau",
-      summary: "We run infrastructure and ship products for the XRPL ecosystem — from a mainnet Xahau UNL validator to oneXah, native DeFi app.",
+      summary: "We run infrastructure and ship products for the XRPL ecosystem — from a mainnet Xahau UNL validator and a free public node to oneXah, native DeFi app.",
       logo: "/ll.png"
     },
     validator: {
