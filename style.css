@@ -922,3 +922,14 @@ pre.code code {
 .topbar-inner .nav-links a {
   padding-inline: 11px;
 }
+
+/* The 44px tap-target rules above set `display: inline-flex` on every
+   `.topbar-inner .nav-links a`. That matches the `display: none` hide rule at
+   0,2,1 specificity but comes later in the file, so it silently un-hid the
+   section links on phones — all four links rendered in a 390px bar and
+   collided with the Contact pill. Re-assert the hide at 0,3,1, after. */
+@media (max-width: 620px) {
+  .topbar-inner .nav-links a:not(.nav-cta) {
+    display: none;
+  }
+}
