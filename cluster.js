@@ -29,7 +29,13 @@ function nodeCard(n) {
       <div class="cluster-kv"><span>status</span><span>${esc(n.error || "no answer")}</span></div>
     </div>`;
   }
-  const synced = ["full", "proposing", "validating"].includes(n.serverState);
+  // Mirrors nodeKeepingUp() on the server: a backfilling node dips to
+  // tracking/syncing for seconds at a time and that is not a fault. Ledger age
+  // is what says whether it is keeping pace.
+  const current = n.ledgerAgeS != null && n.ledgerAgeS <= 20;
+  const synced = ["full", "proposing", "validating"].includes(n.serverState)
+    ? (n.ledgerAgeS == null || n.ledgerAgeS <= 60)
+    : (["tracking", "syncing"].includes(n.serverState) && current);
   const range = n.low ? `${num(n.low)}–${num(n.high)}` : (n.completeLedgers || "—");
   return `<div class="cluster-node" data-tone="${synced ? "ok" : "warn"}">
     <div class="cluster-node-head"><strong>${esc(n.label)}</strong>

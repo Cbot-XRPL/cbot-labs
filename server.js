@@ -366,6 +366,32 @@ function parseLedgerRange(complete) {
   return { low, high, count: high - low + 1 };
 }
 
+/* Is this node actually serving good answers?
+ *
+ * NOT simply `server_state === "full"`. A node backfilling deep history dips
+ * to tracking/syncing for ~10s at a time while it fetches — measured on
+ * xah-node-1: 98.6% full, 1.2% tracking, across 97 transitions a day. Calling
+ * the cluster "degraded" for that is noise, and noise is what gets ignored.
+ *
+ * The signal that matters is LEDGER AGE. A node at `syncing` with a 4s ledger
+ * is keeping pace; a node at `full` with a 2 minute old ledger is not, and the
+ * naive check reports that one as healthy — exactly backwards. */
+const SYNCED_STATES = ["full", "proposing", "validating"];
+const MAX_LEDGER_AGE_S = 20;
+const MAX_STALE_AGE_S = 60;
+
+function nodeKeepingUp(n) {
+  if (!n.reachable) return false;
+  // Stale ledger is a fault whatever the state claims.
+  if (n.ledgerAgeS != null && n.ledgerAgeS > MAX_STALE_AGE_S) return false;
+  if (SYNCED_STATES.includes(n.serverState)) return true;
+  // Following the network, just not settled — fine if it is current.
+  if (["tracking", "syncing"].includes(n.serverState)) {
+    return n.ledgerAgeS != null && n.ledgerAgeS <= MAX_LEDGER_AGE_S;
+  }
+  return false;
+}
+
 async function collectCluster() {
   const nodes = await Promise.all(CLUSTER.nodes.map(async (n) => {
     try {
@@ -393,7 +419,7 @@ async function collectCluster() {
   }));
 
   const up = nodes.filter((n) => n.reachable);
-  const synced = up.filter((n) => ["full", "proposing", "validating"].includes(n.serverState));
+  const synced = up.filter(nodeKeepingUp);
   return {
     ts: Date.now(),
     network: "Xahau Mainnet",
